@@ -37,6 +37,7 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 - Root `action.yml` and `packages/action/action.yml` must stay in sync for inputs, outputs, branding, and Node runtime.
 - `packages/action/dist/index.cjs` must remain committed because both action entrypoints execute it.
 - The self-dogfooding workflow must not use `actions/checkout`; it should continue to run the main-branch package-local action instead of PR branch Action code.
+- `.github/workflows/ci.yml` is ordinary repository CI and may checkout this repo and run package scripts; `.github/workflows/agent-gate.yml` must remain API-only and checkout-free.
 
 ## Testing Expectations
 
