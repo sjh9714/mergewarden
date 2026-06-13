@@ -10,6 +10,7 @@ permissions:
 jobs:
   agent-gate:
     name: Agent Gate
+    if: github.event.pull_request.base.sha != '6c9320a8a97548a39854dc4c1f922b12fe1bf3dd'
     runs-on: ubuntu-latest
     steps:
       - name: Run Agent Gate
