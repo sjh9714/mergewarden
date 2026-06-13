@@ -1,5 +1,6 @@
 import { findMatchingPatterns, matchesAny } from "../path/match.js";
 import type { AnalysisInput } from "../types.js";
+import { agentControlPlaneDriftRule } from "./agentControlPlane.js";
 import { agentOriginRule, detectAgentOrigin, type AgentOriginResult } from "./agentOrigin.js";
 import {
   contractBlockedPathRule,
@@ -7,6 +8,8 @@ import {
   contractMissingRule,
   contractOutOfScopeRule,
 } from "./contractRules.js";
+import { highRiskPathRule } from "./highRiskPath.js";
+import { missingTestEvidenceRule } from "./testEvidence.js";
 import type { Rule, RuleContext } from "./types.js";
 
 export const builtInRules: Rule[] = [
@@ -15,6 +18,9 @@ export const builtInRules: Rule[] = [
   contractMissingRule,
   contractOutOfScopeRule,
   contractBlockedPathRule,
+  highRiskPathRule,
+  agentControlPlaneDriftRule,
+  missingTestEvidenceRule,
 ];
 
 export function createRuleContext(input: AnalysisInput): RuleContext {

@@ -113,4 +113,67 @@ describe("analyze", () => {
 
     expect(result.riskScore).toBe(100);
   });
+
+  it("returns block when agent control-plane drift is present in block mode", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    expect(result.decision).toBe("block");
+    expect(result.findings.map((finding) => finding.ruleId)).toEqual(["agent-control-plane/drift"]);
+  });
+
+  it("returns block when missing test evidence is present in block mode", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig(
+          "version: 1\nmode: block\nhigh_risk_paths:\n  auth:\n    paths:\n      - src/auth/**\n    require_tests:\n      - tests/auth/**\n",
+        ),
+        files: [fileChange("src/auth/session.ts")],
+      }),
+    );
+
+    expect(result.decision).toBe("block");
+    expect(result.findings.map((finding) => finding.ruleId)).toEqual([
+      "risk/high-risk-path",
+      "evidence/missing-test-change",
+    ]);
+  });
+
+  it("returns warn for error findings in warn mode", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: warn\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    expect(result.decision).toBe("warn");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "agent-control-plane/drift",
+        severity: "error",
+      }),
+    );
+  });
+
+  it("returns pass in observe mode while recording findings", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: observe\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    expect(result.decision).toBe("pass");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "agent-control-plane/drift",
+        severity: "error",
+      }),
+    );
+  });
 });
