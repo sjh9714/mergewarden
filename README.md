@@ -35,6 +35,10 @@ The GitHub Action wrapper currently lives at `packages/action/action.yml` for de
 
 PR comments are not implemented yet. When `comment: true` is set, the action emits a notice instead of calling comment APIs.
 
+## Self-Dogfooding
+
+Agent Gate runs against this repository's pull requests through `.github/workflows/agent-gate.yml`. The workflow uses `sjh9714/Agent-Gate/packages/action@main`, so pull requests do not execute Action code from their own branches. It starts in non-blocking `warn` mode while the project tunes early policy.
+
 ## Commands
 
 ```bash

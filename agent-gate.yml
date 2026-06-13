@@ -1,0 +1,43 @@
+version: 1
+mode: warn
+
+agent_detection:
+  labels:
+    - ai
+    - agent
+    - codex
+    - claude
+  branch_patterns:
+    - codex/**
+    - claude/**
+    - cursor/**
+
+contract:
+  required_for:
+    - agent
+  sources:
+    - pr_body
+
+high_risk_paths:
+  core:
+    paths:
+      - packages/core/**
+    require_tests:
+      - packages/core/test/**
+    severity: error
+  action:
+    paths:
+      - packages/action/**
+    require_tests:
+      - packages/action/test/**
+    severity: error
+  workflows:
+    paths:
+      - .github/workflows/**
+      - packages/action/action.yml
+    require_tests:
+      - packages/action/test/**
+    severity: warn
+
+github_actions:
+  require_pinned_actions: warn
