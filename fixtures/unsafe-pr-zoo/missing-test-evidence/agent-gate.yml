@@ -1,0 +1,10 @@
+version: 1
+mode: block
+
+high_risk_paths:
+  auth:
+    paths:
+      - src/auth/**
+    require_tests:
+      - tests/auth/**
+    severity: error

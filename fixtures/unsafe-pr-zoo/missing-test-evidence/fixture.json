@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-auth",
+    "headSha": "head-auth"
+  },
+  "pr": {
+    "number": 104,
+    "title": "Change auth session logic without tests",
+    "branchName": "demo/missing-test-evidence",
+    "author": "replay"
+  },
+  "files": [
+    {
+      "path": "src/auth/session.ts",
+      "status": "modified",
+      "additions": 8,
+      "deletions": 3,
+      "baseContent": "export function sessionTtl() {\n  return 3600;\n}\n",
+      "headContent": "export function sessionTtl() {\n  return 86400;\n}\n"
+    }
+  ],
+  "now": "2026-06-13T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

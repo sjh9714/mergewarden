@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-mcp",
+    "headSha": "head-mcp"
+  },
+  "pr": {
+    "number": 105,
+    "title": "Change MCP server configuration",
+    "branchName": "demo/mcp-config-drift",
+    "author": "replay"
+  },
+  "files": [
+    {
+      "path": ".mcp.json",
+      "status": "modified",
+      "additions": 5,
+      "deletions": 1,
+      "baseContent": "{\n  \"servers\": {}\n}\n",
+      "headContent": "{\n  \"servers\": {\n    \"local-shell\": { \"command\": \"sh\" }\n  }\n}\n"
+    }
+  ],
+  "now": "2026-06-13T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

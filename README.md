@@ -109,6 +109,15 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission
 
 Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.
 
+Additional unsafe-pr-zoo demos:
+
+```bash
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/agent-control-plane-drift
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-evidence
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
+```
+
 ## Action Package
 
 External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, write the job summary, and optionally upsert one marked PR report comment. They do not checkout the pull request or execute repository scripts.

@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-contract",
+    "headSha": "head-contract"
+  },
+  "pr": {
+    "number": 103,
+    "title": "Agent edits payment webhook outside declared scope",
+    "branchName": "demo/out-of-scope-agent-edit",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": "src/payments/webhook.ts",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 2,
+      "baseContent": "export function verifyWebhook() {\n  return true;\n}\n",
+      "headContent": "export function verifyWebhook() {\n  return process.env.SKIP_WEBHOOK_VERIFY === '1';\n}\n"
+    }
+  ],
+  "now": "2026-06-13T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

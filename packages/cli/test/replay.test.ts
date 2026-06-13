@@ -1,11 +1,14 @@
 import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
+import { analyze } from "@agent-gate/core";
 import { loadReplayFixture, renderHumanReport, runCli } from "../src/replay.js";
 
+const repoRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const baseWorkflow = "permissions:\n  contents: read\n";
 const headWorkflow =
   "'on':\n  pull_request_target:\npermissions:\n  contents: write\njobs:\n  test:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n";
@@ -62,6 +65,38 @@ async function createFixture(
   return dir;
 }
 
+const unsafePrZooFixtures = [
+  {
+    name: "workflow-permission-escalation",
+    expectedRuleIds: ["workflow/permission-escalation", "workflow/dangerous-pattern"],
+    expectedPath: ".github/workflows/release.yml",
+  },
+  {
+    name: "agent-control-plane-drift",
+    expectedRuleIds: ["agent-control-plane/drift"],
+    expectedPath: "AGENTS.md",
+  },
+  {
+    name: "out-of-scope-agent-edit",
+    expectedRuleIds: ["contract/out-of-scope"],
+    expectedPath: "src/payments/webhook.ts",
+  },
+  {
+    name: "missing-test-evidence",
+    expectedRuleIds: ["risk/high-risk-path", "evidence/missing-test-change"],
+    expectedPath: "src/auth/session.ts",
+  },
+  {
+    name: "mcp-config-drift",
+    expectedRuleIds: ["agent-control-plane/drift"],
+    expectedPath: ".mcp.json",
+  },
+];
+
+function unsafePrZooFixturePath(name: string): string {
+  return join(repoRoot, "fixtures", "unsafe-pr-zoo", name);
+}
+
 describe("CLI replay", () => {
   it("loads replay fixtures into analysis input", async () => {
     const input = await loadReplayFixture(await createTempFixture());
@@ -84,9 +119,7 @@ describe("CLI replay", () => {
 
   it("renders human replay output with decision, rule ids, messages, and paths", async () => {
     const input = await loadReplayFixture(await createTempFixture());
-    const output = renderHumanReport(
-      await import("@agent-gate/core").then(({ analyze }) => analyze(input)),
-    );
+    const output = renderHumanReport(await analyze(input));
 
     expect(output).toContain("Agent Gate: BLOCKED");
     expect(output).toContain("ERROR workflow/permission-escalation");
@@ -112,6 +145,21 @@ describe("CLI replay", () => {
       "workflow/permission-escalation",
     );
   });
+
+  it.each(unsafePrZooFixtures)(
+    "replays unsafe-pr-zoo/$name with expected findings",
+    async ({ name, expectedRuleIds, expectedPath }) => {
+      const input = await loadReplayFixture(unsafePrZooFixturePath(name));
+      const result = await analyze(input);
+      const output = renderHumanReport(result);
+
+      expect(result.decision).toBe("block");
+      expect(result.findings.map((finding) => finding.ruleId)).toEqual(expectedRuleIds);
+      expect(output).toContain("Agent Gate: BLOCKED");
+      expect(output).toContain(expectedRuleIds[0]);
+      expect(output).toContain(`Path: ${expectedPath}`);
+    },
+  );
 
   it("returns exit code 0 for warn decisions", async () => {
     const fixtureDir = await createFixture(
