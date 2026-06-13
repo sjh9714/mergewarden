@@ -2,6 +2,18 @@ name: Agent Gate
 
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+concurrency:
+  group: agent-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -10,7 +22,9 @@ permissions:
 jobs:
   agent-gate:
     name: Agent Gate
-    if: github.event.pull_request.base.sha != '6c9320a8a97548a39854dc4c1f922b12fe1bf3dd'
+    # Bootstrap guard: PR #7 adds the base-branch config this action needs.
+    # Remove this guard after the self-dogfooding workflow has landed.
+    if: ${{ github.event.pull_request.number != 7 }}
     runs-on: ubuntu-latest
     steps:
       - name: Run Agent Gate
