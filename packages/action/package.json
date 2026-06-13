@@ -1,0 +1,14 @@
+{
+  "name": "@agent-gate/action",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "action.yml",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --platform node --target node20 --dts --sourcemap",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

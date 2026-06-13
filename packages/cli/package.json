@@ -1,0 +1,16 @@
+{
+  "name": "agent-gate",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agent-gate": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/main.ts --format esm --dts --sourcemap",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}
