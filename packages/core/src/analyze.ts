@@ -1,4 +1,4 @@
-import type { AnalysisInput, AnalysisResult } from "./types.js";
+import type { AnalysisInput, AnalysisResult, Finding } from "./types.js";
 import { createRuleContext, builtInRules } from "./rules/index.js";
 import { decide } from "./score/decision.js";
 import { calculateRiskScore } from "./score/riskScore.js";
@@ -17,7 +17,7 @@ function titleForDecision(decision: AnalysisResult["decision"]): string {
 
 export async function analyze(input: AnalysisInput): Promise<AnalysisResult> {
   const ctx = createRuleContext(input);
-  const findings = [];
+  const findings: Finding[] = [];
 
   for (const rule of builtInRules) {
     findings.push(...(await rule.run(ctx)));

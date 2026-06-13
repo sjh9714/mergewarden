@@ -14,7 +14,17 @@ export interface AgentOriginResult {
 }
 
 function lower(value: string): string {
-  return value.toLocaleLowerCase();
+  return value.toLowerCase();
+}
+
+function truncateEvidence(value: string, maxLength = 160): string {
+  const compact = value.replace(/\s+/g, " ").trim();
+
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+
+  return `${compact.slice(0, maxLength - 3)}...`;
 }
 
 function bodySignals(input: AnalysisInput): AgentOriginSignal[] {
@@ -88,7 +98,7 @@ export const agentOriginRule: Rule = {
       message: "This PR appears to be agent-generated.",
       evidence: origin.signals.map((signal) => ({
         label: signal.kind,
-        value: `${signal.value} matched ${signal.matched}`,
+        value: `${signal.kind} matched "${signal.matched}" in "${truncateEvidence(signal.value)}"`,
       })),
       remediation: [],
       tags: ["agent-pr", "origin"],

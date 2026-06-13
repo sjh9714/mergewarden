@@ -1,3 +1,4 @@
+import { scopePathsForFile } from "../path/scopePaths.js";
 import type { Finding, Severity } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
@@ -88,8 +89,14 @@ export const contractOutOfScopeRule: Rule = {
 
     return ctx.helpers
       .changedFiles()
-      .filter((file) => !ctx.helpers.matchesAny(file.path, contract.allowed_paths))
-      .map((file) => {
+      .map((file) => ({
+        file,
+        outOfScopePaths: scopePathsForFile(file).filter(
+          (path) => !ctx.helpers.matchesAny(path, contract.allowed_paths),
+        ),
+      }))
+      .filter(({ outOfScopePaths }) => outOfScopePaths.length > 0)
+      .map(({ file, outOfScopePaths }) => {
         const finding = baseFinding(
           "contract/out-of-scope",
           "error",
@@ -98,8 +105,12 @@ export const contractOutOfScopeRule: Rule = {
         );
 
         finding.path = file.path;
+        finding.evidence.push({ label: "changed_file", value: file.path });
+        if (file.previousPath) {
+          finding.evidence.push({ label: "previous_path", value: file.previousPath });
+        }
         finding.evidence.push(
-          { label: "changed_file", value: file.path },
+          { label: "out_of_scope_paths", value: outOfScopePaths.join(", ") },
           { label: "allowed_paths", value: contract.allowed_paths.join(", ") },
         );
         finding.remediation.push("Remove the out-of-scope change or update the contract.");
@@ -124,7 +135,13 @@ export const contractBlockedPathRule: Rule = {
       .changedFiles()
       .map((file) => ({
         file,
-        patterns: ctx.helpers.findMatchingPatterns(file.path, blockedPaths),
+        patterns: [
+          ...new Set(
+            scopePathsForFile(file).flatMap((path) =>
+              ctx.helpers.findMatchingPatterns(path, blockedPaths),
+            ),
+          ),
+        ],
       }))
       .filter(({ patterns }) => patterns.length > 0)
       .map(({ file, patterns }) => {
@@ -136,10 +153,11 @@ export const contractBlockedPathRule: Rule = {
         );
 
         finding.path = file.path;
-        finding.evidence.push(
-          { label: "changed_file", value: file.path },
-          { label: "blocked_patterns", value: patterns.join(", ") },
-        );
+        finding.evidence.push({ label: "changed_file", value: file.path });
+        if (file.previousPath) {
+          finding.evidence.push({ label: "previous_path", value: file.previousPath });
+        }
+        finding.evidence.push({ label: "blocked_patterns", value: patterns.join(", ") });
         finding.remediation.push("Remove the blocked-path change from this PR.");
 
         return finding;

@@ -99,6 +99,36 @@ describe("contract rules", () => {
     );
   });
 
+  it("blocks renamed files when the previous path is outside contract scope", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        contract: validAuthContract,
+        files: [
+          {
+            ...fileChange("src/auth/webhook.ts"),
+            previousPath: "src/payments/webhook.ts",
+            status: "renamed",
+          },
+        ],
+      }),
+    );
+
+    expect(result.decision).toBe("block");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "contract/out-of-scope",
+        severity: "error",
+        path: "src/auth/webhook.ts",
+        evidence: expect.arrayContaining([
+          { label: "changed_file", value: "src/auth/webhook.ts" },
+          { label: "previous_path", value: "src/payments/webhook.ts" },
+          { label: "out_of_scope_paths", value: "src/payments/webhook.ts" },
+        ]),
+      }),
+    );
+  });
+
   it("blocks valid contracts with blocked paths", async () => {
     const result = await analyze(
       createAnalysisInput({
@@ -123,6 +153,68 @@ describe("contract rules", () => {
         path: ".github/workflows/ci.yml",
       }),
     );
+  });
+
+  it("blocks renamed files when the previous path matches blocked contract paths", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        contract: {
+          kind: "valid",
+          contract: {
+            version: 1,
+            allowed_paths: ["src/auth/**", "src/payments/**"],
+            blocked_paths: ["src/payments/**"],
+          },
+        },
+        files: [
+          {
+            ...fileChange("src/auth/webhook.ts"),
+            previousPath: "src/payments/webhook.ts",
+            status: "renamed",
+          },
+        ],
+      }),
+    );
+
+    expect(result.decision).toBe("block");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "contract/blocked-path",
+        severity: "error",
+        path: "src/auth/webhook.ts",
+        evidence: expect.arrayContaining([
+          { label: "changed_file", value: "src/auth/webhook.ts" },
+          { label: "previous_path", value: "src/payments/webhook.ts" },
+          { label: "blocked_patterns", value: "src/payments/**" },
+        ]),
+      }),
+    );
+  });
+
+  it("passes renamed files when both current and previous paths are allowed", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        contract: {
+          kind: "valid",
+          contract: {
+            version: 1,
+            allowed_paths: ["src/auth/**", "src/legacy-auth/**"],
+          },
+        },
+        files: [
+          {
+            ...fileChange("src/auth/session.ts"),
+            previousPath: "src/legacy-auth/session.ts",
+            status: "renamed",
+          },
+        ],
+      }),
+    );
+
+    expect(result.decision).toBe("pass");
+    expect(result.findings).toEqual([]);
   });
 
   it("downgrades missing contracts in observe mode when configured", async () => {
