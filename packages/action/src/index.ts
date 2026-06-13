@@ -4,7 +4,6 @@ import * as github from "@actions/github";
 import { writeTextFile } from "./fileWriter.js";
 import { runAction, type ActionContext, type ActionSummary, type OctokitLike } from "./run.js";
 
-const token = core.getInput("github-token");
 const summary: ActionSummary = {
   addRaw(content) {
     core.summary.addRaw(content);
@@ -15,9 +14,14 @@ const summary: ActionSummary = {
   },
 };
 
-if (!token) {
-  core.setFailed("Agent Gate requires the github-token input.");
-} else {
+async function main(): Promise<void> {
+  const token = core.getInput("github-token");
+
+  if (!token) {
+    core.setFailed("Agent Gate requires the github-token input.");
+    return;
+  }
+
   await runAction({
     context: github.context as unknown as ActionContext,
     getInput: (name) => core.getInput(name),
@@ -30,3 +34,7 @@ if (!token) {
     now: () => new Date(),
   });
 }
+
+main().catch((error: unknown) => {
+  core.setFailed(error instanceof Error ? error.message : String(error));
+});
