@@ -1,3 +1,6 @@
+import type { AgentGateConfig } from "./config/schema.js";
+import type { ParseContractResult } from "./contract/schema.js";
+
 export type Severity = "info" | "warn" | "error";
 export type Decision = "pass" | "warn" | "block";
 export type ConfigSource = "base-branch" | "local";
@@ -86,6 +89,8 @@ export interface CheckEvidence {
 export interface AnalysisInput {
   repo: RepoContext;
   pr: PullRequestContext;
+  config: AgentGateConfig;
+  contract: ParseContractResult;
   changes: ChangeSet;
   reviews: ReviewEvidence[];
   checks: CheckEvidence[];

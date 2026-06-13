@@ -33,6 +33,10 @@ export function renderMarkdownReport(result: AnalysisResult): string {
         finding.message,
         "",
       );
+
+      if (finding.path) {
+        lines.push(`Path: \`${finding.path}\``, "");
+      }
     }
   }
 

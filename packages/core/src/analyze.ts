@@ -1,18 +1,45 @@
-import type { AnalysisInput, AnalysisResult } from "./types.js";
+import type { AnalysisInput, AnalysisResult, Finding } from "./types.js";
+import { createRuleContext, builtInRules } from "./rules/index.js";
+import { decide } from "./score/decision.js";
+import { calculateRiskScore } from "./score/riskScore.js";
+
+function titleForDecision(decision: AnalysisResult["decision"]): string {
+  if (decision === "block") {
+    return "Agent Gate: blocked";
+  }
+
+  if (decision === "warn") {
+    return "Agent Gate: warnings found";
+  }
+
+  return "Agent Gate: passed";
+}
 
 export async function analyze(input: AnalysisInput): Promise<AnalysisResult> {
+  const ctx = createRuleContext(input);
+  const findings: Finding[] = [];
+
+  for (const rule of builtInRules) {
+    findings.push(...(await rule.run(ctx)));
+  }
+
+  const errorCount = findings.filter((finding) => finding.severity === "error").length;
+  const warnCount = findings.filter((finding) => finding.severity === "warn").length;
+  const infoCount = findings.filter((finding) => finding.severity === "info").length;
+  const decision = decide(input.config.mode, { errorCount, warnCount });
+
   return {
-    decision: "pass",
-    riskScore: 0,
+    decision,
+    riskScore: calculateRiskScore(findings),
     summary: {
-      title: "Agent Gate: passed",
-      agentDetected: false,
-      contractPresent: false,
-      errorCount: 0,
-      warnCount: 0,
-      infoCount: 0,
+      title: titleForDecision(decision),
+      agentDetected: ctx.helpers.getAgentOrigin().detected,
+      contractPresent: input.contract.kind !== "missing",
+      errorCount,
+      warnCount,
+      infoCount,
     },
-    findings: [],
+    findings,
     metadata: {
       analyzedAt: input.now,
       baseSha: input.repo.baseSha,

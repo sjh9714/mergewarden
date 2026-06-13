@@ -8,8 +8,13 @@ export {
 } from "./config/schema.js";
 export { parseContractFromPrBody } from "./contract/parsePrBody.js";
 export { AgentContractSchema } from "./contract/schema.js";
+export { findMatchingPatterns, matchesAny } from "./path/match.js";
+export { normalizePath } from "./path/normalizePath.js";
 export { renderJsonReport } from "./report/json.js";
 export { renderMarkdownReport } from "./report/markdown.js";
+export { detectAgentOrigin } from "./rules/agentOrigin.js";
+export type { AgentOriginResult, AgentOriginSignal } from "./rules/agentOrigin.js";
+export type { Rule, RuleContext } from "./rules/index.js";
 export type { AgentGateConfig } from "./config/schema.js";
 export type { AgentContract, ParseContractResult } from "./contract/schema.js";
 export type {
