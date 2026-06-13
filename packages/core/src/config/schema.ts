@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { NonEmptyStringSchema } from "../validation/schemas.js";
+
 export const CONFIG_FILE_NAME = "agent-gate.yml";
 
 export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
@@ -8,6 +10,7 @@ export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "AGENTS.override.md",
   "**/AGENTS.override.md",
   "CLAUDE.md",
+  "**/CLAUDE.md",
   ".cursor/**",
   ".github/copilot-instructions.md",
   ".mcp.json",
@@ -19,10 +22,10 @@ const SeveritySettingSchema = z.enum(["warn", "error"]);
 
 const AgentDetectionSchema = z
   .object({
-    authors: z.array(z.string()).default([]),
-    labels: z.array(z.string()).default([]),
-    branch_patterns: z.array(z.string()).default([]),
-    body_patterns: z.array(z.string()).default([]),
+    authors: z.array(NonEmptyStringSchema).default([]),
+    labels: z.array(NonEmptyStringSchema).default([]),
+    branch_patterns: z.array(NonEmptyStringSchema).default([]),
+    body_patterns: z.array(NonEmptyStringSchema).default([]),
   })
   .strict();
 
@@ -43,9 +46,9 @@ const RiskBudgetConfigSchema = z
 
 const HighRiskPathAreaSchema = z
   .object({
-    paths: z.array(z.string()).min(1),
-    require_tests: z.array(z.string()).default([]),
-    require_reviewers: z.array(z.string()).default([]),
+    paths: z.array(NonEmptyStringSchema).min(1),
+    require_tests: z.array(NonEmptyStringSchema).default([]),
+    require_reviewers: z.array(NonEmptyStringSchema).default([]),
     require_rollback_plan: z.boolean().default(false),
     severity: SeveritySettingSchema.default("error"),
   })
@@ -53,15 +56,17 @@ const HighRiskPathAreaSchema = z
 
 const AgentControlPlaneSchema = z
   .object({
-    paths: z.array(z.string()).default(DEFAULT_AGENT_CONTROL_PLANE_PATHS),
-    require_reviewers: z.array(z.string()).default([]),
+    paths: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_CONTROL_PLANE_PATHS),
+    require_reviewers: z.array(NonEmptyStringSchema).default([]),
     severity: SeveritySettingSchema.default("error"),
   })
   .strict();
 
 const GitHubActionsConfigSchema = z
   .object({
-    paths: z.array(z.string()).default([".github/workflows/*.yml", ".github/workflows/*.yaml"]),
+    paths: z
+      .array(NonEmptyStringSchema)
+      .default([".github/workflows/*.yml", ".github/workflows/*.yaml"]),
     block_permission_escalation: z.boolean().default(true),
     block_pull_request_target_checkout: z.boolean().default(true),
     require_pinned_actions: z.enum(["off", "warn", "error"]).default("warn"),
@@ -84,9 +89,9 @@ const ClaimVsCiEvidenceSchema = z
   .object({
     enabled: z.boolean().default(true),
     phrases: z
-      .array(z.string())
+      .array(NonEmptyStringSchema)
       .default(["tests passed", "all tests pass", "ci passed", "verified"]),
-    required_checks: z.array(z.string()).default(["test", "lint"]),
+    required_checks: z.array(NonEmptyStringSchema).default(["test", "lint"]),
   })
   .strict();
 

@@ -88,6 +88,36 @@ allowed_paths: []
     expect(expectInvalid(result).message).toMatch(/allowed_paths/);
   });
 
+  it("returns invalid when allowed_paths contains an empty pattern", () => {
+    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+version: 1
+allowed_paths:
+  - ""
+-->`);
+
+    expect(expectInvalid(result).message).toMatch(/allowed_paths\.0/);
+  });
+
+  it("returns invalid when scalar contract strings are whitespace-only", () => {
+    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+version: 1
+agent: " "
+task: "   "
+allowed_paths:
+  - "src/**"
+-->`);
+
+    expect(expectInvalid(result).message).toMatch(/agent/);
+    expect(expectInvalid(result).message).toMatch(/task/);
+  });
+
+  it("returns invalid when the contract block is empty", () => {
+    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+-->`);
+
+    expect(expectInvalid(result).message).toMatch(/Invalid agent-gate contract/);
+  });
+
   it("returns invalid when multiple contract blocks are present", () => {
     const result = parseContractFromPrBody(`${validContractBlock}\n\n${validContractBlock}`);
 

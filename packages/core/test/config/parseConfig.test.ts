@@ -195,11 +195,35 @@ high_risk_paths:
       "AGENTS.override.md",
       "**/AGENTS.override.md",
       "CLAUDE.md",
+      "**/CLAUDE.md",
       ".cursor/**",
       ".github/copilot-instructions.md",
       ".mcp.json",
       "claude_desktop_config.json",
       ".codex/**",
     ]);
+  });
+
+  it("rejects empty high-risk path patterns", () => {
+    expect(() =>
+      parseConfig(`
+version: 1
+high_risk_paths:
+  auth:
+    paths:
+      - ""
+`),
+    ).toThrow(/Invalid agent-gate\.yml: high_risk_paths\.auth\.paths\.0/);
+  });
+
+  it("rejects whitespace-only agent detection labels", () => {
+    expect(() =>
+      parseConfig(`
+version: 1
+agent_detection:
+  labels:
+    - "   "
+`),
+    ).toThrow(/Invalid agent-gate\.yml: agent_detection\.labels\.0/);
   });
 });
