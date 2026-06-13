@@ -4,13 +4,22 @@ No AI PR gets merged without proof.
 
 Agent Gate is a deterministic CI firewall for AI-generated pull requests. It is designed to block agent-authored changes when they exceed their contract, touch risky files, change agent instructions, escalate workflow permissions, or claim tests without evidence.
 
-This repository is currently at the Task 1 scaffold stage. The TypeScript workspace and core report surface exist, but the CLI, GitHub Action, configuration parser, contract parser, and rules are not implemented yet.
+This repository is in early development. The core package now includes deterministic config parsing, PR-body contract parsing, path/risk/control-plane/test-evidence rules, and GitHub Actions workflow safety rules. The CLI can replay local fixtures so the engine can be demonstrated without calling GitHub APIs or executing PR-controlled code.
 
 ## What Exists
 
-- `packages/core`: shared types, an empty `analyze()` pass-through, and JSON/Markdown report renderers.
-- `packages/cli`: reserved `agent-gate` command package with a placeholder executable.
+- `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
+- `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
 - `packages/action`: reserved Node 20 GitHub Action package with placeholder metadata.
+
+## Replay Demo
+
+```bash
+pnpm --filter agent-gate build
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
+```
+
+Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.
 
 ## Commands
 

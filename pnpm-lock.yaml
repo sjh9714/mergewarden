@@ -38,7 +38,11 @@ importers:
 
   packages/action: {}
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      '@agent-gate/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/core:
     dependencies:

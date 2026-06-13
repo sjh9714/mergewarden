@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-console.error(
-  "Agent Gate CLI scaffold only: commands are not implemented yet. This package is reserved for a later task.",
-);
+import { runCli } from "./replay.js";
 
-process.exitCode = 1;
+process.exitCode = await runCli(process.argv.slice(2));

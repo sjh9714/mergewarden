@@ -11,6 +11,10 @@
   ],
   "scripts": {
     "build": "tsup src/main.ts --format esm --dts --sourcemap",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@agent-gate/core": "workspace:*"
   }
 }

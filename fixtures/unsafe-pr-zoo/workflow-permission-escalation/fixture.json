@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-workflow",
+    "headSha": "head-workflow"
+  },
+  "pr": {
+    "number": 101,
+    "title": "Escalate release workflow permissions",
+    "branchName": "codex/workflow-permission-escalation",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/release.yml",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 2,
+      "baseContent": "on: [push]\npermissions:\n  contents: read\njobs:\n  release:\n    steps:\n      - uses: actions/checkout@v4\n",
+      "headContent": "on:\n  pull_request_target:\npermissions:\n  contents: write\njobs:\n  release:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          ref: ${{ github.event.pull_request.head.sha }}\n"
+    }
+  ],
+  "now": "2026-06-13T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

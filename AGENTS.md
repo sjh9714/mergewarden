@@ -29,7 +29,7 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 ## Architecture
 
 - `packages/core`: pure analysis engine
-- `packages/cli`: local CLI package
+- `packages/cli`: local CLI package; depends on `@agent-gate/core` through the workspace only to run deterministic replay fixtures
 - `packages/action`: GitHub Action wrapper package
 
 ## Testing Expectations
