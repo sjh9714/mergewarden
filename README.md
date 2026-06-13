@@ -45,6 +45,8 @@ jobs:
           fail-on-block: false
 ```
 
+Use `@main` while Agent Gate is pre-release. After the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
+
 Agent Gate loads policy from the PR base branch and does not execute PR branch code. Start with `mode: warn` and `fail-on-block: false`, tune the findings, then move to `mode: block` when ready.
 
 Create `agent-gate.yml` in the repository root:
