@@ -11,6 +11,8 @@ import {
 import { highRiskPathRule } from "./highRiskPath.js";
 import { missingTestEvidenceRule } from "./testEvidence.js";
 import type { Rule, RuleContext } from "./types.js";
+import { workflowDangerousPatternRule } from "./workflowDangerousPattern.js";
+import { workflowPermissionEscalationRule } from "./workflowPermissions.js";
 
 export const builtInRules: Rule[] = [
   agentOriginRule,
@@ -21,6 +23,8 @@ export const builtInRules: Rule[] = [
   highRiskPathRule,
   agentControlPlaneDriftRule,
   missingTestEvidenceRule,
+  workflowPermissionEscalationRule,
+  workflowDangerousPatternRule,
 ];
 
 export function createRuleContext(input: AnalysisInput): RuleContext {
