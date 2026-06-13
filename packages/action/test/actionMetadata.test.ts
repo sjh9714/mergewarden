@@ -7,6 +7,11 @@ import { describe, expect, it } from "vitest";
 const repoRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const rootAction = readFileSync(join(repoRoot, "action.yml"), "utf8");
 const packageAction = readFileSync(join(repoRoot, "packages/action/action.yml"), "utf8");
+const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
+const selfDogfoodingWorkflow = readFileSync(
+  join(repoRoot, ".github/workflows/agent-gate.yml"),
+  "utf8",
+);
 
 const importantInputs = [
   "github-token",
@@ -32,5 +37,11 @@ describe("action metadata", () => {
       expect(rootAction).toContain(`  ${output}:`);
       expect(packageAction).toContain(`  ${output}:`);
     }
+  });
+
+  it("documents comment permissions without adding checkout to self-dogfooding", () => {
+    expect(readme).toContain("issues: write");
+    expect(readme).toContain("comment: true");
+    expect(selfDogfoodingWorkflow).not.toContain("actions/checkout");
   });
 });

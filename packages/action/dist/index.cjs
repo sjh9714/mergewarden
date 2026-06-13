@@ -22971,12 +22971,12 @@ var require_log = __commonJS({
       if (logLevel === "debug")
         console.log(...messages);
     }
-    function warn(logLevel, warning) {
+    function warn(logLevel, warning2) {
       if (logLevel === "debug" || logLevel === "warn") {
         if (typeof node_process.emitWarning === "function")
-          node_process.emitWarning(warning);
+          node_process.emitWarning(warning2);
         else
-          console.warn(warning);
+          console.warn(warning2);
       }
     }
     exports2.debug = debug2;
@@ -26445,9 +26445,9 @@ var require_composer = __commonJS({
         this.prelude = [];
         this.errors = [];
         this.warnings = [];
-        this.onError = (source, code, message, warning) => {
+        this.onError = (source, code, message, warning2) => {
           const pos = getErrorPos(source);
-          if (warning)
+          if (warning2)
             this.warnings.push(new errors.YAMLWarning(pos, code, message));
           else
             this.errors.push(new errors.YAMLParseError(pos, code, message));
@@ -26520,10 +26520,10 @@ ${cb}` : comment;
           console.dir(token, { depth: null });
         switch (token.type) {
           case "directive":
-            this.directives.add(token.source, (offset, message, warning) => {
+            this.directives.add(token.source, (offset, message, warning2) => {
               const pos = getErrorPos(token);
               pos[0] += offset;
-              this.onError(pos, "BAD_DIRECTIVE", message, warning);
+              this.onError(pos, "BAD_DIRECTIVE", message, warning2);
             });
             this.prelude.push(token.source);
             this.atDirectives = true;
@@ -28565,7 +28565,7 @@ var require_public_api = __commonJS({
       const doc = parseDocument4(src, options);
       if (!doc)
         return null;
-      doc.warnings.forEach((warning) => log.warn(doc.options.logLevel, warning));
+      doc.warnings.forEach((warning2) => log.warn(doc.options.logLevel, warning2));
       if (doc.errors.length > 0) {
         if (doc.options.logLevel !== "silent")
           throw doc.errors[0];
@@ -29143,6 +29143,9 @@ function setFailed(message) {
 }
 function error(message, properties = {}) {
   issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+function warning(message, properties = {}) {
+  issueCommand("warning", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 function notice(message, properties = {}) {
   issueCommand("notice", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
@@ -48486,6 +48489,8 @@ function renderMarkdownReport(result) {
 }
 
 // src/run.ts
+var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
+var AGENT_GATE_MANAGED_COMMENT_NOTE = "<!-- This comment is managed by Agent Gate. Do not edit manually. -->";
 function errorMessage(error52) {
   return error52 instanceof Error ? error52.message : String(error52);
 }
@@ -48643,6 +48648,66 @@ async function loadChangedFiles(octokit, baseRepo, headRepo, pr) {
     )
   );
 }
+async function listIssueComments(octokit, repository, issueNumber) {
+  const listComments = octokit.rest.issues?.listComments;
+  if (!listComments) {
+    throw new Error("GitHub Issues comment list API is unavailable.");
+  }
+  const args = {
+    owner: repository.owner,
+    repo: repository.repo,
+    issue_number: issueNumber,
+    per_page: 100
+  };
+  if (octokit.paginate) {
+    return octokit.paginate(listComments, args);
+  }
+  const response = await listComments(args);
+  return response.data;
+}
+function markedCommentBody(markdownReport) {
+  return `${AGENT_GATE_COMMENT_MARKER}
+${AGENT_GATE_MANAGED_COMMENT_NOTE}
+
+${markdownReport}`;
+}
+function isAgentGateManagedComment(comment) {
+  if (!comment.body?.startsWith(AGENT_GATE_COMMENT_MARKER)) {
+    return false;
+  }
+  return comment.user?.type === "Bot" || comment.user?.login === "github-actions[bot]";
+}
+function latestMarkedComment(comments) {
+  return comments.filter(isAgentGateManagedComment).sort((left, right) => right.id - left.id)[0];
+}
+async function upsertPullRequestComment(octokit, repository, issueNumber, markdownReport) {
+  const comments = await listIssueComments(octokit, repository, issueNumber);
+  const body = markedCommentBody(markdownReport);
+  const existingComment = latestMarkedComment(comments);
+  if (existingComment) {
+    const updateComment = octokit.rest.issues?.updateComment;
+    if (!updateComment) {
+      throw new Error("GitHub Issues comment update API is unavailable.");
+    }
+    await updateComment({
+      owner: repository.owner,
+      repo: repository.repo,
+      comment_id: existingComment.id,
+      body
+    });
+    return;
+  }
+  const createComment = octokit.rest.issues?.createComment;
+  if (!createComment) {
+    throw new Error("GitHub Issues comment create API is unavailable.");
+  }
+  await createComment({
+    owner: repository.owner,
+    repo: repository.repo,
+    issue_number: issueNumber,
+    body
+  });
+}
 async function loadConfig(runtime, owner, repo, baseSha, path) {
   const configText = await fetchRepositoryTextContent(runtime.octokit, {
     owner,
@@ -48708,7 +48773,11 @@ async function runActionInner(runtime) {
   runtime.setOutput("report-markdown", reportMarkdownPath);
   await runtime.summary.addRaw(markdownReport).write();
   if (comment) {
-    runtime.notice("Agent Gate PR comments are not implemented yet.");
+    try {
+      await upsertPullRequestComment(runtime.octokit, baseRepo, pr.number, markdownReport);
+    } catch (error52) {
+      runtime.warning(`Agent Gate could not upsert PR comment: ${errorMessage(error52)}`);
+    }
   }
   if (result.decision === "block" && failOnBlock) {
     runtime.setFailed("Agent Gate blocked this pull request.");
@@ -48747,6 +48816,7 @@ async function main() {
     octokit: getOctokit(token),
     setFailed: (message) => setFailed(message),
     setOutput: (name, value) => setOutput(name, value),
+    warning: (message) => warning(message),
     summary: summary2,
     writeFile: writeTextFile,
     now: () => /* @__PURE__ */ new Date()

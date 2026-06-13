@@ -49,6 +49,18 @@ Use `@main` while Agent Gate is pre-release. After the first release, prefer a v
 
 Agent Gate loads policy from the PR base branch and does not execute PR branch code. Start with `mode: warn` and `fail-on-block: false`, tune the findings, then move to `mode: block` when ready.
 
+To let Agent Gate create or update a PR report comment, add `issues: write` to the workflow permissions and set `comment: true`. Keep `contents: read` and `pull-requests: read`; no checkout step is needed. On fork pull requests, GitHub may still provide a read-only token, so comment failures are reported as warnings instead of failing the action.
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+with:
+  comment: true
+```
+
 Create `agent-gate.yml` in the repository root:
 
 ```yaml
@@ -99,9 +111,7 @@ Expected result: Agent Gate reports a blocked PR with `workflow/permission-escal
 
 ## Action Package
 
-External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, and write the job summary. They do not checkout the pull request or execute repository scripts.
-
-PR comments are not implemented yet. When `comment: true` is set, the action emits a notice instead of calling comment APIs.
+External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, write the job summary, and optionally upsert one marked PR report comment. They do not checkout the pull request or execute repository scripts.
 
 ## Self-Dogfooding
 

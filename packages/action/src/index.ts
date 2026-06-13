@@ -29,6 +29,7 @@ async function main(): Promise<void> {
     octokit: github.getOctokit(token) as unknown as OctokitLike,
     setFailed: (message) => core.setFailed(message),
     setOutput: (name, value) => core.setOutput(name, value),
+    warning: (message) => core.warning(message),
     summary,
     writeFile: writeTextFile,
     now: () => new Date(),
