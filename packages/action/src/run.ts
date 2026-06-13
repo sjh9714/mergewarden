@@ -83,11 +83,41 @@ interface GetContentArgs {
   ref: string;
 }
 
-type ListFilesMethod = (args: ListFilesArgs) => Promise<{ data: PullFile[] }>;
+interface ListIssueCommentsArgs {
+  owner: string;
+  repo: string;
+  issue_number: number;
+  per_page: number;
+}
+
+interface CreateIssueCommentArgs {
+  owner: string;
+  repo: string;
+  issue_number: number;
+  body: string;
+}
+
+interface UpdateIssueCommentArgs {
+  owner: string;
+  repo: string;
+  comment_id: number;
+  body: string;
+}
+
+interface IssueComment {
+  id: number;
+  body?: string | null;
+}
+
+type PaginatedMethod<TArgs, TItem> = (args: TArgs) => Promise<{ data: TItem[] }>;
+type ListFilesMethod = PaginatedMethod<ListFilesArgs, PullFile>;
+type ListIssueCommentsMethod = PaginatedMethod<ListIssueCommentsArgs, IssueComment>;
 type GetContentMethod = (args: GetContentArgs) => Promise<{ data: unknown }>;
+type CreateIssueCommentMethod = (args: CreateIssueCommentArgs) => Promise<{ data: unknown }>;
+type UpdateIssueCommentMethod = (args: UpdateIssueCommentArgs) => Promise<{ data: unknown }>;
 
 export interface OctokitLike {
-  paginate?: (method: ListFilesMethod, args: ListFilesArgs) => Promise<PullFile[]>;
+  paginate?: <TArgs, TItem>(method: PaginatedMethod<TArgs, TItem>, args: TArgs) => Promise<TItem[]>;
   rest: {
     pulls: {
       listFiles: ListFilesMethod;
@@ -96,7 +126,9 @@ export interface OctokitLike {
       getContent: GetContentMethod;
     };
     issues?: {
-      createComment?: unknown;
+      listComments?: ListIssueCommentsMethod;
+      createComment?: CreateIssueCommentMethod;
+      updateComment?: UpdateIssueCommentMethod;
     };
   };
 }
@@ -113,10 +145,13 @@ export interface ActionRuntime {
   setOutput(name: string, value: string | number): void;
   setFailed(message: string | Error): void;
   notice(message: string): void;
+  warning(message: string): void;
   summary: ActionSummary;
   writeFile(path: string, content: string): Promise<void>;
   now(): Date;
 }
+
+const AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
 
 interface FetchContentOptions {
   owner: string;
@@ -348,6 +383,82 @@ async function loadChangedFiles(
   );
 }
 
+async function listIssueComments(
+  octokit: OctokitLike,
+  repository: RepositoryRef,
+  issueNumber: number,
+): Promise<IssueComment[]> {
+  const listComments = octokit.rest.issues?.listComments;
+
+  if (!listComments) {
+    throw new Error("GitHub Issues comment list API is unavailable.");
+  }
+
+  const args = {
+    owner: repository.owner,
+    repo: repository.repo,
+    issue_number: issueNumber,
+    per_page: 100,
+  };
+
+  if (octokit.paginate) {
+    return octokit.paginate(listComments, args);
+  }
+
+  const response = await listComments(args);
+  return response.data;
+}
+
+function markedCommentBody(markdownReport: string): string {
+  return `${AGENT_GATE_COMMENT_MARKER}\n${markdownReport}`;
+}
+
+function latestMarkedComment(comments: IssueComment[]): IssueComment | undefined {
+  return comments
+    .filter((comment) => comment.body?.startsWith(AGENT_GATE_COMMENT_MARKER))
+    .sort((left, right) => right.id - left.id)[0];
+}
+
+async function upsertPullRequestComment(
+  octokit: OctokitLike,
+  repository: RepositoryRef,
+  issueNumber: number,
+  markdownReport: string,
+): Promise<void> {
+  const comments = await listIssueComments(octokit, repository, issueNumber);
+  const body = markedCommentBody(markdownReport);
+  const existingComment = latestMarkedComment(comments);
+
+  if (existingComment) {
+    const updateComment = octokit.rest.issues?.updateComment;
+
+    if (!updateComment) {
+      throw new Error("GitHub Issues comment update API is unavailable.");
+    }
+
+    await updateComment({
+      owner: repository.owner,
+      repo: repository.repo,
+      comment_id: existingComment.id,
+      body,
+    });
+    return;
+  }
+
+  const createComment = octokit.rest.issues?.createComment;
+
+  if (!createComment) {
+    throw new Error("GitHub Issues comment create API is unavailable.");
+  }
+
+  await createComment({
+    owner: repository.owner,
+    repo: repository.repo,
+    issue_number: issueNumber,
+    body,
+  });
+}
+
 async function loadConfig(
   runtime: ActionRuntime,
   owner: string,
@@ -434,7 +545,11 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
   await runtime.summary.addRaw(markdownReport).write();
 
   if (comment) {
-    runtime.notice("Agent Gate PR comments are not implemented yet.");
+    try {
+      await upsertPullRequestComment(runtime.octokit, baseRepo, pr.number, markdownReport);
+    } catch (error) {
+      runtime.warning(`Agent Gate could not upsert PR comment: ${errorMessage(error)}`);
+    }
   }
 
   if (result.decision === "block" && failOnBlock) {

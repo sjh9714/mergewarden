@@ -89,14 +89,27 @@ function workflowFile(overrides: Partial<PullFile> = {}): PullFile {
   };
 }
 
+interface IssueComment {
+  id: number;
+  body?: string | null;
+}
+
 function createOctokit(options: {
   files?: PullFile[];
   contents?: Record<string, string>;
   errors?: Record<string, Error>;
+  comments?: IssueComment[];
+  commentErrors?: {
+    list?: Error;
+    create?: Error;
+    update?: Error;
+  };
 }): OctokitLike {
   const files = options.files ?? [];
   const contents = options.contents ?? {};
   const errors = options.errors ?? {};
+  const comments = options.comments ?? [];
+  const commentErrors = options.commentErrors ?? {};
 
   const listFiles = vi.fn(async () => ({ data: files }));
   const getContent = vi.fn(async ({ path, ref }: { path: string; ref: string }) => {
@@ -115,7 +128,27 @@ function createOctokit(options: {
     return contentResponse(content);
   });
 
-  const createComment = vi.fn(async () => ({ data: {} }));
+  const listComments = vi.fn(async () => {
+    if (commentErrors.list) {
+      throw commentErrors.list;
+    }
+
+    return { data: comments };
+  });
+  const createComment = vi.fn(async () => {
+    if (commentErrors.create) {
+      throw commentErrors.create;
+    }
+
+    return { data: {} };
+  });
+  const updateComment = vi.fn(async () => {
+    if (commentErrors.update) {
+      throw commentErrors.update;
+    }
+
+    return { data: {} };
+  });
 
   return {
     paginate: vi.fn(async (method, args) => {
@@ -130,7 +163,9 @@ function createOctokit(options: {
         getContent,
       },
       issues: {
+        listComments,
         createComment,
+        updateComment,
       },
     },
   };
@@ -156,10 +191,11 @@ function createHarness(
   const outputs = new Map<string, string>();
   const failures: string[] = [];
   const notices: string[] = [];
+  const warnings: string[] = [];
   const writtenFiles = new Map<string, string>();
   let summaryText = "";
 
-  const runtime: ActionRuntime = {
+  const runtime = {
     context: options.context ?? prContext(),
     octokit: options.octokit ?? createOctokit({}),
     getInput: vi.fn((name: string) => inputs[name] ?? ""),
@@ -172,6 +208,9 @@ function createHarness(
     notice: vi.fn((message: string) => {
       notices.push(message);
     }),
+    warning: vi.fn((message: string) => {
+      warnings.push(message);
+    }),
     summary: {
       addRaw: vi.fn((content: string) => {
         summaryText += content;
@@ -183,7 +222,7 @@ function createHarness(
       writtenFiles.set(path, content);
     }),
     now: () => new Date("2026-06-13T00:00:00.000Z"),
-  };
+  } satisfies ActionRuntime & { warning(message: string): void };
 
   return {
     failures,
@@ -191,6 +230,7 @@ function createHarness(
     outputs,
     runtime,
     summaryText: () => summaryText,
+    warnings,
     writtenFiles,
   };
 }
@@ -453,11 +493,90 @@ describe("runAction", () => {
     expect(harness.failures).toEqual([]);
   });
 
-  it("emits a notice for comment=true without calling comment APIs", async () => {
+  it("does not call comment APIs when comment is false", async () => {
     const octokit = createOctokit({
       files: [],
       contents: {
         [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.issues?.listComments).not.toHaveBeenCalled();
+    expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+    expect(octokit.rest.issues?.updateComment).not.toHaveBeenCalled();
+  });
+
+  it("creates a marked PR comment when comment is true and none exists", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+      comments: [{ id: 3, body: "unrelated" }],
+    });
+    const harness = createHarness({
+      octokit,
+      inputs: {
+        comment: "true",
+      },
+    });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.issues?.createComment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: "sjh9714",
+        repo: "Agent-Gate",
+        issue_number: 5,
+        body: expect.stringContaining("<!-- agent-gate-report -->\n# Agent Gate Report"),
+      }),
+    );
+    expect(octokit.rest.issues?.updateComment).not.toHaveBeenCalled();
+  });
+
+  it("updates the highest-id existing marked PR comment", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+      comments: [
+        { id: 8, body: "<!-- agent-gate-report -->\nold" },
+        { id: 3, body: "unrelated" },
+        { id: 21, body: "<!-- agent-gate-report -->\nnewer old" },
+      ],
+    });
+    const harness = createHarness({
+      octokit,
+      inputs: {
+        comment: "true",
+      },
+    });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.issues?.updateComment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        owner: "sjh9714",
+        repo: "Agent-Gate",
+        comment_id: 21,
+        body: expect.stringContaining("<!-- agent-gate-report -->\n# Agent Gate Report"),
+      }),
+    );
+    expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+  });
+
+  it("warns without failing when PR comment upsert fails", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+      commentErrors: {
+        list: new Error("Resource not accessible by integration"),
       },
     });
     const harness = createHarness({
@@ -469,8 +588,32 @@ describe("runAction", () => {
 
     await runAction(harness.runtime);
 
-    expect(harness.notices).toEqual(["Agent Gate PR comments are not implemented yet."]);
-    expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+    expect(harness.warnings).toEqual([
+      "Agent Gate could not upsert PR comment: Resource not accessible by integration",
+    ]);
+    expect(harness.failures).toEqual([]);
+  });
+
+  it("attempts comment upsert before failing block decisions", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+        [`${BASE_SHA}:.github/workflows/release.yml`]: "permissions: {}\n",
+        [`${HEAD_SHA}:.github/workflows/release.yml`]: "permissions: write-all\n",
+      },
+    });
+    const harness = createHarness({
+      octokit,
+      inputs: {
+        comment: "true",
+      },
+    });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.issues?.createComment).toHaveBeenCalled();
+    expect(harness.failures).toEqual(["Agent Gate blocked this pull request."]);
   });
 
   it("fails clearly for invalid fail-on-block input", async () => {

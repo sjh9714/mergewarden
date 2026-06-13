@@ -30,7 +30,7 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 
 - `packages/core`: pure analysis engine
 - `packages/cli`: local CLI package; depends on `@agent-gate/core` through the workspace only to run deterministic replay fixtures
-- `packages/action`: API-only GitHub Action wrapper package; depends on `@agent-gate/core` through the workspace and on the official `@actions/core` / `@actions/github` toolkit only to read pull request data through GitHub APIs, write reports, set outputs, and update the job summary without checking out or executing PR-controlled code
+- `packages/action`: API-only GitHub Action wrapper package; depends on `@agent-gate/core` through the workspace and on the official `@actions/core` / `@actions/github` toolkit only to read pull request data through GitHub APIs, write reports, set outputs, update the job summary, and optionally upsert a marked PR report comment without checking out or executing PR-controlled code
 
 ## Action Packaging
 
