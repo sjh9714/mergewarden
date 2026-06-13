@@ -16,5 +16,9 @@
     "build": "tsup src/index.ts --format esm --dts --sourcemap",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   }
 }
