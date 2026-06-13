@@ -7,6 +7,10 @@ inputs:
     description: "Path to agent-gate.yml on the base branch"
     required: false
     default: "agent-gate.yml"
+  github-token:
+    description: "GitHub token used for API-only pull request reads"
+    required: false
+    default: "${{ github.token }}"
   mode:
     description: "Override config mode: observe, warn, or block"
     required: false
@@ -34,6 +38,8 @@ outputs:
     description: "Risk score from 0 to 100"
   report-json:
     description: "Path to JSON report"
+  report-markdown:
+    description: "Path to Markdown report"
 
 runs:
   using: "node20"

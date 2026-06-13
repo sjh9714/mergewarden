@@ -1,1 +1,0 @@
-{"version":3,"sources":["../src/index.ts"],"sourcesContent":["console.error(\n  \"Agent Gate GitHub Action scaffold only: runtime behavior is not implemented yet. This package is reserved for a later task.\",\n);\n\nprocess.exitCode = 1;\n"],"mappings":";AAAA,QAAQ;AAAA,EACN;AACF;AAEA,QAAQ,WAAW;","names":[]}
