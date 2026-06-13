@@ -45,6 +45,8 @@ class CliError extends Error {
   }
 }
 
+const FILE_STATUSES = new Set<FileChange["status"]>(["added", "modified", "removed", "renamed"]);
+
 const DEFAULT_REPO: RepoContext = {
   owner: "agent-gate",
   repo: "replay-fixture",
@@ -81,6 +83,78 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string";
+}
+
+function isOptionalNullableString(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || typeof value === "string";
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return Number.isInteger(value) && typeof value === "number" && value >= 0;
+}
+
+function validateFileChange(value: unknown, index: number): FileChange {
+  if (!isRecord(value)) {
+    throw new CliError(`fixture.json files[${index}] must be an object.`);
+  }
+
+  if (!isNonEmptyString(value.path)) {
+    throw new CliError(`fixture.json files[${index}].path must be a non-empty string.`);
+  }
+
+  if (
+    typeof value.status !== "string" ||
+    !FILE_STATUSES.has(value.status as FileChange["status"])
+  ) {
+    throw new CliError(`fixture.json files[${index}].status is invalid.`);
+  }
+
+  if (!isNonNegativeInteger(value.additions)) {
+    throw new CliError(`fixture.json files[${index}].additions must be a non-negative integer.`);
+  }
+
+  if (!isNonNegativeInteger(value.deletions)) {
+    throw new CliError(`fixture.json files[${index}].deletions must be a non-negative integer.`);
+  }
+
+  if (!isOptionalString(value.previousPath)) {
+    throw new CliError(`fixture.json files[${index}].previousPath must be a string when present.`);
+  }
+
+  if (!isOptionalNullableString(value.baseContent)) {
+    throw new CliError(
+      `fixture.json files[${index}].baseContent must be a string or null when present.`,
+    );
+  }
+
+  if (!isOptionalNullableString(value.headContent)) {
+    throw new CliError(
+      `fixture.json files[${index}].headContent must be a string or null when present.`,
+    );
+  }
+
+  if (!isOptionalString(value.patch)) {
+    throw new CliError(`fixture.json files[${index}].patch must be a string when present.`);
+  }
+
+  return {
+    path: value.path,
+    previousPath: value.previousPath,
+    status: value.status as FileChange["status"],
+    additions: value.additions,
+    deletions: value.deletions,
+    patch: value.patch,
+    baseContent: value.baseContent,
+    headContent: value.headContent,
+  };
+}
+
 function parseFixtureJson(text: string, filePath: string): ReplayFixtureJson {
   let parsed: unknown;
 
@@ -98,7 +172,10 @@ function parseFixtureJson(text: string, filePath: string): ReplayFixtureJson {
     throw new CliError(`${filePath} must include a files array.`);
   }
 
-  return parsed as ReplayFixtureJson;
+  return {
+    ...(parsed as ReplayFixtureJson),
+    files: parsed.files.map((file, index) => validateFileChange(file, index)),
+  };
 }
 
 async function readRequiredText(filePath: string): Promise<string> {
@@ -109,9 +186,9 @@ async function readRequiredText(filePath: string): Promise<string> {
   }
 }
 
-async function readOptionalText(filePath: string): Promise<string> {
+async function readOptionalText(filePath: string): Promise<string | undefined> {
   if (!existsSync(filePath)) {
-    return "";
+    return undefined;
   }
 
   return readFile(filePath, "utf8");
@@ -126,7 +203,7 @@ export async function loadReplayFixture(fixtureDir: string): Promise<AnalysisInp
   const pr = {
     ...DEFAULT_PR,
     ...fixture.pr,
-    body: prBody || fixture.pr?.body || DEFAULT_PR.body,
+    body: prBody ?? fixture.pr?.body ?? DEFAULT_PR.body,
   };
 
   return {
@@ -180,7 +257,7 @@ export function renderHumanReport(result: AnalysisResult): string {
     lines.push("");
   }
 
-  return `${lines.join("\n")}`;
+  return `${lines.join("\n")}\n`;
 }
 
 function parseReplayOptions(argv: string[]): { fixtureDir: string; options: ReplayOptions } {
@@ -208,7 +285,7 @@ function parseReplayOptions(argv: string[]): { fixtureDir: string; options: Repl
 }
 
 function exitCodeForResult(result: AnalysisResult): 0 | 1 {
-  return result.decision === "pass" ? 0 : 1;
+  return result.decision === "block" ? 1 : 0;
 }
 
 export async function runCli(

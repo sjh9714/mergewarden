@@ -14,9 +14,17 @@ This repository is in early development. The core package now includes determini
 
 ## Replay Demo
 
+Human-readable output for demos:
+
 ```bash
 pnpm --filter agent-gate build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
+```
+
+Machine-readable JSON report:
+
+```bash
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation --format json
 ```
 
 Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.

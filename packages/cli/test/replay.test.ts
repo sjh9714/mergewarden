@@ -48,6 +48,20 @@ async function createTempFixture(): Promise<string> {
   return dir;
 }
 
+async function createFixture(
+  fixture: Record<string, unknown>,
+  options: { config?: string; prBody?: string } = {},
+): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), "agent-gate-replay-custom-"));
+  await writeFile(join(dir, "agent-gate.yml"), options.config ?? "version: 1\nmode: block\n");
+  if (options.prBody !== undefined) {
+    await writeFile(join(dir, "pr-body.md"), options.prBody);
+  }
+  await writeFile(join(dir, "fixture.json"), JSON.stringify(fixture, null, 2));
+
+  return dir;
+}
+
 describe("CLI replay", () => {
   it("loads replay fixtures into analysis input", async () => {
     const input = await loadReplayFixture(await createTempFixture());
@@ -79,6 +93,7 @@ describe("CLI replay", () => {
     expect(output).toContain("contents permission increased from read to write.");
     expect(output).toContain("ERROR workflow/dangerous-pattern");
     expect(output).toContain("Path: .github/workflows/release.yml");
+    expect(output.endsWith("\n")).toBe(true);
   });
 
   it("prints JSON replay output that parses as an analysis result", async () => {
@@ -96,6 +111,71 @@ describe("CLI replay", () => {
     expect(result.findings.map((finding: { ruleId: string }) => finding.ruleId)).toContain(
       "workflow/permission-escalation",
     );
+  });
+
+  it("returns exit code 0 for warn decisions", async () => {
+    const fixtureDir = await createFixture(
+      {
+        files: [
+          {
+            path: "src/payments/webhook.ts",
+            status: "modified",
+            additions: 1,
+            deletions: 0,
+          },
+        ],
+      },
+      {
+        config:
+          "version: 1\nmode: block\nhigh_risk_paths:\n  payments:\n    paths:\n      - src/payments/**\n    severity: warn\n",
+      },
+    );
+
+    const exitCode = await runCli(["replay", fixtureDir], {
+      stdout: () => undefined,
+      stderr: () => undefined,
+    });
+
+    expect(exitCode).toBe(0);
+  });
+
+  it("preserves pr-body.md content over fixture PR body", async () => {
+    const input = await loadReplayFixture(
+      await createFixture(
+        {
+          pr: { body: "fixture body" },
+          files: [],
+        },
+        { prBody: "file body" },
+      ),
+    );
+
+    expect(input.pr.body).toBe("file body");
+  });
+
+  it("preserves empty pr-body.md over fixture PR body", async () => {
+    const input = await loadReplayFixture(
+      await createFixture(
+        {
+          pr: { body: "fixture body" },
+          files: [],
+        },
+        { prBody: "" },
+      ),
+    );
+
+    expect(input.pr.body).toBe("");
+  });
+
+  it("falls back to fixture PR body when pr-body.md is missing", async () => {
+    const input = await loadReplayFixture(
+      await createFixture({
+        pr: { body: "fixture body" },
+        files: [],
+      }),
+    );
+
+    expect(input.pr.body).toBe("fixture body");
   });
 
   it("returns deterministic errors for missing fixture directories", async () => {
@@ -127,5 +207,29 @@ describe("CLI replay", () => {
     expect(exitCode).toBe(2);
     expect(stderr.join("")).toContain("Agent Gate CLI error:");
     expect(stderr.join("")).not.toContain("SyntaxError");
+  });
+
+  it.each([
+    ["missing file.path", { status: "modified", additions: 1, deletions: 0 }],
+    ["invalid file.status", { path: "src/app.ts", status: "changed", additions: 1, deletions: 0 }],
+    [
+      "invalid file.additions",
+      { path: "src/app.ts", status: "modified", additions: -1, deletions: 0 },
+    ],
+    [
+      "invalid file.deletions",
+      { path: "src/app.ts", status: "modified", additions: 1, deletions: 1.5 },
+    ],
+  ])("returns deterministic errors for %s", async (_name, file) => {
+    const fixtureDir = await createFixture({ files: [file] });
+    const stderr: string[] = [];
+    const exitCode = await runCli(["replay", fixtureDir], {
+      stdout: () => undefined,
+      stderr: (text) => stderr.push(text),
+    });
+
+    expect(exitCode).toBe(2);
+    expect(stderr.join("")).toContain("Agent Gate CLI error:");
+    expect(stderr.join("")).not.toContain("TypeError");
   });
 });
