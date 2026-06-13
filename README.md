@@ -2,15 +2,52 @@
 
 No AI PR gets merged without proof.
 
-Agent Gate is a deterministic CI firewall for AI-generated pull requests. It is designed to block agent-authored changes when they exceed their contract, touch risky files, change agent instructions, escalate workflow permissions, or claim tests without evidence.
+Agent Gate is a deterministic CI firewall for AI-generated pull requests. It blocks agent-authored changes when they exceed their contract, touch risky files, change agent instructions, escalate workflow permissions, or claim tests without evidence.
 
-This repository is in early development. The core package now includes deterministic config parsing, PR-body contract parsing, path/risk/control-plane/test-evidence rules, and GitHub Actions workflow safety rules. The CLI can replay local fixtures so the engine can be demonstrated without calling GitHub APIs or executing PR-controlled code.
+It runs as a GitHub Action without checking out PR code, and as a local replay CLI for deterministic demos. Runtime analysis does not call LLMs, execute repository scripts, or load policy from an untrusted PR head.
 
-## What Exists
+Agent Gate is pre-release. Use `@main` while the project is stabilizing; after the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
 
-- `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
-- `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
-- `packages/action`: development Node 20 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer.
+## Why
+
+AI agents can open pull requests. Tests do not always catch:
+
+- out-of-scope edits
+- workflow permission escalation
+- agent control-plane drift
+- missing test evidence
+- MCP config drift
+
+## Replay Demo
+
+Human-readable output for demos:
+
+```bash
+pnpm --filter agent-gate build
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
+```
+
+Machine-readable JSON report:
+
+```bash
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation --format json
+```
+
+Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.
+
+Additional unsafe-pr-zoo demos:
+
+- `agent-control-plane-drift`: blocks `AGENTS.md` changes because they can change future agent behavior.
+- `out-of-scope-agent-edit`: blocks a payment webhook edit outside the PR contract's `allowed_paths`.
+- `missing-test-evidence`: blocks an auth logic change without matching auth test changes.
+- `mcp-config-drift`: blocks `.mcp.json` changes because MCP config can change which tools an agent can call.
+
+```bash
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/agent-control-plane-drift
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-evidence
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
+```
 
 ## Install
 
@@ -44,8 +81,6 @@ jobs:
           mode: warn
           fail-on-block: false
 ```
-
-Use `@main` while Agent Gate is pre-release. After the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
 
 Agent Gate loads policy from the PR base branch and does not execute PR branch code. Start with `mode: warn` and `fail-on-block: false`, tune the findings, then move to `mode: block` when ready.
 
@@ -92,36 +127,11 @@ high_risk_paths:
 
 Teams can add auth, payments, infra, and agent-control-plane paths as their policy matures.
 
-## Replay Demo
+## Packages
 
-Human-readable output for demos:
-
-```bash
-pnpm --filter agent-gate build
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
-```
-
-Machine-readable JSON report:
-
-```bash
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation --format json
-```
-
-Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.
-
-Additional unsafe-pr-zoo demos:
-
-- `agent-control-plane-drift`: blocks `AGENTS.md` changes because they can change future agent behavior.
-- `out-of-scope-agent-edit`: blocks a payment webhook edit outside the PR contract's `allowed_paths`.
-- `missing-test-evidence`: blocks an auth logic change without matching auth test changes.
-- `mcp-config-drift`: blocks `.mcp.json` changes because MCP config can change which tools an agent can call.
-
-```bash
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/agent-control-plane-drift
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-evidence
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
-```
+- `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
+- `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
+- `packages/action`: Node 20 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer.
 
 ## Action Package
 
@@ -130,8 +140,6 @@ External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. Th
 ## Self-Dogfooding
 
 Agent Gate runs against this repository's pull requests through `.github/workflows/agent-gate.yml`. The workflow uses `sjh9714/Agent-Gate/packages/action@main`, so pull requests do not execute Action code from their own branches while the action itself is under development. It starts in non-blocking `warn` mode while the project tunes early policy.
-
-PR #8 switched the packaged Action runtime to CommonJS so the main-branch Action can load on GitHub runners.
 
 ## Commands
 
