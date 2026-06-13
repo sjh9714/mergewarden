@@ -39,6 +39,8 @@ PR comments are not implemented yet. When `comment: true` is set, the action emi
 
 Agent Gate runs against this repository's pull requests through `.github/workflows/agent-gate.yml`. The workflow uses `sjh9714/Agent-Gate/packages/action@main`, so pull requests do not execute Action code from their own branches. It starts in non-blocking `warn` mode while the project tunes early policy.
 
+PR #8 switched the packaged Action runtime to CommonJS so the main-branch Action can load on GitHub runners.
+
 ## Commands
 
 ```bash
