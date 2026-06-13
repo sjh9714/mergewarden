@@ -10,7 +10,7 @@ This repository is in early development. The core package now includes determini
 
 - `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
 - `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
-- `packages/action`: reserved Node 20 GitHub Action package with placeholder metadata.
+- `packages/action`: development Node 20 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer. It remains package-local for now; a root `action.yml` or marketplace release layout is intentionally deferred.
 
 ## Replay Demo
 
@@ -28,6 +28,12 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission
 ```
 
 Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.
+
+## Action Package
+
+The GitHub Action wrapper currently lives at `packages/action/action.yml` for development. It uses REST APIs only: it loads `agent-gate.yml` from the PR base ref, reads changed-file metadata and file contents from the API, runs `@agent-gate/core`, writes JSON/Markdown reports, sets action outputs, and writes the job summary. It does not checkout the pull request or execute repository scripts.
+
+PR comments are not implemented yet. When `comment: true` is set, the action emits a notice instead of calling comment APIs.
 
 ## Commands
 

@@ -7,8 +7,14 @@
     "action.yml",
     "dist"
   ],
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1",
+    "@agent-gate/core": "workspace:*"
+  },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --platform node --target node20 --dts --sourcemap",
+    "build": "tsup",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   }
 }
