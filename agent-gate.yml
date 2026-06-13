@@ -31,6 +31,7 @@ high_risk_paths:
     severity: error
   action:
     paths:
+      - action.yml
       - packages/action/**
     require_tests:
       - packages/action/test/**

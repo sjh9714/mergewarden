@@ -32,6 +32,12 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 - `packages/cli`: local CLI package; depends on `@agent-gate/core` through the workspace only to run deterministic replay fixtures
 - `packages/action`: API-only GitHub Action wrapper package; depends on `@agent-gate/core` through the workspace and on the official `@actions/core` / `@actions/github` toolkit only to read pull request data through GitHub APIs, write reports, set outputs, and update the job summary without checking out or executing PR-controlled code
 
+## Action Packaging
+
+- Root `action.yml` and `packages/action/action.yml` must stay in sync for inputs, outputs, branding, and Node runtime.
+- `packages/action/dist/index.cjs` must remain committed because both action entrypoints execute it.
+- The self-dogfooding workflow must not use `actions/checkout`; it should continue to run the main-branch package-local action instead of PR branch Action code.
+
 ## Testing Expectations
 
 For every new rule:

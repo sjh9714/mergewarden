@@ -10,7 +10,75 @@ This repository is in early development. The core package now includes determini
 
 - `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
 - `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
-- `packages/action`: development Node 20 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer. It remains package-local for now; a root `action.yml` or marketplace release layout is intentionally deferred.
+- `packages/action`: development Node 20 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer.
+
+## Install
+
+Add Agent Gate to a repository with a pull request workflow. No checkout step is required.
+
+```yaml
+name: Agent Gate
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  agent-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sjh9714/Agent-Gate@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: warn
+          fail-on-block: false
+```
+
+Use `@main` while Agent Gate is pre-release. After the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
+
+Agent Gate loads policy from the PR base branch and does not execute PR branch code. Start with `mode: warn` and `fail-on-block: false`, tune the findings, then move to `mode: block` when ready.
+
+Create `agent-gate.yml` in the repository root:
+
+```yaml
+version: 1
+mode: warn
+
+contract:
+  required_for:
+    - agent
+  allow_missing_in_observe_mode: true
+
+agent_detection:
+  authors:
+    - github-copilot[bot]
+  labels:
+    - ai
+    - agent
+    - codex
+  branch_patterns:
+    - "codex/**"
+    - "ai/**"
+
+high_risk_paths:
+  workflows:
+    paths:
+      - ".github/workflows/**"
+    severity: error
+```
+
+Teams can add auth, payments, infra, and agent-control-plane paths as their policy matures.
 
 ## Replay Demo
 
@@ -31,13 +99,13 @@ Expected result: Agent Gate reports a blocked PR with `workflow/permission-escal
 
 ## Action Package
 
-The GitHub Action wrapper currently lives at `packages/action/action.yml` for development. It uses REST APIs only: it loads `agent-gate.yml` from the PR base ref, reads changed-file metadata and file contents from the API, runs `@agent-gate/core`, writes JSON/Markdown reports, sets action outputs, and writes the job summary. It does not checkout the pull request or execute repository scripts.
+External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, and write the job summary. They do not checkout the pull request or execute repository scripts.
 
 PR comments are not implemented yet. When `comment: true` is set, the action emits a notice instead of calling comment APIs.
 
 ## Self-Dogfooding
 
-Agent Gate runs against this repository's pull requests through `.github/workflows/agent-gate.yml`. The workflow uses `sjh9714/Agent-Gate/packages/action@main`, so pull requests do not execute Action code from their own branches. It starts in non-blocking `warn` mode while the project tunes early policy.
+Agent Gate runs against this repository's pull requests through `.github/workflows/agent-gate.yml`. The workflow uses `sjh9714/Agent-Gate/packages/action@main`, so pull requests do not execute Action code from their own branches while the action itself is under development. It starts in non-blocking `warn` mode while the project tunes early policy.
 
 PR #8 switched the packaged Action runtime to CommonJS so the main-branch Action can load on GitHub runners.
 

@@ -1,0 +1,50 @@
+name: "Agent Gate"
+description: "Deterministic CI firewall for AI-generated pull requests"
+author: "Agent Gate contributors"
+
+inputs:
+  config:
+    description: "Path to agent-gate.yml on the base branch"
+    required: false
+    default: "agent-gate.yml"
+  github-token:
+    description: "GitHub token used for API-only pull request reads"
+    required: false
+    default: "${{ github.token }}"
+  mode:
+    description: "Override config mode: observe, warn, or block"
+    required: false
+  comment:
+    description: "Post or update a PR comment with the report"
+    required: false
+    default: "false"
+  fail-on-block:
+    description: "Exit with code 1 when decision is block"
+    required: false
+    default: "true"
+  report-json:
+    description: "Path to write JSON report"
+    required: false
+    default: "agent-gate-report.json"
+  report-markdown:
+    description: "Path to write Markdown report"
+    required: false
+    default: "agent-gate-report.md"
+
+outputs:
+  decision:
+    description: "pass, warn, or block"
+  risk-score:
+    description: "Risk score from 0 to 100"
+  report-json:
+    description: "Path to JSON report"
+  report-markdown:
+    description: "Path to Markdown report"
+
+runs:
+  using: "node20"
+  main: "packages/action/dist/index.cjs"
+
+branding:
+  icon: "shield"
+  color: "red"
