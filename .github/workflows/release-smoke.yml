@@ -1,0 +1,23 @@
+name: Release Smoke
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  release-smoke:
+    name: Release Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sjh9714/Agent-Gate@v0.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: warn
+          fail-on-block: false
