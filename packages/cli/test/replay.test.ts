@@ -132,9 +132,13 @@ describe("CLI replay", () => {
   it("documents the headline replay output in the README", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
+    expect(readme).toContain("@v0.1.0");
+    expect(readme).toContain("No AI PR gets merged without proof");
+    expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Agent Gate: BLOCKED");
     expect(readme).toContain("workflow/permission-escalation");
     expect(readme).toContain("workflow/dangerous-pattern");
+    expect(readme).toContain("agent-control-plane/drift");
     expect(readme).toContain(".github/workflows/release.yml");
   });
 

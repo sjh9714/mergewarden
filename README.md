@@ -1,10 +1,15 @@
 # Agent Gate
 
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.1.0)
+[![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
+[![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
+[![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
+
 No AI PR gets merged without proof.
 
-Agent Gate is a deterministic CI firewall for AI-generated pull requests. It blocks agent-authored changes when they exceed their contract, touch risky files, change agent instructions, escalate workflow permissions, or claim tests without evidence.
+Agent Gate is a deterministic CI firewall for AI-generated pull requests. It checks PR contracts, risky paths, agent instruction drift, workflow permissions, and test evidence before merge.
 
-It runs as a GitHub Action without checking out PR code, and as a local replay CLI for deterministic demos. Runtime analysis does not call LLMs, execute repository scripts, or load policy from an untrusted PR head.
+The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
 
 ## Status
 
@@ -15,6 +20,14 @@ For released installs, prefer `@v0.1.0` or a pinned commit SHA. `@main` tracks o
 See `docs/v0.1.0-release-notes.md` and `docs/release-verification-v0.1.0.md` for release notes and verification.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
+
+## What It Catches
+
+- Out-of-contract edits: agent PRs changing files outside their declared scope.
+- Workflow permission escalation: Actions workflows gaining broader write access.
+- Agent control-plane drift (`agent-control-plane/drift`): instruction or tool config changes that affect future agents.
+- Missing test evidence: high-risk source changes without matching test file changes.
+- MCP config drift: `.mcp.json` changes that alter which tools agents can call.
 
 ## Why
 
