@@ -40,6 +40,13 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 - `.github/workflows/ci.yml` is ordinary repository CI and may checkout this repo and run package scripts; `.github/workflows/agent-gate.yml` must remain API-only and checkout-free.
 - CI uses Node 22 for pnpm, but the committed Action bundle should be smoke-tested on Node 20 because `action.yml` declares a Node 20 runtime.
 
+## Release Guidance
+
+- Update `CHANGELOG.md` for user-visible changes.
+- Keep `docs/release-checklist.md` current as packaging and release steps evolve.
+- Do not create tags or GitHub releases from Codex unless explicitly requested.
+- Do not publish packages unless explicitly requested.
+
 ## Testing Expectations
 
 For every new rule:

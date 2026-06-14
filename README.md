@@ -6,7 +6,11 @@ Agent Gate is a deterministic CI firewall for AI-generated pull requests. It blo
 
 It runs as a GitHub Action without checking out PR code, and as a local replay CLI for deterministic demos. Runtime analysis does not call LLMs, execute repository scripts, or load policy from an untrusted PR head.
 
-Agent Gate is pre-release. Use `@main` while the project is stabilizing; after the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
+## Status
+
+Agent Gate is pre-release. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may still change before `v0.1.0`.
+
+Use `@main` while the project is stabilizing; after the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
 
 ## Why
 
