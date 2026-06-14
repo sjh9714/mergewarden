@@ -15,8 +15,10 @@ GitHub prerelease.
 
 ## Marketplace
 
-- GitHub Marketplace listing: published and loaded successfully after `v0.1.2`
+- GitHub Marketplace listing: published and still accessible after `v0.1.2`
   publication
+- Marketplace listed release: may still show `v0.1.1`
+- Marketplace settings were not changed for `v0.1.2`
 - Listing URL: https://github.com/marketplace/actions/agent-gate-for-ai-prs
 - Action display name: `Agent Gate for AI PRs`
 - Description: `Deterministic CI firewall for AI-generated pull requests`
@@ -31,7 +33,8 @@ GitHub prerelease.
   - `pnpm format:check`
   - `git diff --exit-code -- packages/action/dist/index.cjs`
 - GitHub release published as a prerelease.
-- GitHub Marketplace listing loaded successfully after release publication.
+- GitHub Marketplace listing loaded successfully after `v0.1.2` publication.
+- Marketplace settings were not changed for `v0.1.2`.
 - Committed Action bundle remained unchanged after build verification.
 
 ## Not Performed
