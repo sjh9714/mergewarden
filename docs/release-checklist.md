@@ -53,6 +53,7 @@ explicitly asks for that release operation.
 
 - [ ] Choose the release ref, such as `v0.1.0`.
 - [ ] Confirm the release commit is on `main`.
+- [ ] Review `docs/v0.1.0-release-notes.md` before tagging.
 - [ ] Create a draft release note from `CHANGELOG.md`.
 - [ ] Do not push the tag until final verification is complete.
 
