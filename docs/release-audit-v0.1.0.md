@@ -8,7 +8,8 @@ document.
 ## Release Target
 
 - Target: `v0.1.0`
-- Current `main` commit: `06e2a4e4a193d6e4537d1bc64fa157e8a51f603c`
+- Audited `main` baseline: `06e2a4e4a193d6e4537d1bc64fa157e8a51f603c`
+- Final release tag commit: record immediately before tagging.
 - Release state: not released.
 
 ## Checks Run
@@ -19,12 +20,9 @@ document.
 - [x] `pnpm build`
 - [x] `pnpm format:check`
 - [x] `git diff --exit-code -- packages/action/dist/index.cjs`
-- [x] GitHub Agent Gate check for release-audit PR #21 passed on first audit
-      commit `82d68ac`.
-- [x] GitHub CI check for release-audit PR #21 passed on first audit commit
-      `82d68ac`.
-- [x] GitGuardian check for release-audit PR #21 passed on first audit commit
-      `82d68ac`.
+- [x] GitHub Agent Gate check passed for release-audit PR #21 before merge.
+- [x] GitHub CI check passed for release-audit PR #21 before merge.
+- [x] GitGuardian check passed for release-audit PR #21 before merge.
 
 ## Unsafe PR Zoo Replay
 
@@ -65,7 +63,7 @@ document.
 
 - Recommendation: Go for `v0.1.0` pre-release tagging after repository
   governance settings are reviewed.
-- Reviewer: Codex
+- Reviewer: `sjh9714` / Codex-assisted
 - Date: 2026-06-14
 - Notes: This audit records pre-release readiness evidence only. It does not
   create a tag, GitHub release, package publish, or repository setting.
