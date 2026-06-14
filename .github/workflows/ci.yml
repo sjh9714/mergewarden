@@ -78,19 +78,20 @@ jobs:
           exit_code=$?
           set -e
 
-          cat /tmp/agent-gate-action-smoke.log
+          echo "Sanitized smoke log:"
+          sed 's/::/[colon-colon]/g' /tmp/agent-gate-action-smoke.log
 
           if [ "$exit_code" -eq 0 ]; then
-            echo "::error::Action bundle unexpectedly succeeded without github-token input."
+            echo "ERROR: Action bundle unexpectedly succeeded without github-token input."
             exit 1
           fi
 
           if grep -q "Dynamic require" /tmp/agent-gate-action-smoke.log; then
-            echo "::error::Action bundle hit a dynamic require runtime error."
+            echo "ERROR: Action bundle hit a dynamic require runtime error."
             exit 1
           fi
 
           if ! grep -q "Agent Gate requires the github-token input." /tmp/agent-gate-action-smoke.log; then
-            echo "::error::Action bundle did not reach the expected token validation path."
+            echo "ERROR: Action bundle did not reach the expected token validation path."
             exit 1
           fi
