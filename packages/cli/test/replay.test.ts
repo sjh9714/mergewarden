@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -127,6 +127,15 @@ describe("CLI replay", () => {
     expect(output).toContain("ERROR workflow/dangerous-pattern");
     expect(output).toContain("Path: .github/workflows/release.yml");
     expect(output.endsWith("\n")).toBe(true);
+  });
+
+  it("documents the headline replay output in the README", async () => {
+    const readme = await readFile(join(repoRoot, "README.md"), "utf8");
+
+    expect(readme).toContain("Agent Gate: BLOCKED");
+    expect(readme).toContain("workflow/permission-escalation");
+    expect(readme).toContain("workflow/dangerous-pattern");
+    expect(readme).toContain(".github/workflows/release.yml");
   });
 
   it("prints JSON replay output that parses as an analysis result", async () => {
