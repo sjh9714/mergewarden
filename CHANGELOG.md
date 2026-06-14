@@ -10,6 +10,19 @@ pre-release, so APIs and rule names may change between versions.
 
 No changes yet.
 
+## v0.1.2 - 2026-06-14
+
+### Changed
+
+- Markdown reports now lead with human-facing labels: `PASSED`,
+  `NEEDS HUMAN DECISION`, and `BLOCKED`.
+- Markdown reports now show `Why`, `Recommended Next Step`, and
+  `Policy Status` before detailed findings.
+- Finding-derived Markdown values are normalized and truncated for safer job
+  summaries and PR comments.
+- JSON decisions remain unchanged as `pass`, `warn`, and `block`.
+- Runtime rule behavior is unchanged.
+
 ## v0.1.1 - 2026-06-14
 
 ### Changed
