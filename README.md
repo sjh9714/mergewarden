@@ -31,6 +31,20 @@ pnpm --filter agent-gate build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
 ```
 
+Example output:
+
+```text
+Agent Gate: BLOCKED
+
+ERROR workflow/permission-escalation
+contents permission increased from read to write.
+Path: .github/workflows/release.yml
+
+ERROR workflow/dangerous-pattern
+.github/workflows/release.yml contains a dangerous GitHub Actions workflow pattern.
+Path: .github/workflows/release.yml
+```
+
 Machine-readable JSON report:
 
 ```bash
