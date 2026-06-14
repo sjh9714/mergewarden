@@ -19,6 +19,7 @@ explicitly asks for that release operation.
 - [ ] Confirm the Agent Gate check succeeds.
 - [ ] Confirm the CI check succeeds.
 - [ ] Confirm GitGuardian succeeds.
+- [ ] Confirm repository governance settings are reviewed before release.
 - [ ] Confirm Agent Gate findings, if any, are expected and non-blocking for the
       release-prep PR.
 

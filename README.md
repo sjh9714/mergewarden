@@ -12,6 +12,8 @@ Agent Gate is pre-release. The core analyzer, CLI replay, root GitHub Action, PR
 
 Use `@main` while the project is stabilizing; after the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
 
+See `docs/repository-governance.md` for recommended branch protection and release safety settings.
+
 ## Why
 
 AI agents can open pull requests. Tests do not always catch:
