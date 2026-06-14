@@ -27,11 +27,6 @@ pre-release, so entries remain under `Unreleased` until the first version tag.
 - Self-dogfooding Agent Gate workflow.
 - Repository CI workflow.
 
-### Changed
-
-- Rename the Action metadata display name to `Agent Gate for AI PRs` for
-  GitHub Marketplace uniqueness.
-
 ### Security
 
 - The Action loads policy from the PR base branch.
@@ -49,3 +44,10 @@ pre-release, so entries remain under `Unreleased` until the first version tag.
 - GitHub Actions job-level permission escalation comparison is limited.
 - Test evidence checks only detect matching test file changes; they do not prove
   semantic coverage.
+
+## v0.1.1 - 2026-06-14
+
+### Changed
+
+- Rename the Action metadata display name to `Agent Gate for AI PRs` for
+  GitHub Marketplace uniqueness.
