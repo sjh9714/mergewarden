@@ -25,6 +25,8 @@ const importantOutputs = ["decision", "risk-score", "report-json", "report-markd
 
 describe("action metadata", () => {
   it("exposes matching root and package-local action metadata", () => {
+    expect(rootAction).toContain('name: "Agent Gate for AI PRs"');
+    expect(packageAction).toContain('name: "Agent Gate for AI PRs"');
     expect(rootAction).toContain('main: "packages/action/dist/index.cjs"');
     expect(packageAction).toContain('main: "dist/index.cjs"');
 

@@ -1,4 +1,4 @@
-name: "Agent Gate"
+name: "Agent Gate for AI PRs"
 description: "Deterministic CI firewall for AI-generated pull requests"
 author: "Agent Gate contributors"
 
