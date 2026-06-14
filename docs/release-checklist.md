@@ -60,6 +60,7 @@ explicitly asks for that release operation.
 
 ## Post-Release Verification
 
+- [ ] Review `docs/release-verification-v0.1.0.md`.
 - [ ] Create a test PR using `sjh9714/Agent-Gate@<tag>` after tagging.
 - [ ] Confirm the root Action loads on GitHub runners.
 - [ ] Confirm the job summary and outputs are written.
