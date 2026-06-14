@@ -135,6 +135,12 @@ describe("CLI replay", () => {
     expect(readme).toContain("@v0.1.0");
     expect(readme).toContain("No AI PR gets merged without proof");
     expect(readme.toLowerCase()).toContain("no checkout");
+    expect(readme).toContain("10-Minute Observe Path");
+    expect(readme).toContain("Start in warn mode");
+    expect(readme).toContain("allowed_paths");
+    expect(readme).toContain("safe to observe");
+    expect(readme).toContain("needs human decision");
+    expect(readme).toContain("must block");
     expect(readme).toContain("Agent Gate: BLOCKED");
     expect(readme).toContain("workflow/permission-escalation");
     expect(readme).toContain("workflow/dangerous-pattern");

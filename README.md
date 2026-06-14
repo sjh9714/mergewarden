@@ -88,6 +88,82 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-eviden
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
 ```
 
+## 10-Minute Observe Path
+
+Start in warn mode, learn your repo's risk profile, then turn proven policies into merge gates.
+
+Add a checkout-free pull request workflow:
+
+```yaml
+name: Agent Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  agent-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sjh9714/Agent-Gate@v0.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: warn
+          fail-on-block: false
+```
+
+Start with a small `agent-gate.yml`:
+
+```yaml
+version: 1
+mode: warn
+
+contract:
+  required_for:
+    - agent
+  allow_missing_in_observe_mode: true
+
+agent_detection:
+  labels:
+    - ai
+    - agent
+    - codex
+  branch_patterns:
+    - "codex/**"
+    - "ai/**"
+
+high_risk_paths:
+  workflows:
+    paths:
+      - ".github/workflows/**"
+    severity: error
+```
+
+For an AI-generated PR, add a small contract to the PR body:
+
+```md
+<!-- agent-gate-contract
+version: 1
+agent: codex
+task: update auth session handling
+allowed_paths:
+  - src/auth/**
+  - tests/auth/**
+required_evidence:
+  - matching auth tests changed
+-->
+```
+
+Read the first runs as observation, not proof of semantic correctness:
+
+- `PASSED`: safe to observe
+- `WARN`: needs human decision
+- `BLOCKED`: must block once policy is enforced
+
 ## Install
 
 Add Agent Gate to a repository with a pull request workflow. No checkout step is required.
