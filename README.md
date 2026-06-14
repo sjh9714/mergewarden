@@ -21,6 +21,8 @@ See `docs/v0.1.0-release-notes.md` and `docs/release-verification-v0.1.0.md` for
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
 
+See `docs/launch-announcement-draft.md` for a reusable launch announcement draft.
+
 ## What It Catches
 
 - Out-of-contract edits: agent PRs changing files outside their declared scope.
