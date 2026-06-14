@@ -16,6 +16,21 @@ function humanDecisionLabel(decision: AnalysisResult["decision"]): string {
   return "PASSED";
 }
 
+function safeMarkdownValue(value: string, maxLength = 500): string {
+  const normalized = value
+    .replace(/\r?\n/g, "\\n")
+    .replace(/<!--/g, "&lt;!--")
+    .replace(/-->/g, "--&gt;")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 1)}…`;
+}
+
 const severityRank: Record<Finding["severity"], number> = {
   info: 0,
   warn: 1,
@@ -32,8 +47,12 @@ function highestSignalFinding(findings: Finding[]): Finding | undefined {
   }, undefined);
 }
 
+function highestActionableFinding(findings: Finding[]): Finding | undefined {
+  return highestSignalFinding(findings.filter((finding) => finding.severity !== "info"));
+}
+
 function whyLines(result: AnalysisResult): string[] {
-  const finding = highestSignalFinding(result.findings);
+  const finding = highestActionableFinding(result.findings);
 
   if (!finding) {
     return ["No warning or blocking findings were detected."];
@@ -42,14 +61,14 @@ function whyLines(result: AnalysisResult): string[] {
   const lines = [finding.message];
 
   if (finding.path) {
-    lines.push("", `Path: \`${finding.path}\``);
+    lines.push("", `Path: \`${safeMarkdownValue(finding.path)}\``);
   }
 
   return lines;
 }
 
 function recommendedNextStep(result: AnalysisResult): string {
-  const finding = highestSignalFinding(result.findings);
+  const finding = highestActionableFinding(result.findings);
 
   if (!finding) {
     return "No action needed beyond normal review.";
@@ -148,14 +167,16 @@ export function renderMarkdownReport(result: AnalysisResult): string {
       );
 
       if (finding.path) {
-        lines.push(`Path: \`${finding.path}\``, "");
+        lines.push(`Path: \`${safeMarkdownValue(finding.path)}\``, "");
       }
 
       if (finding.evidence.length > 0) {
         lines.push("Evidence:");
 
         for (const evidence of finding.evidence) {
-          lines.push(`- ${evidence.label}: ${evidence.value}`);
+          lines.push(
+            `- ${safeMarkdownValue(evidence.label)}: ${safeMarkdownValue(evidence.value)}`,
+          );
         }
 
         lines.push("");
@@ -165,7 +186,7 @@ export function renderMarkdownReport(result: AnalysisResult): string {
         lines.push("Remediation:");
 
         for (const remediation of finding.remediation) {
-          lines.push(`- ${remediation}`);
+          lines.push(`- ${safeMarkdownValue(remediation)}`);
         }
 
         lines.push("");

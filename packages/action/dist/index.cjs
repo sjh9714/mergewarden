@@ -48460,6 +48460,13 @@ function humanDecisionLabel(decision) {
   }
   return "PASSED";
 }
+function safeMarkdownValue(value, maxLength = 500) {
+  const normalized = value.replace(/\r?\n/g, "\\n").replace(/<!--/g, "&lt;!--").replace(/-->/g, "--&gt;").replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return `${normalized.slice(0, maxLength - 1)}\u2026`;
+}
 var severityRank = {
   info: 0,
   warn: 1,
@@ -48473,19 +48480,22 @@ function highestSignalFinding(findings) {
     return highest;
   }, void 0);
 }
+function highestActionableFinding(findings) {
+  return highestSignalFinding(findings.filter((finding) => finding.severity !== "info"));
+}
 function whyLines(result) {
-  const finding = highestSignalFinding(result.findings);
+  const finding = highestActionableFinding(result.findings);
   if (!finding) {
     return ["No warning or blocking findings were detected."];
   }
   const lines = [finding.message];
   if (finding.path) {
-    lines.push("", `Path: \`${finding.path}\``);
+    lines.push("", `Path: \`${safeMarkdownValue(finding.path)}\``);
   }
   return lines;
 }
 function recommendedNextStep(result) {
-  const finding = highestSignalFinding(result.findings);
+  const finding = highestActionableFinding(result.findings);
   if (!finding) {
     return "No action needed beyond normal review.";
   }
@@ -48565,19 +48575,21 @@ function renderMarkdownReport(result) {
         ""
       );
       if (finding.path) {
-        lines.push(`Path: \`${finding.path}\``, "");
+        lines.push(`Path: \`${safeMarkdownValue(finding.path)}\``, "");
       }
       if (finding.evidence.length > 0) {
         lines.push("Evidence:");
         for (const evidence of finding.evidence) {
-          lines.push(`- ${evidence.label}: ${evidence.value}`);
+          lines.push(
+            `- ${safeMarkdownValue(evidence.label)}: ${safeMarkdownValue(evidence.value)}`
+          );
         }
         lines.push("");
       }
       if (finding.remediation.length > 0) {
         lines.push("Remediation:");
         for (const remediation of finding.remediation) {
-          lines.push(`- ${remediation}`);
+          lines.push(`- ${safeMarkdownValue(remediation)}`);
         }
         lines.push("");
       }

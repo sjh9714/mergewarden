@@ -164,7 +164,7 @@ Read the first runs as observation, not proof of semantic correctness:
 - `WARN`: needs human decision
 - `BLOCKED`: must block once policy is enforced
 
-The Markdown report leads with the human decision before the rule details:
+The Markdown report leads with the human decision before the rule details. Example shape:
 
 ```text
 Agent Gate: NEEDS HUMAN DECISION
