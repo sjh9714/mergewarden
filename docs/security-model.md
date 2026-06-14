@@ -7,7 +7,8 @@ executing PR-controlled code.
 ## Trusted Inputs
 
 - Base branch `agent-gate.yml`.
-- Base branch Action code when referenced by `@main` or a release tag.
+- Action code from the workflow-pinned ref, such as `@main`, a release tag, or
+  a pinned commit SHA.
 - GitHub pull request metadata from REST APIs.
 - GitHub changed-file metadata from REST APIs.
 
@@ -56,6 +57,7 @@ failures are reported as warnings and do not fail the Action.
 
 - CODEOWNERS and reviewer evidence are not implemented yet.
 - Package and dependency drift rules are not implemented yet.
+- GitHub Actions job-level permission escalation comparison is limited.
 - Test evidence checks only detect matching test file changes; they do not prove
   semantic coverage.
 - Comment upsert depends on GitHub token permissions.
