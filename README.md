@@ -23,6 +23,8 @@ See `docs/repository-governance.md` for recommended branch protection and releas
 
 See `docs/launch-announcement-draft.md` for a reusable launch announcement draft.
 
+Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
+
 ## What It Catches
 
 - Out-of-contract edits: agent PRs changing files outside their declared scope.
