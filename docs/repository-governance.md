@@ -22,6 +22,9 @@ Recommended required checks:
 - `CI`
 - `Agent Gate`
 
+Before the `v0.1.0` pre-release, `main` branch protection was reviewed and
+applied with required checks for `CI` and `Agent Gate`.
+
 Agent Gate currently runs in non-blocking `warn` mode while policy is tuned. If
 Agent Gate becomes a required check during this phase, keep
 `fail-on-block: false` so the check surfaces findings without blocking merges.
