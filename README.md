@@ -33,6 +33,20 @@ Feedback on AI-generated PR safety policies is welcome in [#27](https://github.c
 - Missing test evidence: high-risk source changes without matching test file changes.
 - MCP config drift: `.mcp.json` changes that alter which tools agents can call.
 
+## Agent Gate vs LLM Reviewers
+
+LLM reviewers help with judgment. Agent Gate verifies deterministic merge evidence.
+
+Agent Gate does not try to find every semantic bug or replace code review. It checks policy boundaries that should be explainable and repeatable in CI:
+
+- did the PR stay inside its declared scope?
+- did workflow permissions escalate?
+- did agent control-plane files drift?
+- did high-risk code change without matching test-file evidence?
+- did MCP config changes get surfaced?
+
+Use your LLM reviewer for judgment. Use Agent Gate for deterministic merge evidence.
+
 ## Why
 
 AI agents can open pull requests. Tests do not always catch:
