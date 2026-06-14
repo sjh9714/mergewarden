@@ -292,7 +292,7 @@ describe("runAction", () => {
     expect(harness.writtenFiles.get("agent-gate-report.md")).toContain(
       "workflow/permission-escalation",
     );
-    expect(harness.summaryText()).toContain("# Agent Gate Report");
+    expect(harness.summaryText()).toContain("# Agent Gate: BLOCKED");
     expect(harness.failures).toEqual(["Agent Gate blocked this pull request."]);
     expect(octokit.rest.repos.getContent).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -536,7 +536,7 @@ describe("runAction", () => {
         repo: "Agent-Gate",
         issue_number: 5,
         body: expect.stringContaining(
-          "<!-- agent-gate-report -->\n<!-- This comment is managed by Agent Gate. Do not edit manually. -->\n\n# Agent Gate Report",
+          "<!-- agent-gate-report -->\n<!-- This comment is managed by Agent Gate. Do not edit manually. -->\n\n# Agent Gate: PASSED",
         ),
       }),
     );
@@ -578,7 +578,7 @@ describe("runAction", () => {
         repo: "Agent-Gate",
         comment_id: 21,
         body: expect.stringContaining(
-          "<!-- agent-gate-report -->\n<!-- This comment is managed by Agent Gate. Do not edit manually. -->\n\n# Agent Gate Report",
+          "<!-- agent-gate-report -->\n<!-- This comment is managed by Agent Gate. Do not edit manually. -->\n\n# Agent Gate: PASSED",
         ),
       }),
     );

@@ -164,6 +164,21 @@ Read the first runs as observation, not proof of semantic correctness:
 - `WARN`: needs human decision
 - `BLOCKED`: must block once policy is enforced
 
+The Markdown report leads with the human decision before the rule details. Example shape:
+
+```text
+Agent Gate: NEEDS HUMAN DECISION
+
+Why:
+This PR changed `.github/workflows/release.yml` and added `secrets.*` usage.
+
+Recommended next step:
+Review the workflow change before merging.
+
+Policy status:
+Warning today; eligible to become a merge gate after tuning.
+```
+
 ## Install
 
 Add Agent Gate to a repository with a pull request workflow. No checkout step is required.

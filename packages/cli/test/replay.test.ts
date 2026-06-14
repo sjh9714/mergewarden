@@ -141,6 +141,7 @@ describe("CLI replay", () => {
     expect(readme).toContain("safe to observe");
     expect(readme).toContain("needs human decision");
     expect(readme).toContain("must block");
+    expect(readme).toContain("Agent Gate: NEEDS HUMAN DECISION");
     expect(readme).toContain("Agent Gate: BLOCKED");
     expect(readme).toContain("workflow/permission-escalation");
     expect(readme).toContain("workflow/dangerous-pattern");
