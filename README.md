@@ -8,11 +8,11 @@ It runs as a GitHub Action without checking out PR code, and as a local replay C
 
 ## Status
 
-Agent Gate is pre-release. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may still change before `v0.1.0`.
+Agent Gate is pre-release. `v0.1.0` is available as a GitHub prerelease. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may change in later releases.
 
-Use `@main` while the project is stabilizing; after the first release, prefer a version tag such as `@v0` or a pinned commit SHA.
+For released installs, prefer `@v0.1.0` or a pinned commit SHA. `@main` tracks ongoing development.
 
-See `docs/v0.1.0-release-notes.md` for draft release notes.
+See `docs/v0.1.0-release-notes.md` and `docs/release-verification-v0.1.0.md` for release notes and verification.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
 
@@ -97,7 +97,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@main
+      - uses: sjh9714/Agent-Gate@v0.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
