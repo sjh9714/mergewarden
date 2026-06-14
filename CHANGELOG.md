@@ -4,9 +4,21 @@ All notable changes to Agent Gate will be documented in this file.
 
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Agent Gate is
-pre-release, so entries remain under `Unreleased` until the first version tag.
+pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
+
+No changes yet.
+
+## v0.1.1 - 2026-06-14
+
+### Changed
+
+- Rename the Action metadata display name to `Agent Gate for AI PRs` for
+  GitHub Marketplace uniqueness.
+- Publish the GitHub Marketplace listing for the Action.
+
+## v0.1.0 - 2026-06-14
 
 ### Added
 
@@ -26,11 +38,6 @@ pre-release, so entries remain under `Unreleased` until the first version tag.
 - PR report comment upsert.
 - Self-dogfooding Agent Gate workflow.
 - Repository CI workflow.
-
-### Changed
-
-- Rename the Action metadata display name to `Agent Gate for AI PRs` for
-  GitHub Marketplace uniqueness.
 
 ### Security
 
