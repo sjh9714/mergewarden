@@ -1,6 +1,6 @@
 # Agent Gate
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.1.1)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.1.2)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
@@ -13,11 +13,11 @@ The Action uses no checkout of PR code, no runtime LLM calls, no repository scri
 
 ## Status
 
-Agent Gate is pre-release. `v0.1.1` is available as a GitHub prerelease and GitHub Marketplace Action. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may change in later releases.
+Agent Gate is pre-release. `v0.1.2` is available as a GitHub prerelease and GitHub Marketplace Action. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may change in later releases.
 
-For released installs, prefer `@v0.1.1` or a pinned commit SHA. `@main` tracks ongoing development.
+For released installs, prefer `@v0.1.2` or a pinned commit SHA. `@main` tracks ongoing development.
 
-See `docs/v0.1.0-release-notes.md`, `docs/release-verification-v0.1.0.md`, and `docs/release-verification-v0.1.1.md` for release notes and verification.
+See `docs/v0.1.0-release-notes.md`, `docs/release-verification-v0.1.0.md`, `docs/release-verification-v0.1.1.md`, and `docs/release-verification-v0.1.2.md` for release notes and verification.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
 
@@ -109,7 +109,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.1.1
+      - uses: sjh9714/Agent-Gate@v0.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -205,7 +205,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.1.1
+      - uses: sjh9714/Agent-Gate@v0.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
