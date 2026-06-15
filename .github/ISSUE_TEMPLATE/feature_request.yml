@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest a focused Agent Gate capability or improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: What problem would this solve for your AI PR workflow?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_behavior
+    attributes:
+      label: Proposed behavior
+      description: What should Agent Gate do?
+    validations:
+      required: true
+  - type: dropdown
+    id: default_behavior
+    attributes:
+      label: Default behavior
+      description: How should this behave by default?
+      options:
+        - Warning-first
+        - Blocking after tuning
+        - Disabled by default
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other workflow, tool, or policy could solve this?
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, examples, or constraints that would help evaluate the request.

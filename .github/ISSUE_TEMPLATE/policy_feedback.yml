@@ -1,0 +1,42 @@
+name: Policy feedback
+description: Share what Agent Gate should warn or block on
+title: "[Policy feedback]: "
+labels:
+  - question
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Repository or workflow context
+      description: What kind of repository, team, or AI PR workflow are you using?
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding or policy
+      description: Which finding should block, warn, stay optional, or be disabled?
+      placeholder: Workflow permission escalation, missing test evidence, MCP config drift, etc.
+    validations:
+      required: true
+  - type: dropdown
+    id: desired_default
+    attributes:
+      label: Desired default
+      options:
+        - Should block
+        - Should warn
+        - Should be disabled by default
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: false_positive_risk
+    attributes:
+      label: False-positive risk
+      description: What legitimate PRs might this policy flag incorrectly?
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Useful evidence
+      description: What evidence would make this finding actionable for a maintainer?

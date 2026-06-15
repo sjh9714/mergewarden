@@ -1,0 +1,56 @@
+name: Bug report
+description: Report a reproducible Agent Gate bug
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not include secrets, private tokens, or sensitive vulnerability details in public issues.
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect Agent Gate to do?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal steps, fixture, PR shape, or command that reproduces the issue.
+      placeholder: |
+        1. Configure ...
+        2. Run ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Agent Gate version or ref
+      description: For example, v0.1.2, a commit SHA, or a branch name.
+      placeholder: v0.1.2
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Report output
+      description: Paste the relevant Markdown or JSON report output after removing sensitive details.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed secrets, tokens, and sensitive private repository details.
+          required: true
