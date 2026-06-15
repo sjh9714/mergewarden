@@ -20,12 +20,8 @@
 
 ## Optional Agent Gate Contract
 
-<!-- agent-gate-contract
-version: 1
-agent: codex
-task: describe the intended change
-allowed_paths:
-  - README.md
-required_evidence:
-  - relevant tests or docs updated
--->
+For AI-generated PRs, add an `agent-gate-contract` block to the PR body only
+when you want scope enforcement for this PR.
+
+Do not leave placeholder contracts in the PR body. See README for the contract
+format.

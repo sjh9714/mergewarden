@@ -8,9 +8,9 @@ AI-generated pull requests with deterministic evidence.
 Please do not open a public issue for security vulnerabilities or sensitive
 security findings.
 
-Use GitHub private vulnerability reporting if it is available for this
-repository. If it is not available, contact the maintainer privately before
-sharing reproduction details in public.
+Use GitHub private vulnerability reporting from the repository's Security tab
+if it is available. If it is not available, contact the maintainer privately
+before sharing reproduction details in public.
 
 ## Scope
 
