@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.1.3 - 2026-06-16
+
 ### Security
 
 - Pin the Action build toolchain to `esbuild@0.28.1` to address Dependabot
