@@ -194,6 +194,7 @@ function createHarness(
   };
   const outputs = new Map<string, string>();
   const failures: string[] = [];
+  const infos: string[] = [];
   const notices: string[] = [];
   const warnings: string[] = [];
   const writtenFiles = new Map<string, string>();
@@ -208,6 +209,9 @@ function createHarness(
     }),
     setFailed: vi.fn((message: string | Error) => {
       failures.push(message instanceof Error ? message.message : message);
+    }),
+    info: vi.fn((message: string) => {
+      infos.push(message);
     }),
     notice: vi.fn((message: string) => {
       notices.push(message);
@@ -230,6 +234,7 @@ function createHarness(
 
   return {
     failures,
+    infos,
     notices,
     outputs,
     runtime,
@@ -293,6 +298,13 @@ describe("runAction", () => {
       "workflow/permission-escalation",
     );
     expect(harness.summaryText()).toContain("# Agent Gate: BLOCKED");
+    expect(harness.infos.join("\n")).toContain("Agent Gate: BLOCKED");
+    expect(harness.infos.join("\n")).toContain("Decision: block");
+    expect(harness.infos.join("\n")).toContain("Risk score:");
+    expect(harness.infos.join("\n")).toContain("Findings:");
+    expect(harness.infos.join("\n")).toContain(
+      "- error workflow/permission-escalation .github/workflows/release.yml",
+    );
     expect(harness.failures).toEqual(["Agent Gate blocked this pull request."]);
     expect(octokit.rest.repos.getContent).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -25,6 +25,7 @@ async function main(): Promise<void> {
   await runAction({
     context: github.context as unknown as ActionContext,
     getInput: (name) => core.getInput(name),
+    info: (message) => core.info(message),
     notice: (message) => core.notice(message),
     octokit: github.getOctokit(token) as unknown as OctokitLike,
     setFailed: (message) => core.setFailed(message),

@@ -4,6 +4,7 @@ import {
   parseContractFromPrBody,
   renderJsonReport,
   renderMarkdownReport,
+  renderPlainTextReportSummary,
   type AgentGateConfig,
   type AnalysisInput,
   type AnalysisResult,
@@ -148,6 +149,7 @@ export interface ActionRuntime {
   getInput(name: string): string;
   setOutput(name: string, value: string | number): void;
   setFailed(message: string | Error): void;
+  info(message: string): void;
   notice(message: string): void;
   warning(message: string): void;
   summary: ActionSummary;
@@ -547,6 +549,7 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
   const result = await analyze(analysisInput(context, pr, config, files, runtime.now()));
   const jsonReport = renderJsonReport(result);
   const markdownReport = renderMarkdownReport(result);
+  const plainTextReportSummary = renderPlainTextReportSummary(result);
 
   await runtime.writeFile(reportJsonPath, jsonReport);
   await runtime.writeFile(reportMarkdownPath, markdownReport);
@@ -555,6 +558,7 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
   runtime.setOutput("report-json", reportJsonPath);
   runtime.setOutput("report-markdown", reportMarkdownPath);
   await runtime.summary.addRaw(markdownReport).write();
+  runtime.info(plainTextReportSummary);
 
   if (comment) {
     try {

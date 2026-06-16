@@ -19067,12 +19067,12 @@ var require_lib = __commonJS({
             throw new Error("Client has already been disposed.");
           }
           const parsedUrl = new URL(requestUrl);
-          let info = this._prepareRequest(verb, parsedUrl, headers);
+          let info2 = this._prepareRequest(verb, parsedUrl, headers);
           const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
           let numTries = 0;
           let response;
           do {
-            response = yield this.requestRaw(info, data);
+            response = yield this.requestRaw(info2, data);
             if (response && response.message && response.message.statusCode === HttpCodes2.Unauthorized) {
               let authenticationHandler;
               for (const handler2 of this.handlers) {
@@ -19082,7 +19082,7 @@ var require_lib = __commonJS({
                 }
               }
               if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info, data);
+                return authenticationHandler.handleAuthentication(this, info2, data);
               } else {
                 return response;
               }
@@ -19105,8 +19105,8 @@ var require_lib = __commonJS({
                   }
                 }
               }
-              info = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info, data);
+              info2 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info2, data);
               redirectsRemaining--;
             }
             if (!response.message.statusCode || !HttpResponseRetryCodes2.includes(response.message.statusCode)) {
@@ -19135,7 +19135,7 @@ var require_lib = __commonJS({
        * @param info
        * @param data
        */
-      requestRaw(info, data) {
+      requestRaw(info2, data) {
         return __awaiter3(this, void 0, void 0, function* () {
           return new Promise((resolve, reject) => {
             function callbackForResult(err, res) {
@@ -19147,7 +19147,7 @@ var require_lib = __commonJS({
                 resolve(res);
               }
             }
-            this.requestRawWithCallback(info, data, callbackForResult);
+            this.requestRawWithCallback(info2, data, callbackForResult);
           });
         });
       }
@@ -19157,12 +19157,12 @@ var require_lib = __commonJS({
        * @param data
        * @param onResult
        */
-      requestRawWithCallback(info, data, onResult) {
+      requestRawWithCallback(info2, data, onResult) {
         if (typeof data === "string") {
-          if (!info.options.headers) {
-            info.options.headers = {};
+          if (!info2.options.headers) {
+            info2.options.headers = {};
           }
-          info.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info2.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         function handleResult(err, res) {
@@ -19171,7 +19171,7 @@ var require_lib = __commonJS({
             onResult(err, res);
           }
         }
-        const req = info.httpModule.request(info.options, (msg) => {
+        const req = info2.httpModule.request(info2.options, (msg) => {
           const res = new HttpClientResponse(msg);
           handleResult(void 0, res);
         });
@@ -19183,7 +19183,7 @@ var require_lib = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error(`Request timeout: ${info.options.path}`));
+          handleResult(new Error(`Request timeout: ${info2.options.path}`));
         });
         req.on("error", function(err) {
           handleResult(err);
@@ -19219,27 +19219,27 @@ var require_lib = __commonJS({
         return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info = {};
-        info.parsedUrl = requestUrl;
-        const usingSsl = info.parsedUrl.protocol === "https:";
-        info.httpModule = usingSsl ? https : http;
+        const info2 = {};
+        info2.parsedUrl = requestUrl;
+        const usingSsl = info2.parsedUrl.protocol === "https:";
+        info2.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
-        info.options = {};
-        info.options.host = info.parsedUrl.hostname;
-        info.options.port = info.parsedUrl.port ? parseInt(info.parsedUrl.port) : defaultPort;
-        info.options.path = (info.parsedUrl.pathname || "") + (info.parsedUrl.search || "");
-        info.options.method = method;
-        info.options.headers = this._mergeHeaders(headers);
+        info2.options = {};
+        info2.options.host = info2.parsedUrl.hostname;
+        info2.options.port = info2.parsedUrl.port ? parseInt(info2.parsedUrl.port) : defaultPort;
+        info2.options.path = (info2.parsedUrl.pathname || "") + (info2.parsedUrl.search || "");
+        info2.options.method = method;
+        info2.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info.options.headers["user-agent"] = this.userAgent;
+          info2.options.headers["user-agent"] = this.userAgent;
         }
-        info.options.agent = this._getAgent(info.parsedUrl);
+        info2.options.agent = this._getAgent(info2.parsedUrl);
         if (this.handlers) {
           for (const handler2 of this.handlers) {
-            handler2.prepareRequest(info.options);
+            handler2.prepareRequest(info2.options);
           }
         }
-        return info;
+        return info2;
       }
       _mergeHeaders(headers) {
         if (this.requestOptions && this.requestOptions.headers) {
@@ -29153,6 +29153,9 @@ function warning(message, properties = {}) {
 }
 function notice(message, properties = {}) {
   issueCommand("notice", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+function info(message) {
+  process.stdout.write(message + os4.EOL);
 }
 
 // ../../node_modules/.pnpm/@actions+github@9.1.1/node_modules/@actions/github/lib/context.js
@@ -48452,9 +48455,6 @@ function renderJsonReport(result) {
   return `${JSON.stringify(result, null, 2)}
 `;
 }
-function yesNo(value) {
-  return value ? "yes" : "no";
-}
 function humanDecisionLabel(decision) {
   if (decision === "block") {
     return "BLOCKED";
@@ -48464,7 +48464,7 @@ function humanDecisionLabel(decision) {
   }
   return "PASSED";
 }
-function safeMarkdownValue(value, maxLength = 500) {
+function safeReportValue(value, maxLength = 500) {
   const normalized = value.replace(/\r?\n/g, "\\n").replace(/<!--/g, "&lt;!--").replace(/-->/g, "--&gt;").replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) {
     return normalized;
@@ -48486,17 +48486,6 @@ function highestSignalFinding(findings) {
 }
 function highestActionableFinding(findings) {
   return highestSignalFinding(findings.filter((finding) => finding.severity !== "info"));
-}
-function whyLines(result) {
-  const finding = highestActionableFinding(result.findings);
-  if (!finding) {
-    return ["No warning or blocking findings were detected."];
-  }
-  const lines = [finding.message];
-  if (finding.path) {
-    lines.push("", `Path: \`${safeMarkdownValue(finding.path)}\``);
-  }
-  return lines;
 }
 function recommendedNextStep(result) {
   const finding = highestActionableFinding(result.findings);
@@ -48537,6 +48526,20 @@ function policyStatus(result) {
     return "Policy status: warning today; eligible to become a merge gate after tuning.";
   }
   return "Policy status: no blocking or warning findings.";
+}
+function yesNo(value) {
+  return value ? "yes" : "no";
+}
+function whyLines(result) {
+  const finding = highestActionableFinding(result.findings);
+  if (!finding) {
+    return ["No warning or blocking findings were detected."];
+  }
+  const lines = [finding.message];
+  if (finding.path) {
+    lines.push("", `Path: \`${safeReportValue(finding.path)}\``);
+  }
+  return lines;
 }
 function renderMarkdownReport(result) {
   const lines = [
@@ -48579,25 +48582,69 @@ function renderMarkdownReport(result) {
         ""
       );
       if (finding.path) {
-        lines.push(`Path: \`${safeMarkdownValue(finding.path)}\``, "");
+        lines.push(`Path: \`${safeReportValue(finding.path)}\``, "");
       }
       if (finding.evidence.length > 0) {
         lines.push("Evidence:");
         for (const evidence of finding.evidence) {
-          lines.push(
-            `- ${safeMarkdownValue(evidence.label)}: ${safeMarkdownValue(evidence.value)}`
-          );
+          lines.push(`- ${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`);
         }
         lines.push("");
       }
       if (finding.remediation.length > 0) {
         lines.push("Remediation:");
         for (const remediation of finding.remediation) {
-          lines.push(`- ${safeMarkdownValue(remediation)}`);
+          lines.push(`- ${safeReportValue(remediation)}`);
         }
         lines.push("");
       }
     }
+  }
+  return `${lines.join("\n")}
+`;
+}
+var MAX_LOG_FINDINGS = 10;
+function whyText(result) {
+  const finding = highestActionableFinding(result.findings);
+  if (!finding) {
+    return "No warning or blocking findings were detected.";
+  }
+  return safeReportValue(finding.message);
+}
+function findingLine(finding) {
+  const parts = ["-", safeReportValue(finding.severity), safeReportValue(finding.ruleId)];
+  if (finding.path) {
+    parts.push(safeReportValue(finding.path));
+  }
+  return parts.join(" ");
+}
+function renderPlainTextReportSummary(result) {
+  const actionableFinding = highestActionableFinding(result.findings);
+  const findings = result.findings.slice(0, MAX_LOG_FINDINGS);
+  const omittedFindings = result.findings.length - findings.length;
+  const lines = [
+    `Agent Gate: ${humanDecisionLabel(result.decision)}`,
+    `Decision: ${result.decision}`,
+    `Risk score: ${result.riskScore} / 100`,
+    `Why: ${whyText(result)}`
+  ];
+  if (actionableFinding?.path) {
+    lines.push(`Path: ${safeReportValue(actionableFinding.path)}`);
+  }
+  lines.push(
+    `Recommended next step: ${recommendedNextStep(result)}`,
+    policyStatus(result),
+    "Findings:"
+  );
+  if (findings.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const finding of findings) {
+      lines.push(findingLine(finding));
+    }
+  }
+  if (omittedFindings > 0) {
+    lines.push(`... ${omittedFindings} more findings omitted`);
   }
   return `${lines.join("\n")}
 `;
@@ -48880,6 +48927,7 @@ async function runActionInner(runtime) {
   const result = await analyze(analysisInput(context3, pr, config2, files, runtime.now()));
   const jsonReport = renderJsonReport(result);
   const markdownReport = renderMarkdownReport(result);
+  const plainTextReportSummary = renderPlainTextReportSummary(result);
   await runtime.writeFile(reportJsonPath, jsonReport);
   await runtime.writeFile(reportMarkdownPath, markdownReport);
   runtime.setOutput("decision", result.decision);
@@ -48887,6 +48935,7 @@ async function runActionInner(runtime) {
   runtime.setOutput("report-json", reportJsonPath);
   runtime.setOutput("report-markdown", reportMarkdownPath);
   await runtime.summary.addRaw(markdownReport).write();
+  runtime.info(plainTextReportSummary);
   if (comment) {
     try {
       await upsertPullRequestComment(runtime.octokit, baseRepo, pr.number, markdownReport);
@@ -48927,6 +48976,7 @@ async function main() {
   await runAction({
     context: context2,
     getInput: (name) => getInput(name),
+    info: (message) => info(message),
     notice: (message) => notice(message),
     octokit: getOctokit(token),
     setFailed: (message) => setFailed(message),
