@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.1.4 - 2026-06-17
+
 ### Changed
 
 - Migrate the GitHub Action runtime metadata and committed Action bundle build
