@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.1.5 - 2026-06-17
+
 ### Changed
 
 - Add a compact plain-text Action log summary so Agent Gate decisions are
