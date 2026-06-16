@@ -66,12 +66,12 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
-      - name: Set up Node.js 20 for action runtime smoke test
+      - name: Set up Node.js 24 for action runtime smoke test
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
 
-      - name: Smoke test committed action bundle on Node 20
+      - name: Smoke test committed action bundle on Node 24
         run: |
           set +e
           node packages/action/dist/index.cjs > /tmp/agent-gate-action-smoke.log 2>&1
