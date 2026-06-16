@@ -31,7 +31,7 @@ explicitly asks for that release operation.
 - [ ] Verify root `action.yml` and `packages/action/action.yml` expose matching
       inputs, outputs, branding, and Node runtime.
 - [ ] Verify `packages/action/dist/index.cjs` is committed.
-- [ ] Confirm the Node 20 Action bundle smoke test passes in CI.
+- [ ] Confirm the Node 24 Action bundle smoke test passes in CI.
 - [ ] Verify `.github/workflows/agent-gate.yml` does not use
       `actions/checkout`.
 

@@ -277,7 +277,7 @@ Teams can add auth, payments, infra, and agent-control-plane paths as their poli
 
 - `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
 - `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
-- `packages/action`: Node 20 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer.
+- `packages/action`: Node 24 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer.
 
 ## Action Package
 

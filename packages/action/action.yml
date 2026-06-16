@@ -42,7 +42,7 @@ outputs:
     description: "Path to Markdown report"
 
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.cjs"
 
 branding:

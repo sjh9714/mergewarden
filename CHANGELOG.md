@@ -8,7 +8,11 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Migrate the GitHub Action runtime metadata and committed Action bundle build
+  target to Node 24 to address the previous runtime deprecation warning.
+- Runtime rule behavior is unchanged.
 
 ## v0.1.3 - 2026-06-16
 
