@@ -8,7 +8,11 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Add a compact plain-text Action log summary so Agent Gate decisions are
+  visible in `gh run --log`.
+- Runtime rule behavior and JSON decisions are unchanged.
 
 ## v0.1.4 - 2026-06-17
 

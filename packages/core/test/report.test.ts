@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { analyze, renderJsonReport, renderMarkdownReport } from "../src/index.js";
+import {
+  analyze,
+  type AnalysisResult,
+  renderJsonReport,
+  renderMarkdownReport,
+  renderPlainTextReportSummary,
+} from "../src/index.js";
 import { createAnalysisInput } from "./helpers.js";
 
 describe("report renderers", () => {
@@ -82,8 +88,72 @@ describe("report renderers", () => {
     expect(JSON.parse(renderJsonReport(result))).toMatchObject({ decision: "warn" });
   });
 
+  it("renders a compact plain-text summary for warn results", () => {
+    const result = {
+      decision: "warn" as const,
+      riskScore: 89,
+      summary: {
+        title: "Agent Gate: warning",
+        agentDetected: true,
+        contractPresent: true,
+        errorCount: 1,
+        warnCount: 1,
+        infoCount: 0,
+      },
+      findings: [
+        {
+          ruleId: "workflow/permission-escalation",
+          severity: "error" as const,
+          title: "Workflow permissions escalated",
+          message: "Workflow permissions changed from read to write.",
+          path: ".github/workflows/release.yml",
+          evidence: [
+            {
+              label: "permission",
+              value: "contents: write",
+            },
+          ],
+          remediation: ["Review the workflow before merging."],
+          tags: ["workflow"],
+          confidence: "high" as const,
+        },
+        {
+          ruleId: "evidence/missing-test-change",
+          severity: "warn" as const,
+          title: "Missing test evidence",
+          message: "src/auth/session.ts changed without matching test evidence.",
+          path: "src/auth/session.ts",
+          evidence: [],
+          remediation: [],
+          tags: ["evidence"],
+          confidence: "medium" as const,
+        },
+      ],
+      metadata,
+    };
+
+    const summary = renderPlainTextReportSummary(result);
+
+    expect(summary).toContain("Agent Gate: NEEDS HUMAN DECISION");
+    expect(summary).toContain("Decision: warn");
+    expect(summary).toContain("Risk score: 89 / 100");
+    expect(summary).toContain("Why: Workflow permissions changed from read to write.");
+    expect(summary).toContain("Path: .github/workflows/release.yml");
+    expect(summary).toContain("Recommended next step: Review the workflow change before merging.");
+    expect(summary).toContain(
+      "Policy status: warning today; eligible to become a merge gate after tuning.",
+    );
+    expect(summary).toContain(
+      "- error workflow/permission-escalation .github/workflows/release.yml",
+    );
+    expect(summary).toContain("- warn evidence/missing-test-change src/auth/session.ts");
+    expect(summary).not.toContain("Evidence:");
+    expect(summary).not.toContain("Remediation:");
+    expect(JSON.parse(renderJsonReport(result))).toMatchObject({ decision: "warn" });
+  });
+
   it("keeps the top summary action-oriented for info-only pass results", () => {
-    const markdown = renderMarkdownReport({
+    const result: AnalysisResult = {
       decision: "pass",
       riskScore: 1,
       summary: {
@@ -107,11 +177,16 @@ describe("report renderers", () => {
         },
       ],
       metadata,
-    });
+    };
+    const markdown = renderMarkdownReport(result);
+    const plainText = renderPlainTextReportSummary(result);
 
     expect(markdown).toContain("# Agent Gate: PASSED");
     expect(markdown).toContain("No warning or blocking findings were detected.");
     expect(markdown).toContain("### INFO agent/origin-detected");
+    expect(plainText).toContain("Agent Gate: PASSED");
+    expect(plainText).toContain("Why: No warning or blocking findings were detected.");
+    expect(plainText).toContain("- info agent/origin-detected");
   });
 
   it("normalizes untrusted Markdown values in finding details", () => {
@@ -156,8 +231,51 @@ describe("report renderers", () => {
     expect(markdown).toContain("- Add matching tests.\\n&lt;!-- do not render as comment --&gt;");
   });
 
+  it("normalizes and truncates untrusted values in plain-text summaries", () => {
+    const longValue = "a".repeat(520);
+    const result = {
+      decision: "warn" as const,
+      riskScore: 10,
+      summary: {
+        title: "Agent Gate: warning",
+        agentDetected: true,
+        contractPresent: true,
+        errorCount: 0,
+        warnCount: 11,
+        infoCount: 0,
+      },
+      findings: Array.from({ length: 11 }, (_, index) => ({
+        ruleId: index === 0 ? "evidence/missing-test-change" : `test/rule-${index}`,
+        severity: "warn" as const,
+        title: "Finding",
+        message:
+          index === 0 ? `Changed risky file.\n<!-- hidden -->\n${longValue}` : `Finding ${index}`,
+        path: index === 0 ? "src/auth/session.ts\n<!-- hidden -->" : `src/file-${index}.ts`,
+        evidence: [
+          {
+            label: "evidence",
+            value: "not printed",
+          },
+        ],
+        remediation: ["not printed"],
+        tags: ["test"],
+        confidence: "medium" as const,
+      })),
+      metadata,
+    };
+
+    const summary = renderPlainTextReportSummary(result);
+
+    expect(summary).toContain("Changed risky file.\\n&lt;!-- hidden --&gt;");
+    expect(summary).toContain("Path: src/auth/session.ts\\n&lt;!-- hidden --&gt;");
+    expect(summary).toContain("…");
+    expect(summary).toContain("... 1 more findings omitted");
+    expect(summary).not.toContain("<!-- hidden -->");
+    expect(summary).not.toContain("not printed");
+  });
+
   it("renders finding severity, rule id, and path in Markdown reports", () => {
-    const markdown = renderMarkdownReport({
+    const result: AnalysisResult = {
       decision: "block",
       riskScore: 20,
       summary: {
@@ -182,12 +300,16 @@ describe("report renderers", () => {
         },
       ],
       metadata,
-    });
+    };
+    const markdown = renderMarkdownReport(result);
+    const plainText = renderPlainTextReportSummary(result);
 
     expect(markdown).toContain("# Agent Gate: BLOCKED");
     expect(markdown).toContain("Decision: block");
     expect(markdown).toContain("Review or split the out-of-scope file changes before merging.");
     expect(markdown).toContain("### ERROR contract/out-of-scope");
     expect(markdown).toContain("Path: `src/payments/webhook.ts`");
+    expect(plainText).toContain("Agent Gate: BLOCKED");
+    expect(plainText).toContain("Decision: block");
   });
 });
