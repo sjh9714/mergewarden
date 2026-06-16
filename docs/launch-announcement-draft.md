@@ -1,8 +1,8 @@
-# Agent Gate v0.1.4 Launch Draft
+# Agent Gate v0.1.5 Launch Draft
 
 ## Title
 
-Agent Gate v0.1.4: No AI PR gets merged without proof.
+Agent Gate v0.1.5: No AI PR gets merged without proof.
 
 ## Short Pitch
 
@@ -11,7 +11,7 @@ flags or blocks out-of-contract edits, workflow permission escalation, agent
 control-plane drift, missing test evidence, and MCP config drift before those
 changes reach `main`, depending on your policy mode.
 
-`v0.1.4` is a GitHub prerelease and GitHub Marketplace Action. The core
+`v0.1.5` is a GitHub prerelease and GitHub Marketplace Action. The core
 analyzer, replay CLI, root GitHub Action, PR report comments, self-dogfooding
 workflow, and CI are implemented, but APIs and rule names may still change in
 later releases.
@@ -82,7 +82,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.1.4
+      - uses: sjh9714/Agent-Gate@v0.1.5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -102,7 +102,7 @@ the deterministic core analyzer.
 
 ## Known Limitations
 
-- `v0.1.4` is pre-release; APIs, rule names, reports, and configuration may
+- `v0.1.5` is pre-release; APIs, rule names, reports, and configuration may
   change.
 - Test evidence is file-pattern based. It does not prove semantic test coverage.
 - CODEOWNERS and reviewer evidence are not implemented yet.
