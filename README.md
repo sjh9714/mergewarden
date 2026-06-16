@@ -19,6 +19,8 @@ For released installs, prefer `@v0.1.3` or a pinned commit SHA. `@main` tracks o
 
 See `docs/v0.1.0-release-notes.md`, `docs/release-verification-v0.1.0.md`, `docs/release-verification-v0.1.1.md`, `docs/release-verification-v0.1.2.md`, and `docs/release-verification-v0.1.3.md` for release notes and verification.
 
+External install smoke for `@v0.1.3` is recorded in `docs/external-install-smoke-v0.1.3.md`.
+
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
 
 See `docs/launch-announcement-draft.md` for a reusable launch announcement draft.

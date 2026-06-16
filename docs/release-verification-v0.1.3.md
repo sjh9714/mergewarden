@@ -31,6 +31,11 @@ This document records post-release verification for Agent Gate `v0.1.3`.
 - GitHub CI passed
 - GitHub Agent Gate passed
 
+## External Install Smoke
+
+- External install smoke for `sjh9714/Agent-Gate@v0.1.3` is recorded in
+  `docs/external-install-smoke-v0.1.3.md`.
+
 ## Marketplace
 
 - GitHub Marketplace listing remains accessible.
