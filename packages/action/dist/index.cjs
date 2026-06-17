@@ -47687,6 +47687,51 @@ var contractBlockedPathRule = {
     });
   }
 };
+function isWorkflowFile(ctx, path) {
+  return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
+}
+function missingBaseContent(file2) {
+  return file2.status !== "added" && file2.baseContent == null;
+}
+function missingHeadContent(file2) {
+  return file2.status !== "removed" && file2.headContent == null;
+}
+function contentUnavailableFinding(file2, ref) {
+  return {
+    ruleId: "analysis/content-unavailable",
+    severity: "error",
+    title: "Changed file content unavailable",
+    message: `Unable to read ${ref} content for ${file2.path}; workflow analysis may be incomplete.`,
+    path: file2.path,
+    evidence: [
+      { label: "changed_file", value: file2.path },
+      { label: "content_ref", value: ref },
+      { label: "file_status", value: file2.status }
+    ],
+    remediation: ["Review this workflow change manually or rerun once content is available."],
+    tags: ["analysis", "content-unavailable", "workflow"],
+    confidence: "medium"
+  };
+}
+var contentUnavailableRule = {
+  id: "analysis/content-unavailable",
+  title: "Changed file content unavailable",
+  run(ctx) {
+    const findings = [];
+    for (const file2 of ctx.helpers.changedFiles()) {
+      if (!isWorkflowFile(ctx, file2.path)) {
+        continue;
+      }
+      if (missingBaseContent(file2)) {
+        findings.push(contentUnavailableFinding(file2, "base"));
+      }
+      if (missingHeadContent(file2)) {
+        findings.push(contentUnavailableFinding(file2, "head"));
+      }
+    }
+    return findings;
+  }
+};
 function matchingPatterns2(ctx, paths, patterns) {
   return [...new Set(paths.flatMap((path) => ctx.helpers.findMatchingPatterns(path, patterns)))];
 }
@@ -48031,7 +48076,7 @@ function parseWorkflow(yamlText) {
     };
   }
 }
-function isWorkflowFile(ctx, path) {
+function isWorkflowFile2(ctx, path) {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
 }
 function dangerousFinding(filePath, severity, pattern, extraEvidence = []) {
@@ -48061,7 +48106,7 @@ var workflowDangerousPatternRule = {
     const findings = [];
     const config2 = ctx.input.config.github_actions;
     for (const file2 of ctx.helpers.changedFiles()) {
-      if (!isWorkflowFile(ctx, file2.path) || file2.status === "removed" || !file2.headContent) {
+      if (!isWorkflowFile2(ctx, file2.path) || file2.status === "removed" || !file2.headContent) {
         continue;
       }
       const parsed = parseWorkflow(file2.headContent);
@@ -48119,11 +48164,14 @@ var workflowDangerousPatternRule = {
     return findings;
   }
 };
-function isWorkflowFile2(ctx, path) {
+function isWorkflowFile3(ctx, path) {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
 }
 function permissionsForWorkflow(workflow) {
   return normalizeWorkflowPermissions(workflow?.permissions);
+}
+function needsBaseContent(file2) {
+  return file2.status !== "added" && file2.baseContent == null;
 }
 var workflowPermissionEscalationRule = {
   id: "workflow/permission-escalation",
@@ -48134,7 +48182,7 @@ var workflowPermissionEscalationRule = {
     }
     const findings = [];
     for (const file2 of ctx.helpers.changedFiles()) {
-      if (!isWorkflowFile2(ctx, file2.path) || file2.status === "removed" || !file2.headContent) {
+      if (!isWorkflowFile3(ctx, file2.path) || file2.status === "removed" || !file2.headContent || needsBaseContent(file2)) {
         continue;
       }
       const head = parseWorkflow(file2.headContent);
@@ -48178,6 +48226,7 @@ var builtInRules = [
   highRiskPathRule,
   agentControlPlaneDriftRule,
   missingTestEvidenceRule,
+  contentUnavailableRule,
   workflowPermissionEscalationRule,
   workflowDangerousPatternRule
 ];

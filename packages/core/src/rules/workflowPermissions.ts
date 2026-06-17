@@ -14,6 +14,10 @@ function permissionsForWorkflow(workflow: WorkflowDocument | undefined) {
   return normalizeWorkflowPermissions(workflow?.permissions);
 }
 
+function needsBaseContent(file: { status: string; baseContent?: string | null }): boolean {
+  return file.status !== "added" && file.baseContent == null;
+}
+
 export const workflowPermissionEscalationRule: Rule = {
   id: "workflow/permission-escalation",
   title: "GitHub Actions permission escalation",
@@ -25,7 +29,12 @@ export const workflowPermissionEscalationRule: Rule = {
     const findings: Finding[] = [];
 
     for (const file of ctx.helpers.changedFiles()) {
-      if (!isWorkflowFile(ctx, file.path) || file.status === "removed" || !file.headContent) {
+      if (
+        !isWorkflowFile(ctx, file.path) ||
+        file.status === "removed" ||
+        !file.headContent ||
+        needsBaseContent(file)
+      ) {
         continue;
       }
 

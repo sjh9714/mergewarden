@@ -31,6 +31,8 @@ executing PR-controlled code.
 - Runtime analysis does not call LLMs.
 - Runtime analysis does not execute MCP servers.
 - Analysis is API-only and uses deterministic core rules.
+- Unavailable workflow file content is surfaced as an
+  `analysis/content-unavailable` finding.
 
 ## Base-Branch Policy
 

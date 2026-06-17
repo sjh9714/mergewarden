@@ -8,6 +8,7 @@ import {
   contractMissingRule,
   contractOutOfScopeRule,
 } from "./contractRules.js";
+import { contentUnavailableRule } from "./contentUnavailable.js";
 import { highRiskPathRule } from "./highRiskPath.js";
 import { missingTestEvidenceRule } from "./testEvidence.js";
 import type { Rule, RuleContext } from "./types.js";
@@ -23,6 +24,7 @@ export const builtInRules: Rule[] = [
   highRiskPathRule,
   agentControlPlaneDriftRule,
   missingTestEvidenceRule,
+  contentUnavailableRule,
   workflowPermissionEscalationRule,
   workflowDangerousPatternRule,
 ];
