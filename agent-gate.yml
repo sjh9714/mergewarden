@@ -15,8 +15,6 @@ agent_detection:
 contract:
   required_for:
     - agent
-  sources:
-    - pr_body
 
 high_risk_paths:
   policy:
