@@ -8,7 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Add a version consistency test for package versions and Agent Gate version
+  constants.
 
 ## v0.1.6 - 2026-06-17
 
