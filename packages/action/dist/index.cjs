@@ -48601,6 +48601,9 @@ function renderPlainTextReportSummary(result) {
 `;
 }
 
+// src/version.ts
+var AGENT_GATE_VERSION = "0.1.6";
+
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
 var AGENT_GATE_MANAGED_COMMENT_NOTE = "<!-- This comment is managed by Agent Gate. Do not edit manually. -->";
@@ -48854,7 +48857,7 @@ function analysisInput(context3, pr, config2, files, now) {
     checks: [],
     now: now.toISOString(),
     configSource: "base-branch",
-    version: "0.0.0"
+    version: AGENT_GATE_VERSION
   };
 }
 async function runActionInner(runtime) {

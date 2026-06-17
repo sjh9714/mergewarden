@@ -7,6 +7,7 @@ explicitly asks for that release operation.
 ## Pre-Release Quality Gate
 
 - [ ] Record final verification in `docs/release-audit-v0.1.0.md`.
+- [ ] Update package versions and `AGENT_GATE_VERSION` for the release.
 - [ ] Run `pnpm test`.
 - [ ] Run `pnpm typecheck`.
 - [ ] Run `pnpm lint`.

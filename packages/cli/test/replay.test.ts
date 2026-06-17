@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import { analyze } from "@agent-gate/core";
 import { loadReplayFixture, renderHumanReport, runCli } from "../src/replay.js";
+import { AGENT_GATE_VERSION } from "../src/version.js";
 
 const repoRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const baseWorkflow = "permissions:\n  contents: read\n";
@@ -115,6 +116,16 @@ describe("CLI replay", () => {
       additions: 12,
       deletions: 1,
     });
+  });
+
+  it("defaults replay metadata to the current Agent Gate version", async () => {
+    const input = await loadReplayFixture(
+      await createFixture({
+        files: [],
+      }),
+    );
+
+    expect(input.version).toBe(AGENT_GATE_VERSION);
   });
 
   it("renders human replay output with decision, rule ids, messages, and paths", async () => {

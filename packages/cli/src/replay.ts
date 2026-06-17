@@ -17,6 +17,8 @@ import {
   type ReviewEvidence,
 } from "@agent-gate/core";
 
+import { AGENT_GATE_VERSION } from "./version.js";
+
 type OutputWriter = (text: string) => void;
 
 export interface CliIo {
@@ -219,7 +221,7 @@ export async function loadReplayFixture(fixtureDir: string): Promise<AnalysisInp
     checks: fixture.checks ?? [],
     now: fixture.now ?? new Date(0).toISOString(),
     configSource: "local",
-    version: fixture.version ?? "0.0.0",
+    version: fixture.version ?? AGENT_GATE_VERSION,
   };
 }
 
