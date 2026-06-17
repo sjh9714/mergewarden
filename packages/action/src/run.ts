@@ -13,6 +13,8 @@ import {
   type PullRequestContext,
 } from "@agent-gate/core";
 
+import { AGENT_GATE_VERSION } from "./version.js";
+
 type Mode = AgentGateConfig["mode"];
 
 interface RepositoryRef {
@@ -522,7 +524,7 @@ function analysisInput(
     checks: [],
     now: now.toISOString(),
     configSource: "base-branch",
-    version: "0.0.0",
+    version: AGENT_GATE_VERSION,
   };
 }
 

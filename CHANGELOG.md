@@ -12,6 +12,7 @@ pre-release, so APIs and rule names may change between versions.
 
 - Reject planned-but-unimplemented config and contract fields instead of
   accepting them as no-op settings.
+- Report metadata now uses the current Agent Gate version instead of `0.0.0`.
 
 ## v0.1.5 - 2026-06-17
 

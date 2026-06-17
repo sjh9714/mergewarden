@@ -14,6 +14,7 @@ export { renderJsonReport } from "./report/json.js";
 export { renderMarkdownReport } from "./report/markdown.js";
 export { renderPlainTextReportSummary } from "./report/plainText.js";
 export { detectAgentOrigin } from "./rules/agentOrigin.js";
+export { AGENT_GATE_VERSION } from "./version.js";
 export type { AgentOriginResult, AgentOriginSignal } from "./rules/agentOrigin.js";
 export type { Rule, RuleContext } from "./rules/index.js";
 export type { AgentGateConfig } from "./config/schema.js";

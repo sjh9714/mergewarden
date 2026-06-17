@@ -9,6 +9,7 @@ import {
   type PullFile,
 } from "../src/run.js";
 import { writeTextFile } from "../src/fileWriter.js";
+import { AGENT_GATE_VERSION } from "../src/version.js";
 
 const BASE_SHA = "base-sha";
 const HEAD_SHA = "head-sha";
@@ -293,6 +294,9 @@ describe("runAction", () => {
     expect(harness.outputs.get("report-markdown")).toBe("agent-gate-report.md");
     expect(JSON.parse(harness.writtenFiles.get("agent-gate-report.json") ?? "{}")).toMatchObject({
       decision: "block",
+      metadata: {
+        version: AGENT_GATE_VERSION,
+      },
     });
     expect(harness.writtenFiles.get("agent-gate-report.md")).toContain(
       "workflow/permission-escalation",
