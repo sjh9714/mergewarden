@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.1.6 - 2026-06-17
+
 ### Changed
 
 - Reject planned-but-unimplemented config and contract fields instead of
