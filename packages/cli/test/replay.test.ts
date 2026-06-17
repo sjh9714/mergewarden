@@ -143,7 +143,7 @@ describe("CLI replay", () => {
   it("documents the headline replay output in the README", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
-    expect(readme).toContain("@v0.1.5");
+    expect(readme).toContain("@v0.1.6");
     expect(readme).toContain("No AI PR gets merged without proof");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("10-Minute Observe Path");
