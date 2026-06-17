@@ -57,6 +57,10 @@ failures are reported as warnings and do not fail the Action.
 
 - CODEOWNERS and reviewer evidence are not implemented yet.
 - Package and dependency drift rules are not implemented yet.
+- File-based PR contracts are not implemented yet; contracts are parsed from
+  PR body comment blocks.
+- Risk budgets, claim-vs-CI evidence, reviewer requirements, and rollback-plan
+  requirements are not implemented yet.
 - GitHub Actions job-level permission escalation comparison is limited.
 - Test evidence checks only detect matching test file changes; they do not prove
   semantic coverage.

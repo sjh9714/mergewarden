@@ -48283,23 +48283,15 @@ var AgentDetectionSchema = external_exports.object({
 }).strict();
 var ContractConfigSchema = external_exports.object({
   required_for: external_exports.array(external_exports.enum(["agent", "all"])).default(["agent"]),
-  sources: external_exports.array(external_exports.enum(["pr_body", "file"])).default(["pr_body"]),
   allow_missing_in_observe_mode: external_exports.boolean().default(true)
-}).strict();
-var RiskBudgetConfigSchema = external_exports.object({
-  max_files_changed_for_agent: external_exports.number().int().positive().default(20),
-  max_lines_changed_for_agent: external_exports.number().int().positive().default(800)
 }).strict();
 var HighRiskPathAreaSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).min(1),
   require_tests: external_exports.array(NonEmptyStringSchema).default([]),
-  require_reviewers: external_exports.array(NonEmptyStringSchema).default([]),
-  require_rollback_plan: external_exports.boolean().default(false),
   severity: SeveritySettingSchema.default("error")
 }).strict();
 var AgentControlPlaneSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_CONTROL_PLANE_PATHS),
-  require_reviewers: external_exports.array(NonEmptyStringSchema).default([]),
   severity: SeveritySettingSchema.default("error")
 }).strict();
 var GitHubActionsConfigSchema = external_exports.object({
@@ -48308,24 +48300,6 @@ var GitHubActionsConfigSchema = external_exports.object({
   block_pull_request_target_checkout: external_exports.boolean().default(true),
   require_pinned_actions: external_exports.enum(["off", "warn", "error"]).default("warn"),
   severity: SeveritySettingSchema.default("error")
-}).strict();
-var DependenciesConfigSchema = external_exports.object({
-  package_managers: external_exports.array(external_exports.enum(["npm", "pnpm", "yarn", "bun"])).default(["npm", "pnpm", "yarn"]),
-  block_lifecycle_script_changes: external_exports.boolean().default(true),
-  require_lockfile_update: external_exports.boolean().default(true),
-  severity: SeveritySettingSchema.default("warn")
-}).strict();
-var ClaimVsCiEvidenceSchema = external_exports.object({
-  enabled: external_exports.boolean().default(true),
-  phrases: external_exports.array(NonEmptyStringSchema).default(["tests passed", "all tests pass", "ci passed", "verified"]),
-  required_checks: external_exports.array(NonEmptyStringSchema).default(["test", "lint"])
-}).strict();
-var EvidenceConfigSchema = external_exports.object({
-  claim_vs_ci: ClaimVsCiEvidenceSchema.default({
-    enabled: true,
-    phrases: ["tests passed", "all tests pass", "ci passed", "verified"],
-    required_checks: ["test", "lint"]
-  })
 }).strict();
 var AgentGateConfigSchema = external_exports.object({
   version: external_exports.literal(1),
@@ -48338,17 +48312,11 @@ var AgentGateConfigSchema = external_exports.object({
   }),
   contract: ContractConfigSchema.default({
     required_for: ["agent"],
-    sources: ["pr_body"],
     allow_missing_in_observe_mode: true
-  }),
-  risk_budget: RiskBudgetConfigSchema.default({
-    max_files_changed_for_agent: 20,
-    max_lines_changed_for_agent: 800
   }),
   high_risk_paths: external_exports.record(external_exports.string(), HighRiskPathAreaSchema).default({}),
   agent_control_plane: AgentControlPlaneSchema.default({
     paths: DEFAULT_AGENT_CONTROL_PLANE_PATHS,
-    require_reviewers: [],
     severity: "error"
   }),
   github_actions: GitHubActionsConfigSchema.default({
@@ -48357,19 +48325,6 @@ var AgentGateConfigSchema = external_exports.object({
     block_pull_request_target_checkout: true,
     require_pinned_actions: "warn",
     severity: "error"
-  }),
-  dependencies: DependenciesConfigSchema.default({
-    package_managers: ["npm", "pnpm", "yarn"],
-    block_lifecycle_script_changes: true,
-    require_lockfile_update: true,
-    severity: "warn"
-  }),
-  evidence: EvidenceConfigSchema.default({
-    claim_vs_ci: {
-      enabled: true,
-      phrases: ["tests passed", "all tests pass", "ci passed", "verified"],
-      required_checks: ["test", "lint"]
-    }
   })
 }).strict();
 var DEFAULT_CONFIG = AgentGateConfigSchema.parse({ version: 1 });
@@ -48408,11 +48363,7 @@ var AgentContractSchema = external_exports.object({
   issue: external_exports.union([external_exports.number().int(), external_exports.string()]).optional(),
   allowed_paths: external_exports.array(NonEmptyStringSchema).min(1),
   blocked_paths: external_exports.array(NonEmptyStringSchema).optional(),
-  required_evidence: external_exports.array(NonEmptyStringSchema).optional(),
-  risk_budget: external_exports.object({
-    max_files_changed: external_exports.number().int().positive().optional(),
-    max_lines_changed: external_exports.number().int().positive().optional()
-  }).strict().optional()
+  required_evidence: external_exports.array(NonEmptyStringSchema).optional()
 }).strict();
 var CONTRACT_BLOCK_PATTERN = /<!--\s*agent-gate-contract\b([\s\S]*?)-->/g;
 function formatYamlErrors2(errors) {

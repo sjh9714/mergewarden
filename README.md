@@ -273,6 +273,13 @@ high_risk_paths:
 
 Teams can add auth, payments, infra, and agent-control-plane paths as their policy matures.
 
+Current `agent-gate.yml` support is intentionally narrow: agent detection,
+PR-body contracts, high-risk paths with matching test-file evidence, agent
+control-plane paths, and GitHub Actions workflow rules. File-based contracts,
+risk budgets, dependency drift, claim-vs-CI evidence, reviewer requirements,
+and rollback-plan requirements are planned areas and are rejected today instead
+of being accepted as no-op settings.
+
 ## Packages
 
 - `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.

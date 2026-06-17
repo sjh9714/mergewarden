@@ -8,7 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Reject planned-but-unimplemented config and contract fields instead of
+  accepting them as no-op settings.
 
 ## v0.1.5 - 2026-06-17
 

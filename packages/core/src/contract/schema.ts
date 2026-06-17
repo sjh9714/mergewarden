@@ -11,13 +11,6 @@ export const AgentContractSchema = z
     allowed_paths: z.array(NonEmptyStringSchema).min(1),
     blocked_paths: z.array(NonEmptyStringSchema).optional(),
     required_evidence: z.array(NonEmptyStringSchema).optional(),
-    risk_budget: z
-      .object({
-        max_files_changed: z.number().int().positive().optional(),
-        max_lines_changed: z.number().int().positive().optional(),
-      })
-      .strict()
-      .optional(),
   })
   .strict();
 

@@ -16,9 +16,6 @@ blocked_paths:
 required_evidence:
   - "auth_tests_changed"
   - "ci_passed"
-risk_budget:
-  max_files_changed: 8
-  max_lines_changed: 300
 -->`;
 
 function expectInvalid(
@@ -51,10 +48,6 @@ describe("parseContractFromPrBody", () => {
         allowed_paths: ["src/auth/**", "tests/auth/**"],
         blocked_paths: [".github/workflows/**", "src/payments/**"],
         required_evidence: ["auth_tests_changed", "ci_passed"],
-        risk_budget: {
-          max_files_changed: 8,
-          max_lines_changed: 300,
-        },
       },
     });
   });
@@ -127,14 +120,14 @@ allowed_paths:
     });
   });
 
-  it("returns invalid when risk budget values are not positive integers", () => {
+  it("rejects planned risk budget fields that are not implemented yet", () => {
     const result = parseContractFromPrBody(`<!-- agent-gate-contract
 version: 1
 allowed_paths:
   - "src/**"
 risk_budget:
-  max_files_changed: 0
-  max_lines_changed: 1.5
+  max_files_changed: 8
+  max_lines_changed: 300
 -->`);
 
     expect(expectInvalid(result).message).toMatch(/risk_budget/);

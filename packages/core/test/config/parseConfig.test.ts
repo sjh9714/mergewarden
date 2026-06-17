@@ -16,12 +16,7 @@ describe("parseConfig", () => {
     });
     expect(config.contract).toEqual({
       required_for: ["agent"],
-      sources: ["pr_body"],
       allow_missing_in_observe_mode: true,
-    });
-    expect(config.risk_budget).toEqual({
-      max_files_changed_for_agent: 20,
-      max_lines_changed_for_agent: 800,
     });
   });
 
@@ -52,13 +47,7 @@ agent_detection:
 contract:
   required_for:
     - agent
-  sources:
-    - pr_body
   allow_missing_in_observe_mode: true
-
-risk_budget:
-  max_files_changed_for_agent: 12
-  max_lines_changed_for_agent: 500
 
 high_risk_paths:
   auth:
@@ -68,8 +57,6 @@ high_risk_paths:
     require_tests:
       - "tests/auth/**"
       - "**/*.auth.test.ts"
-    require_reviewers:
-      - "@security-team"
     severity: error
 
 agent_control_plane:
@@ -84,8 +71,6 @@ agent_control_plane:
     - ".mcp.json"
     - "claude_desktop_config.json"
     - ".codex/**"
-  require_reviewers:
-    - "@platform-team"
   severity: error
 
 github_actions:
@@ -96,27 +81,6 @@ github_actions:
   block_pull_request_target_checkout: true
   require_pinned_actions: warn
   severity: error
-
-dependencies:
-  package_managers:
-    - npm
-    - pnpm
-    - yarn
-  block_lifecycle_script_changes: true
-  require_lockfile_update: true
-  severity: warn
-
-evidence:
-  claim_vs_ci:
-    enabled: true
-    phrases:
-      - "tests passed"
-      - "all tests pass"
-      - "ci passed"
-      - "verified"
-    required_checks:
-      - "test"
-      - "lint"
 `);
 
     expect(config.mode).toBe("block");
@@ -127,12 +91,8 @@ evidence:
     expect(config.high_risk_paths.auth).toEqual({
       paths: ["src/auth/**", "app/**/auth/**"],
       require_tests: ["tests/auth/**", "**/*.auth.test.ts"],
-      require_reviewers: ["@security-team"],
-      require_rollback_plan: false,
       severity: "error",
     });
-    expect(config.dependencies.package_managers).toEqual(["npm", "pnpm", "yarn"]);
-    expect(config.evidence.claim_vs_ci.required_checks).toEqual(["test", "lint"]);
   });
 
   it("exposes defaults with the same values as a minimal config parse", () => {
@@ -170,14 +130,12 @@ high_risk_paths:
   payments:
     paths:
       - "src/payments/**"
-    require_reviewers:
-      - "@payments-team"
     severity: warn
 `);
 
     expect(Object.keys(config.high_risk_paths)).toEqual(["auth", "payments"]);
     expect(config.high_risk_paths.auth?.paths).toEqual(["src/auth/**"]);
-    expect(config.high_risk_paths.payments?.require_reviewers).toEqual(["@payments-team"]);
+    expect(config.high_risk_paths.payments?.severity).toBe("warn");
   });
 
   it("rejects unknown fields instead of stripping them", () => {
@@ -225,5 +183,75 @@ agent_detection:
     - "   "
 `),
     ).toThrow(/Invalid agent-gate\.yml: agent_detection\.labels\.0/);
+  });
+
+  it("rejects planned config fields that are not implemented yet", () => {
+    expect(() =>
+      parseConfig(`
+version: 1
+risk_budget:
+  max_files_changed_for_agent: 12
+`),
+    ).toThrow(/Invalid agent-gate\.yml: risk_budget/);
+
+    expect(() =>
+      parseConfig(`
+version: 1
+dependencies:
+  require_lockfile_update: true
+`),
+    ).toThrow(/Invalid agent-gate\.yml: dependencies/);
+
+    expect(() =>
+      parseConfig(`
+version: 1
+evidence:
+  claim_vs_ci:
+    enabled: true
+`),
+    ).toThrow(/Invalid agent-gate\.yml: evidence/);
+  });
+
+  it("rejects planned reviewer, rollback, and file-contract fields", () => {
+    expect(() =>
+      parseConfig(`
+version: 1
+contract:
+  sources:
+    - file
+`),
+    ).toThrow(/Invalid agent-gate\.yml: contract\.sources/);
+
+    expect(() =>
+      parseConfig(`
+version: 1
+high_risk_paths:
+  auth:
+    paths:
+      - src/auth/**
+    require_reviewers:
+      - "@security-team"
+`),
+    ).toThrow(/Invalid agent-gate\.yml: high_risk_paths\.auth\.require_reviewers/);
+
+    expect(() =>
+      parseConfig(`
+version: 1
+high_risk_paths:
+  auth:
+    paths:
+      - src/auth/**
+    require_rollback_plan: true
+`),
+    ).toThrow(/Invalid agent-gate\.yml: high_risk_paths\.auth\.require_rollback_plan/);
+
+    expect(() =>
+      parseConfig(`
+version: 1
+agent_control_plane:
+  require_reviewers:
+    - "@platform-team"
+`),
+    ).toThrow(/Invalid agent-gate\.yml: agent_control_plane\.require_reviewers/);
   });
 });
