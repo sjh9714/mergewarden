@@ -469,6 +469,30 @@ describe("runAction", () => {
     expect(harness.failures).toEqual([]);
   });
 
+  it("surfaces workflow content fetch failures as incomplete analysis findings", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+        [`${HEAD_SHA}:.github/workflows/release.yml`]: "permissions:\n  contents: write\n",
+      },
+      errors: {
+        [`${BASE_SHA}:.github/workflows/release.yml`]: new Error("not found"),
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    const result = await runAction(harness.runtime);
+
+    expect(result?.findings.map((finding) => finding.ruleId)).toContain(
+      "analysis/content-unavailable",
+    );
+    expect(result?.findings.map((finding) => finding.ruleId)).not.toContain(
+      "workflow/permission-escalation",
+    );
+    expect(harness.outputs.get("decision")).toBe("block");
+  });
+
   it("does not fail block decisions when fail-on-block is false", async () => {
     const octokit = createOctokit({
       files: [workflowFile()],
