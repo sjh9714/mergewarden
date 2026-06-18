@@ -23,6 +23,8 @@ Latest external install smoke evidence is recorded for `@v0.1.5` in `docs/extern
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
 
+See `docs/evidence-model.md` for stable finding IDs, re-derivable evidence, and warn-to-block planning.
+
 See `docs/launch-announcement-draft.md` for a reusable launch announcement draft.
 
 Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).

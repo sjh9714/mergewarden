@@ -1,5 +1,5 @@
 import { scopePathsForFile } from "../path/scopePaths.js";
-import type { Finding } from "../types.js";
+import type { RawFinding } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
 function matchingPatterns(ctx: RuleContext, paths: string[], patterns: string[]): string[] {
@@ -10,7 +10,7 @@ export const agentControlPlaneDriftRule: Rule = {
   id: "agent-control-plane/drift",
   title: "Agent control-plane file changed",
   run(ctx) {
-    const findings: Finding[] = [];
+    const findings: RawFinding[] = [];
     const config = ctx.input.config.agent_control_plane;
 
     for (const file of ctx.helpers.changedFiles()) {
@@ -20,7 +20,7 @@ export const agentControlPlaneDriftRule: Rule = {
         continue;
       }
 
-      const finding: Finding = {
+      const finding: RawFinding = {
         ruleId: "agent-control-plane/drift",
         severity: config.severity,
         title: "Agent control-plane file changed",

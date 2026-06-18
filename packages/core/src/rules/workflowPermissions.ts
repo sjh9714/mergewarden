@@ -3,7 +3,7 @@ import {
   findPermissionEscalations,
   normalizeWorkflowPermissions,
 } from "../workflow/permissions.js";
-import type { Finding } from "../types.js";
+import type { RawFinding } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
 function isWorkflowFile(ctx: RuleContext, path: string): boolean {
@@ -26,7 +26,7 @@ export const workflowPermissionEscalationRule: Rule = {
       return [];
     }
 
-    const findings: Finding[] = [];
+    const findings: RawFinding[] = [];
 
     for (const file of ctx.helpers.changedFiles()) {
       if (

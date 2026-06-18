@@ -1,4 +1,5 @@
-import type { AnalysisInput, AnalysisResult, Finding } from "./types.js";
+import { attachFindingIds } from "./finding/id.js";
+import type { AnalysisInput, AnalysisResult, RawFinding } from "./types.js";
 import { createRuleContext, builtInRules } from "./rules/index.js";
 import { decide } from "./score/decision.js";
 import { calculateRiskScore } from "./score/riskScore.js";
@@ -17,12 +18,13 @@ function titleForDecision(decision: AnalysisResult["decision"]): string {
 
 export async function analyze(input: AnalysisInput): Promise<AnalysisResult> {
   const ctx = createRuleContext(input);
-  const findings: Finding[] = [];
+  const rawFindings: RawFinding[] = [];
 
   for (const rule of builtInRules) {
-    findings.push(...(await rule.run(ctx)));
+    rawFindings.push(...(await rule.run(ctx)));
   }
 
+  const findings = attachFindingIds(rawFindings);
   const errorCount = findings.filter((finding) => finding.severity === "error").length;
   const warnCount = findings.filter((finding) => finding.severity === "warn").length;
   const infoCount = findings.filter((finding) => finding.severity === "info").length;

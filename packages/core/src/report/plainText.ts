@@ -20,7 +20,12 @@ function whyText(result: AnalysisResult): string {
 }
 
 function findingLine(finding: Finding): string {
-  const parts = ["-", safeReportValue(finding.severity), safeReportValue(finding.ruleId)];
+  const parts = [
+    "-",
+    safeReportValue(finding.severity),
+    safeReportValue(finding.findingId),
+    safeReportValue(finding.ruleId),
+  ];
 
   if (finding.path) {
     parts.push(safeReportValue(finding.path));

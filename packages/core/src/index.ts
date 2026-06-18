@@ -30,6 +30,7 @@ export type {
   FileChange,
   Finding,
   PullRequestContext,
+  RawFinding,
   RepoContext,
   ReviewEvidence,
   Severity,

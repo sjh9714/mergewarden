@@ -1,5 +1,5 @@
 import type { AgentGateConfig } from "../config/schema.js";
-import type { Finding, Severity } from "../types.js";
+import type { RawFinding, Severity } from "../types.js";
 import {
   findUnpinnedThirdPartyActions,
   findJobsWithIdTokenWritePermission,
@@ -22,7 +22,7 @@ function dangerousFinding(
   severity: Severity,
   pattern: string,
   extraEvidence: { label: string; value: string }[] = [],
-): Finding {
+): RawFinding {
   return {
     ruleId: "workflow/dangerous-pattern",
     severity,
@@ -50,7 +50,7 @@ export const workflowDangerousPatternRule: Rule = {
   id: "workflow/dangerous-pattern",
   title: "Dangerous GitHub Actions workflow pattern",
   run(ctx) {
-    const findings: Finding[] = [];
+    const findings: RawFinding[] = [];
     const config = ctx.input.config.github_actions;
 
     for (const file of ctx.helpers.changedFiles()) {

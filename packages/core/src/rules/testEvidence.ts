@@ -1,5 +1,5 @@
 import { scopePathsForFile } from "../path/scopePaths.js";
-import type { FileChange, Finding } from "../types.js";
+import type { FileChange, RawFinding } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
 function matchingScopePaths(ctx: RuleContext, file: FileChange, patterns: string[]): string[] {
@@ -34,7 +34,7 @@ export const missingTestEvidenceRule: Rule = {
   id: "evidence/missing-test-change",
   title: "Missing test evidence",
   run(ctx) {
-    const findings: Finding[] = [];
+    const findings: RawFinding[] = [];
     const areas = Object.entries(ctx.input.config.high_risk_paths).sort(([left], [right]) =>
       compareAreaNames(left, right),
     );

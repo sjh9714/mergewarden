@@ -1,5 +1,5 @@
 import { findMatchingPatterns } from "../path/match.js";
-import type { AnalysisInput, Finding } from "../types.js";
+import type { AnalysisInput, RawFinding } from "../types.js";
 import type { Rule } from "./types.js";
 
 export interface AgentOriginSignal {
@@ -91,7 +91,7 @@ export const agentOriginRule: Rule = {
       return [];
     }
 
-    const finding: Finding = {
+    const finding: RawFinding = {
       ruleId: "agent/origin-detected",
       severity: "info",
       title: "Agent origin detected",

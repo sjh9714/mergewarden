@@ -32912,6 +32912,7 @@ async function writeTextFile(path, content) {
 }
 
 // ../core/dist/index.js
+var import_crypto = require("crypto");
 var import_picomatch = __toESM(require_picomatch2(), 1);
 var import_yaml = __toESM(require_dist2(), 1);
 
@@ -47432,6 +47433,46 @@ config(en_default());
 // ../core/dist/index.js
 var import_yaml2 = __toESM(require_dist2(), 1);
 var import_yaml3 = __toESM(require_dist2(), 1);
+function normalizeStableText(value) {
+  return value.normalize("NFC").replace(/\r\n?/g, "\n");
+}
+function sortedEvidence(finding) {
+  return finding.evidence.map((item) => ({
+    label: normalizeStableText(item.label),
+    value: normalizeStableText(item.value)
+  })).sort((left, right) => {
+    if (left.label < right.label) {
+      return -1;
+    }
+    if (left.label > right.label) {
+      return 1;
+    }
+    if (left.value < right.value) {
+      return -1;
+    }
+    if (left.value > right.value) {
+      return 1;
+    }
+    return 0;
+  });
+}
+function createFindingId(finding) {
+  const stableInput = {
+    ruleId: finding.ruleId,
+    severity: finding.severity,
+    ...finding.path ? { path: normalizeStableText(finding.path) } : {},
+    ...finding.line !== void 0 ? { line: finding.line } : {},
+    evidence: sortedEvidence(finding)
+  };
+  const hash2 = (0, import_crypto.createHash)("sha256").update(JSON.stringify(stableInput)).digest("hex").slice(0, 16);
+  return `agf_${hash2}`;
+}
+function attachFindingIds(findings) {
+  return findings.map((finding) => ({
+    ...finding,
+    findingId: createFindingId(finding)
+  }));
+}
 function normalizePath(path) {
   return path.replace(/\\/g, "/").replace(/^(\.\/)+/, "");
 }
@@ -48279,10 +48320,11 @@ function titleForDecision(decision) {
 }
 async function analyze(input) {
   const ctx = createRuleContext(input);
-  const findings = [];
+  const rawFindings = [];
   for (const rule of builtInRules) {
-    findings.push(...await rule.run(ctx));
+    rawFindings.push(...await rule.run(ctx));
   }
+  const findings = attachFindingIds(rawFindings);
   const errorCount = findings.filter((finding) => finding.severity === "error").length;
   const warnCount = findings.filter((finding) => finding.severity === "warn").length;
   const infoCount = findings.filter((finding) => finding.severity === "info").length;
@@ -48579,6 +48621,8 @@ function renderMarkdownReport(result) {
         `### ${finding.severity.toUpperCase()} ${finding.ruleId}`,
         "",
         finding.message,
+        "",
+        `Finding ID: \`${safeReportValue(finding.findingId)}\``,
         ""
       );
       if (finding.path) {
@@ -48612,7 +48656,12 @@ function whyText(result) {
   return safeReportValue(finding.message);
 }
 function findingLine(finding) {
-  const parts = ["-", safeReportValue(finding.severity), safeReportValue(finding.ruleId)];
+  const parts = [
+    "-",
+    safeReportValue(finding.severity),
+    safeReportValue(finding.findingId),
+    safeReportValue(finding.ruleId)
+  ];
   if (finding.path) {
     parts.push(safeReportValue(finding.path));
   }
@@ -48651,7 +48700,7 @@ function renderPlainTextReportSummary(result) {
 }
 
 // src/version.ts
-var AGENT_GATE_VERSION = "0.1.6";
+var AGENT_GATE_VERSION = "0.2.0";
 
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";

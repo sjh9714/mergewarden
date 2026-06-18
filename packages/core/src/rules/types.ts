@@ -1,10 +1,10 @@
-import type { FileChange, Finding, AnalysisInput } from "../types.js";
+import type { FileChange, RawFinding, AnalysisInput } from "../types.js";
 import type { AgentOriginResult } from "./agentOrigin.js";
 
 export interface Rule {
   id: string;
   title: string;
-  run(ctx: RuleContext): Finding[] | Promise<Finding[]>;
+  run(ctx: RuleContext): RawFinding[] | Promise<RawFinding[]>;
 }
 
 export interface RuleContext {

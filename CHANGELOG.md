@@ -12,6 +12,11 @@ pre-release, so APIs and rule names may change between versions.
 
 - Add a version consistency test for package versions and Agent Gate version
   constants.
+- Add stable finding IDs to JSON, Markdown, and compact plain-text reports as
+  the foundation for v0.2 evidence-model work.
+- Document the evidence model for re-derivable findings, warn-mode signal
+  measurement, test-evidence limits, agent-control-plane drift boundaries, and
+  future override audit concerns.
 
 ## v0.1.6 - 2026-06-17
 

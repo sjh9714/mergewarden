@@ -3,11 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   analyze,
   type AnalysisResult,
+  type RawFinding,
+  parseConfig,
   renderJsonReport,
   renderMarkdownReport,
   renderPlainTextReportSummary,
 } from "../src/index.js";
-import { createAnalysisInput } from "./helpers.js";
+import { createFindingId } from "../src/finding/id.js";
+import { createAnalysisInput, fileChange } from "./helpers.js";
 
 describe("report renderers", () => {
   const metadata = {
@@ -17,6 +20,13 @@ describe("report renderers", () => {
     configSource: "local" as const,
     version: "0.0.0",
   };
+
+  function finding(rawFinding: RawFinding): RawFinding & { findingId: string } {
+    return {
+      ...rawFinding,
+      findingId: createFindingId(rawFinding),
+    };
+  }
 
   it("renders JSON that parses back into the analysis result", async () => {
     const result = await analyze(createAnalysisInput());
@@ -52,7 +62,7 @@ describe("report renderers", () => {
         infoCount: 0,
       },
       findings: [
-        {
+        finding({
           ruleId: "evidence/missing-test-change",
           severity: "warn" as const,
           title: "Missing test evidence",
@@ -67,7 +77,7 @@ describe("report renderers", () => {
           remediation: ["Add or update matching auth tests."],
           tags: ["evidence"],
           confidence: "medium" as const,
-        },
+        }),
       ],
       metadata,
     };
@@ -101,7 +111,7 @@ describe("report renderers", () => {
         infoCount: 0,
       },
       findings: [
-        {
+        finding({
           ruleId: "workflow/permission-escalation",
           severity: "error" as const,
           title: "Workflow permissions escalated",
@@ -116,8 +126,8 @@ describe("report renderers", () => {
           remediation: ["Review the workflow before merging."],
           tags: ["workflow"],
           confidence: "high" as const,
-        },
-        {
+        }),
+        finding({
           ruleId: "evidence/missing-test-change",
           severity: "warn" as const,
           title: "Missing test evidence",
@@ -127,12 +137,18 @@ describe("report renderers", () => {
           remediation: [],
           tags: ["evidence"],
           confidence: "medium" as const,
-        },
+        }),
       ],
       metadata,
     };
 
     const summary = renderPlainTextReportSummary(result);
+    const workflowFinding = result.findings[0];
+    const evidenceFinding = result.findings[1];
+
+    if (!workflowFinding || !evidenceFinding) {
+      throw new Error("Expected warn report fixture to include two findings");
+    }
 
     expect(summary).toContain("Agent Gate: NEEDS HUMAN DECISION");
     expect(summary).toContain("Decision: warn");
@@ -144,9 +160,11 @@ describe("report renderers", () => {
       "Policy status: warning today; eligible to become a merge gate after tuning.",
     );
     expect(summary).toContain(
-      "- error workflow/permission-escalation .github/workflows/release.yml",
+      `- error ${workflowFinding.findingId} workflow/permission-escalation .github/workflows/release.yml`,
     );
-    expect(summary).toContain("- warn evidence/missing-test-change src/auth/session.ts");
+    expect(summary).toContain(
+      `- warn ${evidenceFinding.findingId} evidence/missing-test-change src/auth/session.ts`,
+    );
     expect(summary).not.toContain("Evidence:");
     expect(summary).not.toContain("Remediation:");
     expect(JSON.parse(renderJsonReport(result))).toMatchObject({ decision: "warn" });
@@ -165,7 +183,7 @@ describe("report renderers", () => {
         infoCount: 1,
       },
       findings: [
-        {
+        finding({
           ruleId: "agent/origin-detected",
           severity: "info",
           title: "Agent origin detected",
@@ -174,19 +192,24 @@ describe("report renderers", () => {
           remediation: [],
           tags: ["agent"],
           confidence: "medium",
-        },
+        }),
       ],
       metadata,
     };
     const markdown = renderMarkdownReport(result);
     const plainText = renderPlainTextReportSummary(result);
+    const infoFinding = result.findings[0];
+
+    if (!infoFinding) {
+      throw new Error("Expected info-only report fixture to include one finding");
+    }
 
     expect(markdown).toContain("# Agent Gate: PASSED");
     expect(markdown).toContain("No warning or blocking findings were detected.");
     expect(markdown).toContain("### INFO agent/origin-detected");
     expect(plainText).toContain("Agent Gate: PASSED");
     expect(plainText).toContain("Why: No warning or blocking findings were detected.");
-    expect(plainText).toContain("- info agent/origin-detected");
+    expect(plainText).toContain(`- info ${infoFinding.findingId} agent/origin-detected`);
   });
 
   it("normalizes untrusted Markdown values in finding details", () => {
@@ -203,7 +226,7 @@ describe("report renderers", () => {
         infoCount: 0,
       },
       findings: [
-        {
+        finding({
           ruleId: "evidence/missing-test-change",
           severity: "warn",
           title: "Missing test evidence",
@@ -218,7 +241,7 @@ describe("report renderers", () => {
           remediation: ["Add matching tests.\n<!-- do not render as comment -->"],
           tags: ["evidence"],
           confidence: "medium",
-        },
+        }),
       ],
       metadata,
     });
@@ -244,23 +267,25 @@ describe("report renderers", () => {
         warnCount: 11,
         infoCount: 0,
       },
-      findings: Array.from({ length: 11 }, (_, index) => ({
-        ruleId: index === 0 ? "evidence/missing-test-change" : `test/rule-${index}`,
-        severity: "warn" as const,
-        title: "Finding",
-        message:
-          index === 0 ? `Changed risky file.\n<!-- hidden -->\n${longValue}` : `Finding ${index}`,
-        path: index === 0 ? "src/auth/session.ts\n<!-- hidden -->" : `src/file-${index}.ts`,
-        evidence: [
-          {
-            label: "evidence",
-            value: "not printed",
-          },
-        ],
-        remediation: ["not printed"],
-        tags: ["test"],
-        confidence: "medium" as const,
-      })),
+      findings: Array.from({ length: 11 }, (_, index) =>
+        finding({
+          ruleId: index === 0 ? "evidence/missing-test-change" : `test/rule-${index}`,
+          severity: "warn" as const,
+          title: "Finding",
+          message:
+            index === 0 ? `Changed risky file.\n<!-- hidden -->\n${longValue}` : `Finding ${index}`,
+          path: index === 0 ? "src/auth/session.ts\n<!-- hidden -->" : `src/file-${index}.ts`,
+          evidence: [
+            {
+              label: "evidence",
+              value: "not printed",
+            },
+          ],
+          remediation: ["not printed"],
+          tags: ["test"],
+          confidence: "medium" as const,
+        }),
+      ),
       metadata,
     };
 
@@ -287,7 +312,7 @@ describe("report renderers", () => {
         infoCount: 0,
       },
       findings: [
-        {
+        finding({
           ruleId: "contract/out-of-scope",
           severity: "error",
           title: "File changed outside contract scope",
@@ -297,7 +322,7 @@ describe("report renderers", () => {
           remediation: [],
           tags: ["contract"],
           confidence: "high",
-        },
+        }),
       ],
       metadata,
     };
@@ -308,8 +333,26 @@ describe("report renderers", () => {
     expect(markdown).toContain("Decision: block");
     expect(markdown).toContain("Review or split the out-of-scope file changes before merging.");
     expect(markdown).toContain("### ERROR contract/out-of-scope");
+    expect(markdown).toContain("Finding ID: `agf_");
     expect(markdown).toContain("Path: `src/payments/webhook.ts`");
     expect(plainText).toContain("Agent Gate: BLOCKED");
     expect(plainText).toContain("Decision: block");
+    expect(plainText).toContain("agf_");
+  });
+
+  it("includes finding IDs in JSON, Markdown, and plain-text reports", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const findingId = result.findings[0]?.findingId;
+
+    expect(findingId).toMatch(/^agf_[0-9a-f]{16}$/);
+    expect(JSON.parse(renderJsonReport(result)).findings[0].findingId).toBe(findingId);
+    expect(renderMarkdownReport(result)).toContain(`Finding ID: \`${findingId}\``);
+    expect(renderPlainTextReportSummary(result)).toContain(findingId);
   });
 });

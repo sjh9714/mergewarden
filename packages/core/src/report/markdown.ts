@@ -67,6 +67,8 @@ export function renderMarkdownReport(result: AnalysisResult): string {
         "",
         finding.message,
         "",
+        `Finding ID: \`${safeReportValue(finding.findingId)}\``,
+        "",
       );
 
       if (finding.path) {

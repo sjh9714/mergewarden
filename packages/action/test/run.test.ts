@@ -292,12 +292,15 @@ describe("runAction", () => {
     expect(harness.outputs.get("risk-score")).toBe(String(result?.riskScore));
     expect(harness.outputs.get("report-json")).toBe("agent-gate-report.json");
     expect(harness.outputs.get("report-markdown")).toBe("agent-gate-report.md");
-    expect(JSON.parse(harness.writtenFiles.get("agent-gate-report.json") ?? "{}")).toMatchObject({
+    const jsonReport = JSON.parse(harness.writtenFiles.get("agent-gate-report.json") ?? "{}");
+
+    expect(jsonReport).toMatchObject({
       decision: "block",
       metadata: {
         version: AGENT_GATE_VERSION,
       },
     });
+    expect(jsonReport.findings[0].findingId).toMatch(/^agf_[0-9a-f]{16}$/);
     expect(harness.writtenFiles.get("agent-gate-report.md")).toContain(
       "workflow/permission-escalation",
     );
@@ -306,8 +309,8 @@ describe("runAction", () => {
     expect(harness.infos.join("\n")).toContain("Decision: block");
     expect(harness.infos.join("\n")).toContain("Risk score:");
     expect(harness.infos.join("\n")).toContain("Findings:");
-    expect(harness.infos.join("\n")).toContain(
-      "- error workflow/permission-escalation .github/workflows/release.yml",
+    expect(harness.infos.join("\n")).toMatch(
+      /- error agf_[0-9a-f]{16} workflow\/permission-escalation \.github\/workflows\/release\.yml/,
     );
     expect(harness.failures).toEqual(["Agent Gate blocked this pull request."]);
     expect(octokit.rest.repos.getContent).toHaveBeenCalledWith(

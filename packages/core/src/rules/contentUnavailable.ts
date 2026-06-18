@@ -1,4 +1,4 @@
-import type { FileChange, Finding } from "../types.js";
+import type { FileChange, RawFinding } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
 function isWorkflowFile(ctx: RuleContext, path: string): boolean {
@@ -13,7 +13,7 @@ function missingHeadContent(file: FileChange): boolean {
   return file.status !== "removed" && file.headContent == null;
 }
 
-function contentUnavailableFinding(file: FileChange, ref: "base" | "head"): Finding {
+function contentUnavailableFinding(file: FileChange, ref: "base" | "head"): RawFinding {
   return {
     ruleId: "analysis/content-unavailable",
     severity: "error",
@@ -35,7 +35,7 @@ export const contentUnavailableRule: Rule = {
   id: "analysis/content-unavailable",
   title: "Changed file content unavailable",
   run(ctx) {
-    const findings: Finding[] = [];
+    const findings: RawFinding[] = [];
 
     for (const file of ctx.helpers.changedFiles()) {
       if (!isWorkflowFile(ctx, file.path)) {

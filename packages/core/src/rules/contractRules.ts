@@ -1,8 +1,13 @@
 import { scopePathsForFile } from "../path/scopePaths.js";
-import type { Finding, Severity } from "../types.js";
+import type { RawFinding, Severity } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
-function baseFinding(ruleId: string, severity: Severity, title: string, message: string): Finding {
+function baseFinding(
+  ruleId: string,
+  severity: Severity,
+  title: string,
+  message: string,
+): RawFinding {
   return {
     ruleId,
     severity,

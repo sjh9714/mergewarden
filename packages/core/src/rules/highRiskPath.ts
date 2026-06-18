@@ -1,5 +1,5 @@
 import { scopePathsForFile } from "../path/scopePaths.js";
-import type { Finding } from "../types.js";
+import type { RawFinding } from "../types.js";
 import type { Rule, RuleContext } from "./types.js";
 
 function matchingPatterns(ctx: RuleContext, paths: string[], patterns: string[]): string[] {
@@ -22,7 +22,7 @@ export const highRiskPathRule: Rule = {
   id: "risk/high-risk-path",
   title: "High-risk path changed",
   run(ctx) {
-    const findings: Finding[] = [];
+    const findings: RawFinding[] = [];
     const areas = Object.entries(ctx.input.config.high_risk_paths).sort(([left], [right]) =>
       compareAreaNames(left, right),
     );
@@ -35,7 +35,7 @@ export const highRiskPathRule: Rule = {
           continue;
         }
 
-        const finding: Finding = {
+        const finding: RawFinding = {
           ruleId: "risk/high-risk-path",
           severity: area.severity,
           title: "High-risk path changed",

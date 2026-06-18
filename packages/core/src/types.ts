@@ -10,7 +10,7 @@ export interface Evidence {
   value: string;
 }
 
-export interface Finding {
+export interface RawFinding {
   ruleId: string;
   severity: Severity;
   title: string;
@@ -21,6 +21,10 @@ export interface Finding {
   remediation: string[];
   tags: string[];
   confidence: "low" | "medium" | "high";
+}
+
+export interface Finding extends RawFinding {
+  findingId: string;
 }
 
 export interface RepoContext {
