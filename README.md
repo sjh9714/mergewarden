@@ -5,11 +5,15 @@
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
 
-No AI PR gets merged without proof.
+> Catch risky AI-generated PRs before merge — without checking out PR code.
 
-Agent Gate is a deterministic CI firewall for AI-generated pull requests. It checks PR contracts, risky paths, agent instruction drift, workflow permissions, and test evidence before merge.
+Agent Gate is a GitHub Action that checks deterministic merge evidence: out-of-scope edits, GitHub Actions permission escalation, agent instruction drift, MCP config drift, and missing test-file evidence.
 
 The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
+
+[Install in 10 minutes](#10-minute-observe-path) · [See a real report](#real-report-example) · [Why deterministic?](#agent-gate-vs-llm-reviewers)
+
+No AI PR gets merged without proof.
 
 ## Status
 
@@ -28,6 +32,20 @@ See `docs/evidence-model.md` for stable finding IDs, re-derivable evidence, and 
 See `docs/launch-announcement-draft.md` for a reusable launch announcement draft.
 
 Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
+
+## Real Report Example
+
+An AI PR changed a GitHub Actions workflow and increased merge risk. In warn mode, Agent Gate keeps the check non-blocking while making the human decision obvious:
+
+```text
+Agent Gate: NEEDS HUMAN DECISION
+Decision: warn
+Why: .github/workflows/release.yml changed outside the allowed contract scope.
+Recommended next step: review the workflow change before merging.
+Policy status: warning today; eligible to become a merge gate after tuning.
+
+Finding ID: agf_...
+```
 
 ## What It Catches
 

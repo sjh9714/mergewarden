@@ -146,6 +146,10 @@ describe("CLI replay", () => {
     expect(readme).toContain("@v0.2.0");
     expect(readme).toContain("No AI PR gets merged without proof");
     expect(readme.toLowerCase()).toContain("no checkout");
+    expect(readme).toContain("Catch risky AI-generated PRs before merge");
+    expect(readme).toContain("[Install in 10 minutes](#10-minute-observe-path)");
+    expect(readme).toContain("[See a real report](#real-report-example)");
+    expect(readme).toContain("Real Report Example");
     expect(readme).toContain("10-Minute Observe Path");
     expect(readme).toContain("Start in warn mode");
     expect(readme).toContain("allowed_paths");
@@ -153,6 +157,7 @@ describe("CLI replay", () => {
     expect(readme).toContain("needs human decision");
     expect(readme).toContain("must block");
     expect(readme).toContain("Agent Gate: NEEDS HUMAN DECISION");
+    expect(readme).toContain("Finding ID: agf_...");
     expect(readme).toContain("Agent Gate: BLOCKED");
     expect(readme).toContain("workflow/permission-escalation");
     expect(readme).toContain("workflow/dangerous-pattern");
