@@ -27,6 +27,7 @@ export type {
   ConfigSource,
   Decision,
   Evidence,
+  EvidenceSnapshot,
   FileChange,
   Finding,
   PullRequestContext,

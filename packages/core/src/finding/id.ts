@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { Finding, RawFinding } from "../types.js";
+import type { EvidenceSnapshot, Finding, RawFinding } from "../types.js";
 
 function normalizeStableText(value: string): string {
   return value.normalize("NFC").replace(/\r\n?/g, "\n");
@@ -33,14 +33,18 @@ function sortedEvidence(finding: RawFinding): Array<{ label: string; value: stri
     });
 }
 
-export function createFindingId(finding: RawFinding): string {
-  const stableInput = {
+export function createEvidenceSnapshot(finding: RawFinding): EvidenceSnapshot {
+  return {
     ruleId: finding.ruleId,
     severity: finding.severity,
     ...(finding.path ? { path: normalizeStableText(finding.path) } : {}),
     ...(finding.line !== undefined ? { line: finding.line } : {}),
     evidence: sortedEvidence(finding),
   };
+}
+
+export function createFindingId(finding: RawFinding): string {
+  const stableInput = createEvidenceSnapshot(finding);
   const hash = createHash("sha256").update(JSON.stringify(stableInput)).digest("hex").slice(0, 16);
 
   return `agf_${hash}`;
@@ -50,5 +54,6 @@ export function attachFindingIds(findings: RawFinding[]): Finding[] {
   return findings.map((finding) => ({
     ...finding,
     findingId: createFindingId(finding),
+    evidenceSnapshot: createEvidenceSnapshot(finding),
   }));
 }

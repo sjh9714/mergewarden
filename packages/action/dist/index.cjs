@@ -47456,21 +47456,25 @@ function sortedEvidence(finding) {
     return 0;
   });
 }
-function createFindingId(finding) {
-  const stableInput = {
+function createEvidenceSnapshot(finding) {
+  return {
     ruleId: finding.ruleId,
     severity: finding.severity,
     ...finding.path ? { path: normalizeStableText(finding.path) } : {},
     ...finding.line !== void 0 ? { line: finding.line } : {},
     evidence: sortedEvidence(finding)
   };
+}
+function createFindingId(finding) {
+  const stableInput = createEvidenceSnapshot(finding);
   const hash2 = (0, import_crypto.createHash)("sha256").update(JSON.stringify(stableInput)).digest("hex").slice(0, 16);
   return `agf_${hash2}`;
 }
 function attachFindingIds(findings) {
   return findings.map((finding) => ({
     ...finding,
-    findingId: createFindingId(finding)
+    findingId: createFindingId(finding),
+    evidenceSnapshot: createEvidenceSnapshot(finding)
   }));
 }
 function normalizePath(path) {
@@ -48583,6 +48587,27 @@ function whyLines(result) {
   }
   return lines;
 }
+function pushEvidenceSnapshot(lines, result) {
+  lines.push(
+    "Evidence Snapshot:",
+    `- ruleId: ${safeReportValue(result.evidenceSnapshot.ruleId)}`,
+    `- severity: ${safeReportValue(result.evidenceSnapshot.severity)}`
+  );
+  if (result.evidenceSnapshot.path) {
+    lines.push(`- path: ${safeReportValue(result.evidenceSnapshot.path)}`);
+  }
+  if (result.evidenceSnapshot.line !== void 0) {
+    lines.push(`- line: ${result.evidenceSnapshot.line}`);
+  }
+  if (result.evidenceSnapshot.evidence.length > 0) {
+    for (const evidence of result.evidenceSnapshot.evidence) {
+      lines.push(
+        `- evidence.${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`
+      );
+    }
+  }
+  lines.push("");
+}
 function renderMarkdownReport(result) {
   const lines = [
     `# Agent Gate: ${humanDecisionLabel(result.decision)}`,
@@ -48628,6 +48653,7 @@ function renderMarkdownReport(result) {
       if (finding.path) {
         lines.push(`Path: \`${safeReportValue(finding.path)}\``, "");
       }
+      pushEvidenceSnapshot(lines, finding);
       if (finding.evidence.length > 0) {
         lines.push("Evidence:");
         for (const evidence of finding.evidence) {

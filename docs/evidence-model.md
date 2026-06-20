@@ -28,6 +28,35 @@ otherwise identical finding look like a different finding.
 `findingId` is an audit reference. It does not prove that the finding is
 semantically correct.
 
+## Evidence Snapshots
+
+Each public finding also includes an `evidenceSnapshot`.
+
+The snapshot is the canonical input used to derive the finding ID:
+
+```json
+{
+  "ruleId": "workflow/permission-escalation",
+  "severity": "error",
+  "path": ".github/workflows/release.yml",
+  "evidence": [
+    { "label": "after", "value": "write" },
+    { "label": "before", "value": "read" },
+    { "label": "changed_file", "value": ".github/workflows/release.yml" },
+    { "label": "permission", "value": "contents" }
+  ]
+}
+```
+
+The snapshot intentionally excludes mutable display fields such as title,
+message, remediation, tags, confidence, risk score, report order, version,
+timestamps, and commit SHAs. Those fields can change how a report reads, but
+they should not change the stable evidence reference for the same finding.
+
+Use `findingId` as the short audit handle. Use `evidenceSnapshot` as the
+re-derivation material. See `docs/evidence-snapshot-example.md` for a compact
+report example.
+
 ## Re-Derivable Findings
 
 A finding should only become a blocking gate if a third party can re-derive it
