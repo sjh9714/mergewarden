@@ -27,6 +27,32 @@ function whyLines(result: AnalysisResult): string[] {
   return lines;
 }
 
+function pushEvidenceSnapshot(lines: string[], result: AnalysisResult["findings"][number]): void {
+  lines.push(
+    "Evidence Snapshot:",
+    `- ruleId: ${safeReportValue(result.evidenceSnapshot.ruleId)}`,
+    `- severity: ${safeReportValue(result.evidenceSnapshot.severity)}`,
+  );
+
+  if (result.evidenceSnapshot.path) {
+    lines.push(`- path: ${safeReportValue(result.evidenceSnapshot.path)}`);
+  }
+
+  if (result.evidenceSnapshot.line !== undefined) {
+    lines.push(`- line: ${result.evidenceSnapshot.line}`);
+  }
+
+  if (result.evidenceSnapshot.evidence.length > 0) {
+    for (const evidence of result.evidenceSnapshot.evidence) {
+      lines.push(
+        `- evidence.${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`,
+      );
+    }
+  }
+
+  lines.push("");
+}
+
 export function renderMarkdownReport(result: AnalysisResult): string {
   const lines = [
     `# Agent Gate: ${humanDecisionLabel(result.decision)}`,
@@ -74,6 +100,8 @@ export function renderMarkdownReport(result: AnalysisResult): string {
       if (finding.path) {
         lines.push(`Path: \`${safeReportValue(finding.path)}\``, "");
       }
+
+      pushEvidenceSnapshot(lines, finding);
 
       if (finding.evidence.length > 0) {
         lines.push("Evidence:");

@@ -23,8 +23,17 @@ export interface RawFinding {
   confidence: "low" | "medium" | "high";
 }
 
+export interface EvidenceSnapshot {
+  ruleId: string;
+  severity: Severity;
+  path?: string;
+  line?: number;
+  evidence: Evidence[];
+}
+
 export interface Finding extends RawFinding {
   findingId: string;
+  evidenceSnapshot: EvidenceSnapshot;
 }
 
 export interface RepoContext {

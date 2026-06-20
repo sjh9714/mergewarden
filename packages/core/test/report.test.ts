@@ -9,7 +9,7 @@ import {
   renderMarkdownReport,
   renderPlainTextReportSummary,
 } from "../src/index.js";
-import { createFindingId } from "../src/finding/id.js";
+import { attachFindingIds } from "../src/finding/id.js";
 import { createAnalysisInput, fileChange } from "./helpers.js";
 
 describe("report renderers", () => {
@@ -21,17 +21,49 @@ describe("report renderers", () => {
     version: "0.0.0",
   };
 
-  function finding(rawFinding: RawFinding): RawFinding & { findingId: string } {
-    return {
-      ...rawFinding,
-      findingId: createFindingId(rawFinding),
-    };
+  function finding(rawFinding: RawFinding) {
+    const [enrichedFinding] = attachFindingIds([rawFinding]);
+
+    if (!enrichedFinding) {
+      throw new Error("Expected enriched finding");
+    }
+
+    return enrichedFinding;
   }
 
   it("renders JSON that parses back into the analysis result", async () => {
     const result = await analyze(createAnalysisInput());
 
     expect(JSON.parse(renderJsonReport(result))).toEqual(result);
+  });
+
+  it("renders evidence snapshots in JSON reports", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const parsed = JSON.parse(renderJsonReport(result));
+
+    expect(parsed.findings[0].findingId).toMatch(/^agf_[0-9a-f]{16}$/);
+    expect(parsed.findings[0].evidenceSnapshot).toMatchObject({
+      ruleId: parsed.findings[0].ruleId,
+      severity: parsed.findings[0].severity,
+      path: parsed.findings[0].path,
+    });
+    expect(parsed.findings[0].evidenceSnapshot.evidence).toEqual(
+      [...parsed.findings[0].evidence].sort((left, right) => {
+        if (left.label !== right.label) {
+          return left.label.localeCompare(right.label);
+        }
+
+        return left.value.localeCompare(right.value);
+      }),
+    );
+    expect(parsed.findings[0].evidenceSnapshot).not.toHaveProperty("message");
+    expect(parsed.findings[0].evidenceSnapshot).not.toHaveProperty("remediation");
   });
 
   it("renders a readable Markdown report for an empty pass result", async () => {
@@ -92,6 +124,10 @@ describe("report renderers", () => {
       "Policy status: warning today; eligible to become a merge gate after tuning.",
     );
     expect(markdown).toContain("Evidence:");
+    expect(markdown).toContain("Snapshot:");
+    expect(markdown).toContain("- ruleId: evidence/missing-test-change");
+    expect(markdown).toContain("- severity: warn");
+    expect(markdown).toContain("- path: src/auth/session.ts");
     expect(markdown).toContain("- required tests: tests/auth/**");
     expect(markdown).toContain("Remediation:");
     expect(markdown).toContain("- Add or update matching auth tests.");
@@ -165,6 +201,7 @@ describe("report renderers", () => {
     expect(summary).toContain(
       `- warn ${evidenceFinding.findingId} evidence/missing-test-change src/auth/session.ts`,
     );
+    expect(summary).not.toContain("Snapshot:");
     expect(summary).not.toContain("Evidence:");
     expect(summary).not.toContain("Remediation:");
     expect(JSON.parse(renderJsonReport(result))).toMatchObject({ decision: "warn" });
@@ -354,5 +391,25 @@ describe("report renderers", () => {
     expect(JSON.parse(renderJsonReport(result)).findings[0].findingId).toBe(findingId);
     expect(renderMarkdownReport(result)).toContain(`Finding ID: \`${findingId}\``);
     expect(renderPlainTextReportSummary(result)).toContain(findingId);
+  });
+
+  it("includes evidence snapshots in JSON and Markdown reports without expanding plain text", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const parsed = JSON.parse(renderJsonReport(result));
+    const markdown = renderMarkdownReport(result);
+    const plainText = renderPlainTextReportSummary(result);
+
+    expect(parsed.findings[0].evidenceSnapshot).toEqual(result.findings[0]?.evidenceSnapshot);
+    expect(markdown).toContain("Snapshot:");
+    expect(markdown).toContain(`- ruleId: ${result.findings[0]?.ruleId}`);
+    expect(markdown).toContain(`- severity: ${result.findings[0]?.severity}`);
+    expect(plainText).not.toContain("Snapshot:");
+    expect(plainText).not.toContain("evidenceSnapshot");
   });
 });
