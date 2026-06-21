@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.2.1 - 2026-06-21
+
 ### Changed
 
 - Add evidence snapshots to findings so reports carry the stable material used
