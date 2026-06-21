@@ -1,6 +1,6 @@
 # Agent Gate
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.0)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.1)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
@@ -17,13 +17,13 @@ No AI PR gets merged without proof.
 
 ## Status
 
-Agent Gate is pre-release. `v0.2.0` is available as a GitHub prerelease and GitHub Marketplace Action. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may change in later releases.
+Agent Gate is pre-release. `v0.2.1` is available as a GitHub prerelease and GitHub Marketplace Action. The core analyzer, CLI replay, root GitHub Action, PR comments, self-dogfooding workflow, and CI are implemented. APIs and rule names may change in later releases.
 
-For released installs, prefer `@v0.2.0` or a pinned commit SHA. `@main` tracks ongoing development.
+For released installs, prefer `@v0.2.1` or a pinned commit SHA. `@main` tracks ongoing development.
 
-See `docs/v0.1.0-release-notes.md`, `docs/release-verification-v0.1.0.md`, `docs/release-verification-v0.1.1.md`, `docs/release-verification-v0.1.2.md`, `docs/release-verification-v0.1.3.md`, `docs/release-verification-v0.1.4.md`, `docs/release-verification-v0.1.5.md`, `docs/release-verification-v0.1.6.md`, and `docs/release-verification-v0.2.0.md` for release notes and verification.
+See `docs/v0.1.0-release-notes.md`, `docs/release-verification-v0.1.0.md`, `docs/release-verification-v0.1.1.md`, `docs/release-verification-v0.1.2.md`, `docs/release-verification-v0.1.3.md`, `docs/release-verification-v0.1.4.md`, `docs/release-verification-v0.1.5.md`, `docs/release-verification-v0.1.6.md`, `docs/release-verification-v0.2.0.md`, and `docs/release-verification-v0.2.1.md` for release notes and verification.
 
-Latest external install smoke evidence is recorded for `@v0.2.0` in `docs/external-install-smoke-v0.2.0.md`.
+Latest external install smoke evidence is recorded for `@v0.2.1` in `docs/external-install-smoke-v0.2.1.md`.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings.
 
@@ -145,7 +145,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.0
+      - uses: sjh9714/Agent-Gate@v0.2.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -241,7 +241,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.0
+      - uses: sjh9714/Agent-Gate@v0.2.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
