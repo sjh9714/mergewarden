@@ -10,6 +10,17 @@ pre-release, so APIs and rule names may change between versions.
 
 No changes yet.
 
+## v0.2.2 - 2026-06-24
+
+### Security
+
+- Patch the transitive `undici` runtime dependency used by the committed Action
+  bundle to resolve Dependabot alerts.
+
+### Changed
+
+- Align package versions and Agent Gate report metadata to `0.2.2`.
+
 ## v0.2.1 - 2026-06-21
 
 ### Changed
