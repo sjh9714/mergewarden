@@ -144,15 +144,33 @@ describe("CLI replay", () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
     expect(readme).toContain("@v0.2.2");
-    expect(readme).toContain("No AI PR gets merged without proof");
+    expect(readme).toContain("Policy boundaries for AI PRs, backed by repeatable evidence");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
-    expect(readme).toContain("[Install in 10 minutes](#10-minute-observe-path)");
-    expect(readme).toContain("[See a real report](#real-report-example)");
+    expect(readme).toContain("[Quickstart](#10-minute-observe-path)");
+    expect(readme).toContain("[Example report](#real-report-example)");
+    expect(readme).toContain("[Action reference](#action-reference)");
+    expect(readme).toContain("[Evidence model](docs/evidence-model.md)");
     expect(readme).toContain("Real Report Example");
+    expect(readme).toContain("What Agent Gate Does Not Do");
+    expect(readme).toContain("prove that a PR is semantically correct");
+    expect(readme).toContain("When To Use Agent Gate");
+    expect(readme).toContain("Why Deterministic?");
     expect(readme).toContain("10-Minute Observe Path");
     expect(readme).toContain("Start in warn mode");
     expect(readme).toContain("allowed_paths");
+    expect(readme).toContain("Action Reference");
+    expect(readme).toContain("| `config`");
+    expect(readme).toContain("| `agent-gate.yml`");
+    expect(readme).toContain("| `decision`");
+    expect(readme).toContain("Final decision: `pass`, `warn`, or `block`.");
+    expect(readme).toContain(
+      "`mode` controls rollout behavior. `decision` is the analyzer result.",
+    );
+    expect(readme).toContain("Status And Roadmap");
+    expect(readme).toContain(
+      "Latest external install smoke evidence is currently recorded for `@v0.2.1`",
+    );
     expect(readme).toContain("safe to observe");
     expect(readme).toContain("needs human decision");
     expect(readme).toContain("must block");
