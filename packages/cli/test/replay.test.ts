@@ -143,7 +143,7 @@ describe("CLI replay", () => {
   it("documents the headline replay output in the README", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
-    expect(readme).toContain("@v0.2.2");
+    expect(readme).toContain("@v0.2.3");
     expect(readme).toContain("Policy boundaries for AI PRs, backed by repeatable evidence");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
@@ -158,7 +158,7 @@ describe("CLI replay", () => {
     expect(readme).toContain("Why Deterministic?");
     expect(readme).toContain("10-Minute Observe Path");
     expect(readme).toContain("Start in warn mode");
-    expect(readme).toContain("Zero-config fallback is implemented for the next `v0.2.3` release");
+    expect(readme).toContain("This is enough for a first run");
     expect(readme).toContain("built-in default policy");
     expect(readme).toContain("configSource: default");
     expect(readme).toContain("Repository-specific checks");
@@ -174,7 +174,7 @@ describe("CLI replay", () => {
     );
     expect(readme).toContain("Status And Roadmap");
     expect(readme).toContain(
-      "Latest external install smoke evidence is currently recorded for `@v0.2.1`",
+      "Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.3.md`",
     );
     expect(readme).toContain("safe to observe");
     expect(readme).toContain("needs human decision");
