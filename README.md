@@ -29,6 +29,9 @@ Policy status: warning today; eligible to become a merge gate after tuning.
 Finding ID: agf_...
 ```
 
+New to the report? See `docs/first-report.md` for how to read decisions,
+finding IDs, evidence snapshots, and policy source.
+
 ## What It Catches
 
 - Out-of-contract edits: agent PRs changing files outside their declared scope.
@@ -144,15 +147,32 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/package-lifecycle-s
 
 Download the observe-mode workflow template into your repository:
 
+macOS/Linux:
+
 ```bash
 mkdir -p .github/workflows \
   && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml \
   -o .github/workflows/agent-gate.yml
 ```
 
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force .github/workflows | Out-Null
+Invoke-WebRequest `
+  -Uri https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml `
+  -OutFile .github/workflows/agent-gate.yml
+```
+
 This downloads a tag-pinned workflow YAML file. It does not execute a remote
 script. Commit the file and open a pull request; Agent Gate will run in warn
 mode without requiring `agent-gate.yml` for the first run.
+
+Next:
+
+1. Commit `.github/workflows/agent-gate.yml`.
+2. Open a pull request.
+3. Read the Agent Gate job summary.
 
 ## 10-Minute Observe Path
 

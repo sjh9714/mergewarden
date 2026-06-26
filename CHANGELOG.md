@@ -8,7 +8,9 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Added
+
+- Add first-report onboarding guidance and Windows install instructions.
 
 ## v0.2.5 - 2026-06-26
 
