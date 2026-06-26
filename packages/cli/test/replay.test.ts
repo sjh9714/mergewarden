@@ -165,10 +165,13 @@ describe("CLI replay", () => {
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
     expect(readme).toContain("[30-second install](#30-second-install)");
-    expect(readme).toContain("[Quickstart](#10-minute-observe-path)");
+    expect(readme).toContain("[Tune policy](#after-the-first-run-tune-policy)");
     expect(readme).toContain("[Example report](#real-report-example)");
     expect(readme).toContain("[Action reference](#action-reference)");
     expect(readme).toContain("[Evidence model](docs/evidence-model.md)");
+    expect(readme.indexOf("## 30-Second Install")).toBeLessThan(
+      readme.indexOf("## Real Report Example"),
+    );
     expect(readme).toContain("Real Report Example");
     expect(readme).toContain("docs/first-report.md");
     expect(readme).toContain("What Agent Gate Does Not Do");
@@ -186,11 +189,17 @@ describe("CLI replay", () => {
     expect(readme).toContain("does not execute a remote");
     expect(readme).toContain("Commit `.github/workflows/agent-gate.yml`.");
     expect(readme).toContain("Read the Agent Gate job summary.");
-    expect(readme).toContain("10-Minute Observe Path");
-    expect(readme).toContain("Start in warn mode");
-    expect(readme).toContain("This is enough for a first run");
+    expect(readme).toContain("package.json added a preinstall script");
+    expect(readme).toContain("review the lifecycle script before merging");
+    expect(readme).toContain("Policy source: built-in default");
+    expect(readme).toContain("What Runs Without `agent-gate.yml`?");
+    expect(readme).toContain("First run without config");
+    expect(readme).toContain("only when a contract exists");
+    expect(readme).toContain("After The First Run: Tune Policy");
+    expect(readme).toContain("start in warn mode");
     expect(readme).toContain("built-in default policy");
     expect(readme).toContain("configSource: default");
+    expect(readme).toContain("Once tuned, Agent Gate can report contract-scope evidence too");
     expect(readme).toContain("That released default policy gives");
     expect(readme).toContain(
       "In `v0.2.4+`, the built-in default policy also includes warning-mode package lifecycle script drift checks.",

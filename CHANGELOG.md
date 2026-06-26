@@ -12,6 +12,11 @@ pre-release, so APIs and rule names may change between versions.
 
 - Add first-report onboarding guidance and Windows install instructions.
 
+### Changed
+
+- Reorder README onboarding around first-run install and default-policy report
+  interpretation.
+
 ## v0.2.5 - 2026-06-26
 
 ### Added

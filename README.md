@@ -11,13 +11,123 @@ Agent Gate is a GitHub Action that checks deterministic merge evidence: out-of-s
 
 The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
 
-[30-second install](#30-second-install) · [Quickstart](#10-minute-observe-path) · [Example report](#real-report-example) · [Action reference](#action-reference) · [Evidence model](docs/evidence-model.md)
+[30-second install](#30-second-install) · [Example report](#real-report-example) · [Tune policy](#after-the-first-run-tune-policy) · [Action reference](#action-reference) · [Evidence model](docs/evidence-model.md)
 
 Policy boundaries for AI PRs, backed by repeatable evidence.
 
+## 30-Second Install
+
+Download the observe-mode workflow template into your repository:
+
+macOS/Linux:
+
+```bash
+mkdir -p .github/workflows \
+  && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml \
+  -o .github/workflows/agent-gate.yml
+```
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force .github/workflows | Out-Null
+Invoke-WebRequest `
+  -Uri https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml `
+  -OutFile .github/workflows/agent-gate.yml
+```
+
+This downloads a tag-pinned workflow YAML file. It does not execute a remote
+script. Commit the file and open a pull request; Agent Gate will run in warn
+mode without requiring `agent-gate.yml` for the first run.
+
+Next:
+
+1. Commit `.github/workflows/agent-gate.yml`.
+2. Open a pull request.
+3. Read the Agent Gate job summary.
+
 ## Real Report Example
 
-An AI PR changed a GitHub Actions workflow and increased merge risk. In warn mode, Agent Gate keeps the check non-blocking while making the human decision obvious:
+On a first run without `agent-gate.yml`, Agent Gate can still surface built-in
+default-policy warnings. For example, package lifecycle script drift:
+
+```text
+Agent Gate: NEEDS HUMAN DECISION
+Decision: warn
+Why: package.json added a preinstall script.
+Recommended next step: review the lifecycle script before merging.
+Policy status: warning today; eligible to become a merge gate after tuning.
+
+Finding ID: agf_...
+Policy source: built-in default
+```
+
+New to the report? See `docs/first-report.md` for how to read decisions,
+finding IDs, evidence snapshots, and policy source.
+
+## What Runs Without `agent-gate.yml`?
+
+| Check                              | First run without config    | With `agent-gate.yml` |
+| ---------------------------------- | --------------------------- | --------------------- |
+| Workflow permission escalation     | yes                         | configurable          |
+| Dangerous workflow patterns        | yes                         | configurable          |
+| Agent control-plane drift          | yes                         | configurable          |
+| Package lifecycle script drift     | yes, warn by default        | configurable          |
+| Agent detection                    | no                          | yes                   |
+| PR-body contract required          | no                          | yes                   |
+| Out-of-contract edits              | only when a contract exists | yes                   |
+| High-risk paths and matching tests | no                          | yes                   |
+
+## After The First Run: Tune Policy
+
+The 30-second install is enough to start in warn mode. If the default
+`agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate uses its
+built-in default policy and records `configSource: default` in report metadata.
+
+After you see the first reports, tune repo-specific checks with a small
+`agent-gate.yml`:
+
+```yaml
+version: 1
+mode: warn
+
+contract:
+  required_for:
+    - agent
+  allow_missing_in_observe_mode: true
+
+agent_detection:
+  labels:
+    - ai
+    - agent
+    - codex
+  branch_patterns:
+    - "codex/**"
+    - "ai/**"
+
+high_risk_paths:
+  workflows:
+    paths:
+      - ".github/workflows/**"
+    severity: error
+```
+
+For an AI-generated PR, add a small contract to the PR body:
+
+```md
+<!-- agent-gate-contract
+version: 1
+agent: codex
+task: update auth session handling
+allowed_paths:
+  - src/auth/**
+  - tests/auth/**
+required_evidence:
+  - matching auth tests changed
+-->
+```
+
+Once tuned, Agent Gate can report contract-scope evidence too:
 
 ```text
 Agent Gate: NEEDS HUMAN DECISION
@@ -29,8 +139,11 @@ Policy status: warning today; eligible to become a merge gate after tuning.
 Finding ID: agf_...
 ```
 
-New to the report? See `docs/first-report.md` for how to read decisions,
-finding IDs, evidence snapshots, and policy source.
+Read the first runs as observation, not proof of semantic correctness:
+
+- `PASSED`: safe to observe
+- `WARN`: needs human decision
+- `BLOCKED`: must block once policy is enforced
 
 ## What It Catches
 
@@ -141,130 +254,6 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-evidence
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/package-lifecycle-script-added
-```
-
-## 30-Second Install
-
-Download the observe-mode workflow template into your repository:
-
-macOS/Linux:
-
-```bash
-mkdir -p .github/workflows \
-  && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml \
-  -o .github/workflows/agent-gate.yml
-```
-
-Windows PowerShell:
-
-```powershell
-New-Item -ItemType Directory -Force .github/workflows | Out-Null
-Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml `
-  -OutFile .github/workflows/agent-gate.yml
-```
-
-This downloads a tag-pinned workflow YAML file. It does not execute a remote
-script. Commit the file and open a pull request; Agent Gate will run in warn
-mode without requiring `agent-gate.yml` for the first run.
-
-Next:
-
-1. Commit `.github/workflows/agent-gate.yml`.
-2. Open a pull request.
-3. Read the Agent Gate job summary.
-
-## 10-Minute Observe Path
-
-Start in warn mode, learn your repo's risk profile, then turn proven policies into merge gates.
-
-Add a checkout-free pull request workflow:
-
-```yaml
-name: Agent Gate
-
-on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
-
-permissions:
-  contents: read
-  pull-requests: read
-
-jobs:
-  agent-gate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: sjh9714/Agent-Gate@v0.2.5
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: warn
-          fail-on-block: false
-```
-
-This is enough for a first run. If the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate uses its built-in default policy and records `configSource: default` in report metadata.
-
-Next, tune repo-specific checks with a small `agent-gate.yml`:
-
-```yaml
-version: 1
-mode: warn
-
-contract:
-  required_for:
-    - agent
-  allow_missing_in_observe_mode: true
-
-agent_detection:
-  labels:
-    - ai
-    - agent
-    - codex
-  branch_patterns:
-    - "codex/**"
-    - "ai/**"
-
-high_risk_paths:
-  workflows:
-    paths:
-      - ".github/workflows/**"
-    severity: error
-```
-
-For an AI-generated PR, add a small contract to the PR body:
-
-```md
-<!-- agent-gate-contract
-version: 1
-agent: codex
-task: update auth session handling
-allowed_paths:
-  - src/auth/**
-  - tests/auth/**
-required_evidence:
-  - matching auth tests changed
--->
-```
-
-Read the first runs as observation, not proof of semantic correctness:
-
-- `PASSED`: safe to observe
-- `WARN`: needs human decision
-- `BLOCKED`: must block once policy is enforced
-
-The Markdown report leads with the human decision before the rule details. Example shape:
-
-```text
-Agent Gate: NEEDS HUMAN DECISION
-
-Why:
-This PR changed `.github/workflows/release.yml` and added `secrets.*` usage.
-
-Recommended next step:
-Review the workflow change before merging.
-
-Policy status:
-Warning today; eligible to become a merge gate after tuning.
 ```
 
 ## Action Reference
