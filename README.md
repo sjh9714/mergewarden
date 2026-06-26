@@ -1,6 +1,6 @@
 # Agent Gate
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.2)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.3)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
@@ -156,16 +156,16 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.2
+      - uses: sjh9714/Agent-Gate@v0.2.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
 ```
 
-For `@v0.2.2`, add `agent-gate.yml` before running the Action. Zero-config fallback is implemented for the next `v0.2.3` release; install references will move to `@v0.2.3` after release verification.
+This is enough for a first run. If the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate uses its built-in default policy and records `configSource: default` in report metadata.
 
-Start with a small `agent-gate.yml`:
+Next, tune repo-specific checks with a small `agent-gate.yml`:
 
 ```yaml
 version: 1
@@ -230,7 +230,7 @@ Warning today; eligible to become a merge gate after tuning.
 
 ## Action Reference
 
-Use the root action with `sjh9714/Agent-Gate@v0.2.2`. No checkout step is required.
+Use the root action with `sjh9714/Agent-Gate@v0.2.3`. No checkout step is required.
 
 ### Inputs
 
@@ -316,11 +316,11 @@ Starting in `v0.2.3`, if the default `agent-gate.yml` is confirmed absent on the
 
 ## Status And Roadmap
 
-Agent Gate is pre-release. The latest prerelease is `v0.2.2`.
+Agent Gate is pre-release. The latest prerelease is `v0.2.3`.
 
-Use `sjh9714/Agent-Gate@v0.2.2` or a pinned commit SHA for installs. `@main` tracks active development and may change.
+Use `sjh9714/Agent-Gate@v0.2.3` or a pinned commit SHA for installs. `@main` tracks active development and may change.
 
-See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the current evidence model. Latest external install smoke evidence is currently recorded for `@v0.2.1`; `v0.2.2` is a dependency/security patch release.
+See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the current evidence model. Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.3.md`.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings. Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
 
