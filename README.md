@@ -1,6 +1,6 @@
 # Agent Gate
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.3)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.4)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
@@ -161,7 +161,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.3
+      - uses: sjh9714/Agent-Gate@v0.2.4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -235,7 +235,7 @@ Warning today; eligible to become a merge gate after tuning.
 
 ## Action Reference
 
-Use the root action with `sjh9714/Agent-Gate@v0.2.3`. No checkout step is required.
+Use the root action with `sjh9714/Agent-Gate@v0.2.4`. No checkout step is required.
 
 ### Inputs
 
@@ -331,11 +331,11 @@ In `v0.2.4+`, the built-in default policy also includes warning-mode package lif
 
 ## Status And Roadmap
 
-Agent Gate is pre-release. The latest prerelease is `v0.2.3`.
+Agent Gate is pre-release. The latest prerelease is `v0.2.4`.
 
-Use `sjh9714/Agent-Gate@v0.2.3` or a pinned commit SHA for installs. `@main` tracks active development and may change.
+Use `sjh9714/Agent-Gate@v0.2.4` or a pinned commit SHA for installs. `@main` tracks active development and may change.
 
-See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the current evidence model. Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.3.md`.
+See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the current evidence model. Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.4.md`.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings. Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
 
