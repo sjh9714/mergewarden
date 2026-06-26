@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.2.4 - 2026-06-26
+
 ### Changed
 
 - Add warning-mode package lifecycle script drift findings for added or changed
