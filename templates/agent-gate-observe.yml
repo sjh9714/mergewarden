@@ -1,0 +1,19 @@
+name: Agent Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  agent-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sjh9714/Agent-Gate@v0.2.5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: warn
+          fail-on-block: false

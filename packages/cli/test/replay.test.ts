@@ -160,10 +160,11 @@ describe("CLI replay", () => {
   it("documents the headline replay output in the README", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
-    expect(readme).toContain("@v0.2.4");
+    expect(readme).toContain("@v0.2.5");
     expect(readme).toContain("Policy boundaries for AI PRs, backed by repeatable evidence");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
+    expect(readme).toContain("[30-second install](#30-second-install)");
     expect(readme).toContain("[Quickstart](#10-minute-observe-path)");
     expect(readme).toContain("[Example report](#real-report-example)");
     expect(readme).toContain("[Action reference](#action-reference)");
@@ -173,6 +174,12 @@ describe("CLI replay", () => {
     expect(readme).toContain("prove that a PR is semantically correct");
     expect(readme).toContain("When To Use Agent Gate");
     expect(readme).toContain("Why Deterministic?");
+    expect(readme).toContain("30-Second Install");
+    expect(readme).toContain("templates/agent-gate-observe.yml");
+    expect(readme).toContain(
+      "raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml",
+    );
+    expect(readme).toContain("does not execute a remote");
     expect(readme).toContain("10-Minute Observe Path");
     expect(readme).toContain("Start in warn mode");
     expect(readme).toContain("This is enough for a first run");
@@ -207,6 +214,7 @@ describe("CLI replay", () => {
     expect(readme).toContain("workflow/dangerous-pattern");
     expect(readme).toContain("agent-control-plane/drift");
     expect(readme).toContain("Package lifecycle script drift");
+    expect(readme).toContain("docs/rules/package-lifecycle-scripts.md");
     expect(readme).toContain("package-lifecycle-script-added");
     expect(readme).toContain("package_scripts:");
     expect(readme).toContain("preinstall");
@@ -214,6 +222,18 @@ describe("CLI replay", () => {
       "Dependency additions and lockfile mismatch checks remain future work.",
     );
     expect(readme).toContain(".github/workflows/release.yml");
+  });
+
+  it("keeps the observe-mode install template checkout-free and tag-pinned", async () => {
+    const template = await readFile(join(repoRoot, "templates", "agent-gate-observe.yml"), "utf8");
+
+    expect(template).toContain("contents: read");
+    expect(template).toContain("pull-requests: read");
+    expect(template).toContain("uses: sjh9714/Agent-Gate@v0.2.5");
+    expect(template).toContain("mode: warn");
+    expect(template).toContain("fail-on-block: false");
+    expect(template).not.toContain("actions/checkout");
+    expect(template).not.toContain("run:");
   });
 
   it("prints JSON replay output that parses as an analysis result", async () => {

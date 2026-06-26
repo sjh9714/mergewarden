@@ -10,6 +10,13 @@ pre-release, so APIs and rule names may change between versions.
 
 No changes yet.
 
+## v0.2.5 - 2026-06-26
+
+### Added
+
+- Add a tag-pinned observe-mode workflow template for faster first installs.
+- Add package lifecycle script drift triage guidance.
+
 ## v0.2.4 - 2026-06-26
 
 ### Changed

@@ -1,6 +1,6 @@
 # Agent Gate
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.4)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.5)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
@@ -11,7 +11,7 @@ Agent Gate is a GitHub Action that checks deterministic merge evidence: out-of-s
 
 The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
 
-[Quickstart](#10-minute-observe-path) · [Example report](#real-report-example) · [Action reference](#action-reference) · [Evidence model](docs/evidence-model.md)
+[30-second install](#30-second-install) · [Quickstart](#10-minute-observe-path) · [Example report](#real-report-example) · [Action reference](#action-reference) · [Evidence model](docs/evidence-model.md)
 
 Policy boundaries for AI PRs, backed by repeatable evidence.
 
@@ -36,7 +36,7 @@ Finding ID: agf_...
 - Agent control-plane drift (`agent-control-plane/drift`): instruction or tool config changes that affect future agents.
 - Missing test evidence: high-risk source changes without matching test file changes.
 - MCP config drift: `.mcp.json` changes that alter which tools agents can call.
-- Package lifecycle script drift: risky `package.json` lifecycle scripts added or changed in `v0.2.4+`.
+- Package lifecycle script drift: risky `package.json` lifecycle scripts added or changed in `v0.2.4+` ([rule guide](docs/rules/package-lifecycle-scripts.md)).
 
 ## What Agent Gate Does Not Do
 
@@ -140,6 +140,20 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/package-lifecycle-script-added
 ```
 
+## 30-Second Install
+
+Download the observe-mode workflow template into your repository:
+
+```bash
+mkdir -p .github/workflows \
+  && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml \
+  -o .github/workflows/agent-gate.yml
+```
+
+This downloads a tag-pinned workflow YAML file. It does not execute a remote
+script. Commit the file and open a pull request; Agent Gate will run in warn
+mode without requiring `agent-gate.yml` for the first run.
+
 ## 10-Minute Observe Path
 
 Start in warn mode, learn your repo's risk profile, then turn proven policies into merge gates.
@@ -161,7 +175,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.4
+      - uses: sjh9714/Agent-Gate@v0.2.5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -235,7 +249,7 @@ Warning today; eligible to become a merge gate after tuning.
 
 ## Action Reference
 
-Use the root action with `sjh9714/Agent-Gate@v0.2.4`. No checkout step is required.
+Use the root action with `sjh9714/Agent-Gate@v0.2.5`. No checkout step is required.
 
 ### Inputs
 
@@ -317,7 +331,7 @@ Teams can add auth, payments, infra, and agent-control-plane paths as their poli
 
 Current `agent-gate.yml` support is intentionally narrow: agent detection, PR-body contracts, high-risk paths with matching test-file evidence, agent-control-plane paths, GitHub Actions workflow rules, and package lifecycle script checks. File-based contracts, risk budgets, dependency additions, lockfile mismatch, claim-vs-CI evidence, reviewer requirements, and rollback-plan requirements are planned areas and are rejected today instead of being accepted as no-op settings.
 
-Starting in `v0.2.4`, package lifecycle script checks are enabled by default in warning mode. They inspect configured `package.json` paths for added or changed `preinstall`, `install`, `postinstall`, and `prepare` scripts. Dependency additions and lockfile mismatch checks remain future work.
+Starting in `v0.2.4`, package lifecycle script checks are enabled by default in warning mode. They inspect configured `package.json` paths for added or changed `preinstall`, `install`, `postinstall`, and `prepare` scripts. See `docs/rules/package-lifecycle-scripts.md` for triage guidance. Dependency additions and lockfile mismatch checks remain future work.
 
 ```yaml
 package_scripts:
@@ -331,9 +345,9 @@ In `v0.2.4+`, the built-in default policy also includes warning-mode package lif
 
 ## Status And Roadmap
 
-Agent Gate is pre-release. The latest prerelease is `v0.2.4`.
+Agent Gate is pre-release. The latest prerelease is `v0.2.5`.
 
-Use `sjh9714/Agent-Gate@v0.2.4` or a pinned commit SHA for installs. `@main` tracks active development and may change.
+Use `sjh9714/Agent-Gate@v0.2.5` or a pinned commit SHA for installs. `@main` tracks active development and may change.
 
 See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the current evidence model. Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.4.md`.
 
