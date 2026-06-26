@@ -160,7 +160,7 @@ describe("CLI replay", () => {
   it("documents the headline replay output in the README", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
-    expect(readme).toContain("@v0.2.3");
+    expect(readme).toContain("@v0.2.4");
     expect(readme).toContain("Policy boundaries for AI PRs, backed by repeatable evidence");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
@@ -195,7 +195,7 @@ describe("CLI replay", () => {
     );
     expect(readme).toContain("Status And Roadmap");
     expect(readme).toContain(
-      "Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.3.md`",
+      "Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.4.md`",
     );
     expect(readme).toContain("safe to observe");
     expect(readme).toContain("needs human decision");
