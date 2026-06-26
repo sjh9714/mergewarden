@@ -170,16 +170,22 @@ describe("CLI replay", () => {
     expect(readme).toContain("[Action reference](#action-reference)");
     expect(readme).toContain("[Evidence model](docs/evidence-model.md)");
     expect(readme).toContain("Real Report Example");
+    expect(readme).toContain("docs/first-report.md");
     expect(readme).toContain("What Agent Gate Does Not Do");
     expect(readme).toContain("prove that a PR is semantically correct");
     expect(readme).toContain("When To Use Agent Gate");
     expect(readme).toContain("Why Deterministic?");
     expect(readme).toContain("30-Second Install");
+    expect(readme).toContain("Windows PowerShell");
+    expect(readme).toContain("Invoke-WebRequest");
+    expect(readme).toContain("New-Item -ItemType Directory -Force .github/workflows");
     expect(readme).toContain("templates/agent-gate-observe.yml");
     expect(readme).toContain(
       "raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml",
     );
     expect(readme).toContain("does not execute a remote");
+    expect(readme).toContain("Commit `.github/workflows/agent-gate.yml`.");
+    expect(readme).toContain("Read the Agent Gate job summary.");
     expect(readme).toContain("10-Minute Observe Path");
     expect(readme).toContain("Start in warn mode");
     expect(readme).toContain("This is enough for a first run");
@@ -222,6 +228,22 @@ describe("CLI replay", () => {
       "Dependency additions and lockfile mismatch checks remain future work.",
     );
     expect(readme).toContain(".github/workflows/release.yml");
+  });
+
+  it("documents how to read the first Agent Gate report", async () => {
+    const firstReport = await readFile(join(repoRoot, "docs", "first-report.md"), "utf8");
+
+    expect(firstReport).toContain("Your First Agent Gate Report");
+    expect(firstReport).toContain("PASSED");
+    expect(firstReport).toContain("NEEDS HUMAN DECISION");
+    expect(firstReport).toContain("BLOCKED");
+    expect(firstReport).toContain("Finding ID");
+    expect(firstReport).toContain("Evidence Snapshot");
+    expect(firstReport).toContain("Policy source");
+    expect(firstReport).toContain("configSource: default");
+    expect(firstReport).toContain("not proof that a pull request is unsafe");
+    expect(firstReport).toContain("does not prove semantic correctness");
+    expect(firstReport).toContain("Treat `NEEDS HUMAN DECISION` as a review prompt");
   });
 
   it("keeps the observe-mode install template checkout-free and tag-pinned", async () => {
