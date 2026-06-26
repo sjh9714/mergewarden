@@ -231,6 +231,51 @@ describe("report renderers", () => {
     expect(JSON.parse(renderJsonReport(result))).toMatchObject({ decision: "warn" });
   });
 
+  it("renders package lifecycle script findings across report formats", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        files: [
+          {
+            path: "package.json",
+            status: "modified",
+            additions: 4,
+            deletions: 1,
+            baseContent: JSON.stringify({ scripts: { test: "vitest" } }),
+            headContent: JSON.stringify({
+              scripts: { test: "vitest", preinstall: "node scripts/setup.js" },
+            }),
+          },
+        ],
+      }),
+    );
+    const finding = result.findings[0];
+
+    if (!finding) {
+      throw new Error("Expected package script finding");
+    }
+
+    const json = JSON.parse(renderJsonReport(result));
+    const markdown = renderMarkdownReport(result);
+    const plainText = renderPlainTextReportSummary(result);
+
+    expect(result.decision).toBe("warn");
+    expect(finding.ruleId).toBe("dependency/lifecycle-script-added");
+    expect(json.findings[0].evidenceSnapshot).toMatchObject({
+      ruleId: "dependency/lifecycle-script-added",
+      severity: "warn",
+      path: "package.json",
+    });
+    expect(markdown).toContain("### WARN dependency/lifecycle-script-added");
+    expect(markdown).toContain("Finding ID: `agf_");
+    expect(markdown).toContain("- script: preinstall");
+    expect(markdown).toContain("- after: node scripts/setup.js");
+    expect(plainText).toContain(
+      `- warn ${finding.findingId} dependency/lifecycle-script-added package.json`,
+    );
+    expect(plainText).not.toContain("evidenceSnapshot");
+    expect(plainText).not.toContain("node scripts/setup.js");
+  });
+
   it("keeps the top summary action-oriented for info-only pass results", () => {
     const result: AnalysisResult = {
       decision: "pass",

@@ -81,6 +81,18 @@ github_actions:
   block_pull_request_target_checkout: true
   require_pinned_actions: warn
   severity: error
+
+package_scripts:
+  enabled: true
+  paths:
+    - package.json
+    - "**/package.json"
+  lifecycle_scripts:
+    - preinstall
+    - install
+    - postinstall
+    - prepare
+  severity: warn
 `);
 
     expect(config.mode).toBe("block");
@@ -92,6 +104,12 @@ github_actions:
       paths: ["src/auth/**", "app/**/auth/**"],
       require_tests: ["tests/auth/**", "**/*.auth.test.ts"],
       severity: "error",
+    });
+    expect(config.package_scripts).toEqual({
+      enabled: true,
+      paths: ["package.json", "**/package.json"],
+      lifecycle_scripts: ["preinstall", "install", "postinstall", "prepare"],
+      severity: "warn",
     });
   });
 
@@ -160,6 +178,17 @@ high_risk_paths:
       "claude_desktop_config.json",
       ".codex/**",
     ]);
+  });
+
+  it("defaults package lifecycle script checks to warning mode", () => {
+    const config = parseConfig("version: 1\n");
+
+    expect(config.package_scripts).toEqual({
+      enabled: true,
+      paths: ["package.json", "**/package.json"],
+      lifecycle_scripts: ["preinstall", "install", "postinstall", "prepare"],
+      severity: "warn",
+    });
   });
 
   it("rejects empty high-risk path patterns", () => {

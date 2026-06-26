@@ -8,7 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Add warning-mode package lifecycle script drift findings for added or changed
+  `preinstall`, `install`, `postinstall`, and `prepare` scripts.
 
 ## v0.2.3 - 2026-06-26
 

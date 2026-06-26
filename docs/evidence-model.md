@@ -118,5 +118,6 @@ be the only audit record for a blocking finding and its bypass.
 
 ## Planned Rule Families
 
-CODEOWNERS/reviewer evidence and package/dependency drift remain planned v0.2.x
-work. They should build on this evidence model instead of bypassing it.
+CODEOWNERS/reviewer evidence, dependency additions, and lockfile drift remain
+planned v0.2.x work. They should build on this evidence model instead of
+bypassing it.

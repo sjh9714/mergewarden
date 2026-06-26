@@ -5,6 +5,8 @@ export {
   AgentGateConfigSchema,
   CONFIG_FILE_NAME,
   DEFAULT_AGENT_CONTROL_PLANE_PATHS,
+  DEFAULT_LIFECYCLE_SCRIPTS,
+  DEFAULT_PACKAGE_SCRIPT_PATHS,
 } from "./config/schema.js";
 export { parseContractFromPrBody } from "./contract/parsePrBody.js";
 export { AgentContractSchema } from "./contract/schema.js";

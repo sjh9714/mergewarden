@@ -18,6 +18,9 @@ export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   ".codex/**",
 ];
 
+export const DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
+export const DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
+
 const SeveritySettingSchema = z.enum(["warn", "error"]);
 
 const AgentDetectionSchema = z
@@ -63,6 +66,15 @@ const GitHubActionsConfigSchema = z
   })
   .strict();
 
+const PackageScriptsConfigSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    paths: z.array(NonEmptyStringSchema).default(DEFAULT_PACKAGE_SCRIPT_PATHS),
+    lifecycle_scripts: z.array(NonEmptyStringSchema).default(DEFAULT_LIFECYCLE_SCRIPTS),
+    severity: SeveritySettingSchema.default("warn"),
+  })
+  .strict();
+
 export const AgentGateConfigSchema = z
   .object({
     version: z.literal(1),
@@ -88,6 +100,12 @@ export const AgentGateConfigSchema = z
       block_pull_request_target_checkout: true,
       require_pinned_actions: "warn",
       severity: "error",
+    }),
+    package_scripts: PackageScriptsConfigSchema.default({
+      enabled: true,
+      paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
+      lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
+      severity: "warn",
     }),
   })
   .strict();

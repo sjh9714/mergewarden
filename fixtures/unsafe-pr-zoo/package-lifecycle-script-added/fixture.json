@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-package-script",
+    "headSha": "head-package-script"
+  },
+  "pr": {
+    "number": 106,
+    "title": "Add package lifecycle script",
+    "branchName": "codex/package-lifecycle-script",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": "package.json",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 1,
+      "baseContent": "{\n  \"name\": \"demo\",\n  \"scripts\": {\n    \"test\": \"vitest\"\n  }\n}\n",
+      "headContent": "{\n  \"name\": \"demo\",\n  \"scripts\": {\n    \"test\": \"vitest\",\n    \"preinstall\": \"node scripts/setup.js\"\n  }\n}\n"
+    }
+  ],
+  "now": "2026-06-26T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

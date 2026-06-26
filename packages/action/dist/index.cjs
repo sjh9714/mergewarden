@@ -47810,26 +47810,31 @@ var contractBlockedPathRule = {
 function isWorkflowFile(ctx, path) {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
 }
+function isPackageManifest(ctx, path) {
+  return ctx.input.config.package_scripts.enabled && ctx.helpers.matchesAny(path, ctx.input.config.package_scripts.paths);
+}
 function missingBaseContent(file2) {
   return file2.status !== "added" && file2.baseContent == null;
 }
 function missingHeadContent(file2) {
   return file2.status !== "removed" && file2.headContent == null;
 }
-function contentUnavailableFinding(file2, ref) {
+function contentUnavailableFinding(file2, ref, options) {
   return {
     ruleId: "analysis/content-unavailable",
-    severity: "error",
+    severity: options.severity,
     title: "Changed file content unavailable",
-    message: `Unable to read ${ref} content for ${file2.path}; workflow analysis may be incomplete.`,
+    message: `Unable to read ${ref} content for ${file2.path}; ${options.subject} analysis may be incomplete.`,
     path: file2.path,
     evidence: [
       { label: "changed_file", value: file2.path },
       { label: "content_ref", value: ref },
       { label: "file_status", value: file2.status }
     ],
-    remediation: ["Review this workflow change manually or rerun once content is available."],
-    tags: ["analysis", "content-unavailable", "workflow"],
+    remediation: [
+      `Review this ${options.subject} change manually or rerun once content is available.`
+    ],
+    tags: options.tags,
     confidence: "medium"
   };
 }
@@ -47839,14 +47844,25 @@ var contentUnavailableRule = {
   run(ctx) {
     const findings = [];
     for (const file2 of ctx.helpers.changedFiles()) {
-      if (!isWorkflowFile(ctx, file2.path)) {
+      const workflowFile = isWorkflowFile(ctx, file2.path);
+      const packageManifest = !workflowFile && isPackageManifest(ctx, file2.path);
+      if (!workflowFile && !packageManifest) {
         continue;
       }
+      const findingOptions = workflowFile ? {
+        severity: "error",
+        subject: "workflow",
+        tags: ["analysis", "content-unavailable", "workflow"]
+      } : {
+        severity: ctx.input.config.package_scripts.severity,
+        subject: "package manifest",
+        tags: ["analysis", "content-unavailable", "dependency", "package-script"]
+      };
       if (missingBaseContent(file2)) {
-        findings.push(contentUnavailableFinding(file2, "base"));
+        findings.push(contentUnavailableFinding(file2, "base", findingOptions));
       }
       if (missingHeadContent(file2)) {
-        findings.push(contentUnavailableFinding(file2, "head"));
+        findings.push(contentUnavailableFinding(file2, "head", findingOptions));
       }
     }
     return findings;
@@ -47897,6 +47913,142 @@ var highRiskPathRule = {
         }
         finding.evidence.push({ label: "matched_patterns", value: patterns.join(", ") });
         findings.push(finding);
+      }
+    }
+    return findings;
+  }
+};
+function isPackageManifest2(ctx, path) {
+  return ctx.helpers.matchesAny(path, ctx.input.config.package_scripts.paths);
+}
+function parsePackageJson(content) {
+  if (content == null) {
+    return { scripts: {} };
+  }
+  try {
+    const parsed = JSON.parse(content);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return { scripts: {}, parseError: "package.json root is not an object" };
+    }
+    const scripts = parsed.scripts;
+    if (scripts === void 0) {
+      return { scripts: {} };
+    }
+    if (!scripts || typeof scripts !== "object" || Array.isArray(scripts)) {
+      return { scripts: {}, parseError: "package.json scripts is not an object" };
+    }
+    return {
+      scripts: Object.fromEntries(
+        Object.entries(scripts).filter((entry) => typeof entry[1] === "string").sort(([left], [right]) => left.localeCompare(right))
+      )
+    };
+  } catch (error52) {
+    return {
+      scripts: {},
+      parseError: error52 instanceof Error ? error52.message : "package.json parse failed"
+    };
+  }
+}
+function parseErrorFinding(filePath, severity, error52) {
+  return {
+    ruleId: "dependency/package-script-drift",
+    severity,
+    title: "Package script drift could not be analyzed",
+    message: `${filePath} could not be parsed as package JSON.`,
+    path: filePath,
+    evidence: [
+      { label: "changed_file", value: filePath },
+      { label: "change", value: "parse-error" },
+      { label: "parse_error", value: error52 }
+    ],
+    remediation: ["Fix package.json so lifecycle script drift can be inspected."],
+    tags: ["dependency", "package-script", "parse-error"],
+    confidence: "medium"
+  };
+}
+function scriptFinding(options) {
+  const evidence = [
+    { label: "changed_file", value: options.filePath },
+    { label: "script", value: options.script },
+    { label: "change", value: options.change }
+  ];
+  if (options.before !== void 0) {
+    evidence.push({ label: "before", value: options.before });
+  }
+  evidence.push({ label: "after", value: options.after });
+  return {
+    ruleId: options.ruleId,
+    severity: options.severity,
+    title: options.ruleId === "dependency/lifecycle-script-added" ? "Package lifecycle script added" : "Package lifecycle script changed",
+    message: `${options.script} script ${options.change} in ${options.filePath}.`,
+    path: options.filePath,
+    evidence,
+    remediation: ["Review lifecycle script changes before merging."],
+    tags: ["dependency", "package-script", options.script],
+    confidence: "high"
+  };
+}
+var packageScriptDriftRule = {
+  id: "dependency/package-script-drift",
+  title: "Package lifecycle script drift",
+  run(ctx) {
+    const config2 = ctx.input.config.package_scripts;
+    if (!config2.enabled) {
+      return [];
+    }
+    const findings = [];
+    for (const file2 of ctx.helpers.changedFiles()) {
+      if (!isPackageManifest2(ctx, file2.path) || file2.status === "removed") {
+        continue;
+      }
+      if (file2.status !== "added" && file2.baseContent == null) {
+        continue;
+      }
+      if (file2.headContent == null) {
+        continue;
+      }
+      const base = parsePackageJson(file2.baseContent);
+      const head = parsePackageJson(file2.headContent);
+      if (base.parseError) {
+        findings.push(parseErrorFinding(file2.path, config2.severity, base.parseError));
+        continue;
+      }
+      if (head.parseError) {
+        findings.push(parseErrorFinding(file2.path, config2.severity, head.parseError));
+        continue;
+      }
+      for (const script of config2.lifecycle_scripts) {
+        const before = base.scripts[script];
+        const after = head.scripts[script];
+        if (after === void 0) {
+          continue;
+        }
+        if (before === void 0) {
+          findings.push(
+            scriptFinding({
+              ruleId: "dependency/lifecycle-script-added",
+              severity: config2.severity,
+              filePath: file2.path,
+              script,
+              change: "added",
+              after
+            })
+          );
+          continue;
+        }
+        if (before !== after) {
+          findings.push(
+            scriptFinding({
+              ruleId: "dependency/package-script-drift",
+              severity: config2.severity,
+              filePath: file2.path,
+              script,
+              change: "changed",
+              before,
+              after
+            })
+          );
+        }
       }
     }
     return findings;
@@ -48347,6 +48499,7 @@ var builtInRules = [
   agentControlPlaneDriftRule,
   missingTestEvidenceRule,
   contentUnavailableRule,
+  packageScriptDriftRule,
   workflowPermissionEscalationRule,
   workflowDangerousPatternRule
 ];
@@ -48444,6 +48597,8 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "claude_desktop_config.json",
   ".codex/**"
 ];
+var DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
+var DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
 var SeveritySettingSchema = external_exports.enum(["warn", "error"]);
 var AgentDetectionSchema = external_exports.object({
   authors: external_exports.array(NonEmptyStringSchema).default([]),
@@ -48471,6 +48626,12 @@ var GitHubActionsConfigSchema = external_exports.object({
   require_pinned_actions: external_exports.enum(["off", "warn", "error"]).default("warn"),
   severity: SeveritySettingSchema.default("error")
 }).strict();
+var PackageScriptsConfigSchema = external_exports.object({
+  enabled: external_exports.boolean().default(true),
+  paths: external_exports.array(NonEmptyStringSchema).default(DEFAULT_PACKAGE_SCRIPT_PATHS),
+  lifecycle_scripts: external_exports.array(NonEmptyStringSchema).default(DEFAULT_LIFECYCLE_SCRIPTS),
+  severity: SeveritySettingSchema.default("warn")
+}).strict();
 var AgentGateConfigSchema = external_exports.object({
   version: external_exports.literal(1),
   mode: external_exports.enum(["observe", "warn", "block"]).default("warn"),
@@ -48495,6 +48656,12 @@ var AgentGateConfigSchema = external_exports.object({
     block_pull_request_target_checkout: true,
     require_pinned_actions: "warn",
     severity: "error"
+  }),
+  package_scripts: PackageScriptsConfigSchema.default({
+    enabled: true,
+    paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
+    lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
+    severity: "warn"
   })
 }).strict();
 var DEFAULT_CONFIG = AgentGateConfigSchema.parse({ version: 1 });
@@ -48811,7 +48978,7 @@ function renderPlainTextReportSummary(result) {
 }
 
 // src/version.ts
-var AGENT_GATE_VERSION = "0.2.3";
+var AGENT_GATE_VERSION = "0.2.4";
 
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";

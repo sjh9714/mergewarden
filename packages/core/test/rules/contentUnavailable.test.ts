@@ -100,4 +100,77 @@ describe("analysis/content-unavailable", () => {
       "analysis/content-unavailable",
     );
   });
+
+  it("emits when package manifest head content is unavailable", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        files: [
+          fileChange({
+            path: "package.json",
+            baseContent: '{ "scripts": {} }\n',
+            headContent: null,
+          }),
+        ],
+      }),
+    );
+
+    expect(result.decision).toBe("warn");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "analysis/content-unavailable",
+        severity: "warn",
+        path: "package.json",
+        evidence: expect.arrayContaining([
+          { label: "changed_file", value: "package.json" },
+          { label: "content_ref", value: "head" },
+          { label: "file_status", value: "modified" },
+        ]),
+      }),
+    );
+  });
+
+  it("emits when package manifest base content is unavailable", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        files: [
+          fileChange({
+            path: "package.json",
+            baseContent: null,
+            headContent: '{ "scripts": { "preinstall": "node setup.js" } }\n',
+          }),
+        ],
+      }),
+    );
+
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "analysis/content-unavailable",
+        severity: "warn",
+        path: "package.json",
+        evidence: expect.arrayContaining([{ label: "content_ref", value: "base" }]),
+      }),
+    );
+    expect(result.findings.map((finding) => finding.ruleId)).not.toContain(
+      "dependency/lifecycle-script-added",
+    );
+  });
+
+  it("does not emit for package manifests when package script checks are disabled", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\npackage_scripts:\n  enabled: false\n"),
+        files: [
+          fileChange({
+            path: "package.json",
+            baseContent: null,
+            headContent: null,
+          }),
+        ],
+      }),
+    );
+
+    expect(result.findings.map((finding) => finding.ruleId)).not.toContain(
+      "analysis/content-unavailable",
+    );
+  });
 });

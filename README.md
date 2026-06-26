@@ -7,7 +7,7 @@
 
 > Catch risky AI-generated PRs before merge — without checking out PR code.
 
-Agent Gate is a GitHub Action that checks deterministic merge evidence: out-of-scope edits, GitHub Actions permission escalation, agent instruction drift, MCP config drift, and missing test-file evidence.
+Agent Gate is a GitHub Action that checks deterministic merge evidence: out-of-scope edits, GitHub Actions permission escalation, agent instruction drift, MCP config drift, missing test-file evidence, and package lifecycle script drift in `v0.2.4+`.
 
 The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
 
@@ -36,6 +36,7 @@ Finding ID: agf_...
 - Agent control-plane drift (`agent-control-plane/drift`): instruction or tool config changes that affect future agents.
 - Missing test evidence: high-risk source changes without matching test file changes.
 - MCP config drift: `.mcp.json` changes that alter which tools agents can call.
+- Package lifecycle script drift: risky `package.json` lifecycle scripts added or changed in `v0.2.4+`.
 
 ## What Agent Gate Does Not Do
 
@@ -75,6 +76,7 @@ Agent Gate does not try to find every semantic bug or replace code review. It ch
 - did agent control-plane files drift?
 - did high-risk code change without matching test-file evidence?
 - did MCP config changes get surfaced?
+- did package lifecycle scripts change? (`v0.2.4+`)
 
 Use your LLM reviewer for judgment. Use Agent Gate for deterministic merge evidence.
 
@@ -87,6 +89,7 @@ AI agents can produce useful pull requests, but tests and LLM review do not alwa
 - `.mcp.json` changes which tools future agents can call
 - `AGENTS.md` changes future agent behavior
 - risky source changes land without matching test-file evidence
+- `package.json` adds a `preinstall`, `install`, `postinstall`, or `prepare` script
 
 Agent Gate focuses on these repeatable boundary checks.
 
@@ -127,12 +130,14 @@ Additional unsafe-pr-zoo demos:
 - `out-of-scope-agent-edit`: blocks a payment webhook edit outside the PR contract's `allowed_paths`.
 - `missing-test-evidence`: blocks an auth logic change without matching auth test changes.
 - `mcp-config-drift`: blocks `.mcp.json` changes because MCP config can change which tools an agent can call.
+- `package-lifecycle-script-added`: warns on a new risky package lifecycle script in `v0.2.4+`.
 
 ```bash
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/agent-control-plane-drift
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-evidence
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/package-lifecycle-script-added
 ```
 
 ## 10-Minute Observe Path
@@ -310,9 +315,19 @@ high_risk_paths:
 
 Teams can add auth, payments, infra, and agent-control-plane paths as their policy matures.
 
-Current `agent-gate.yml` support is intentionally narrow: agent detection, PR-body contracts, high-risk paths with matching test-file evidence, agent control-plane paths, and GitHub Actions workflow rules. File-based contracts, risk budgets, dependency drift, claim-vs-CI evidence, reviewer requirements, and rollback-plan requirements are planned areas and are rejected today instead of being accepted as no-op settings.
+Current `agent-gate.yml` support is intentionally narrow: agent detection, PR-body contracts, high-risk paths with matching test-file evidence, agent-control-plane paths, GitHub Actions workflow rules, and package lifecycle script checks. File-based contracts, risk budgets, dependency additions, lockfile mismatch, claim-vs-CI evidence, reviewer requirements, and rollback-plan requirements are planned areas and are rejected today instead of being accepted as no-op settings.
 
-Starting in `v0.2.3`, if the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate can use its built-in default policy and record `configSource: default` in report metadata. That default policy gives repository-agnostic first signals for GitHub Actions workflow checks, agent control-plane drift, and pinned-action warnings. Repository-specific checks such as agent detection, required PR contracts, high-risk source paths, and matching test-file evidence still require `agent-gate.yml`.
+Starting in `v0.2.4`, package lifecycle script checks are enabled by default in warning mode. They inspect configured `package.json` paths for added or changed `preinstall`, `install`, `postinstall`, and `prepare` scripts. Dependency additions and lockfile mismatch checks remain future work.
+
+```yaml
+package_scripts:
+  enabled: true
+  severity: warn
+```
+
+Starting in `v0.2.3`, if the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate can use its built-in default policy and record `configSource: default` in report metadata. That released default policy gives repository-agnostic first signals for GitHub Actions workflow checks, agent-control-plane drift, and pinned-action warnings.
+
+In `v0.2.4+`, the built-in default policy also includes warning-mode package lifecycle script drift checks. Repository-specific checks such as agent detection, required PR contracts, high-risk source paths, and matching test-file evidence still require `agent-gate.yml`.
 
 ## Status And Roadmap
 
