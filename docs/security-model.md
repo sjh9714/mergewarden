@@ -6,6 +6,7 @@ executing PR-controlled code.
 
 ## Trusted Inputs
 
+- Built-in default policy bundled with the pinned Agent Gate Action ref.
 - Base branch `agent-gate.yml`.
 - Action code from the workflow-pinned ref, such as `@main`, a release tag, or
   a pinned commit SHA.
@@ -36,8 +37,15 @@ executing PR-controlled code.
 
 ## Base-Branch Policy
 
-The Action loads `agent-gate.yml` from the PR base ref. This prevents a pull
-request from weakening its own policy by changing policy files on the PR branch.
+The Action loads `agent-gate.yml` from the PR base ref when the configured
+policy file exists. This prevents a pull request from weakening its own policy
+by changing policy files on the PR branch. When the default `agent-gate.yml` is
+confirmed absent, Agent Gate may use the built-in default policy bundled with
+the trusted Action ref.
+
+Other policy retrieval failures are fatal. Permission failures, API failures,
+rate limits, malformed content responses, and missing custom config paths do not
+fall back to defaults. Agent Gate never falls back to policy from the PR head.
 Changes to policy and agent-control-plane files are still analyzed as ordinary
 pull request content.
 

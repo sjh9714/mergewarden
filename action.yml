@@ -4,7 +4,7 @@ author: "Agent Gate contributors"
 
 inputs:
   config:
-    description: "Path to agent-gate.yml on the base branch"
+    description: "Optional path to agent-gate.yml on the base branch; built-in defaults are used when the default path is confirmed missing"
     required: false
     default: "agent-gate.yml"
   github-token:

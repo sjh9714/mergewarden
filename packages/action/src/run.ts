@@ -1,5 +1,7 @@
 import {
   analyze,
+  CONFIG_FILE_NAME,
+  DEFAULT_CONFIG,
   parseConfig,
   parseContractFromPrBody,
   renderJsonReport,
@@ -9,6 +11,7 @@ import {
   type AnalysisInput,
   type AnalysisResult,
   type ChangeSet,
+  type ConfigSource,
   type FileChange,
   type PullRequestContext,
 } from "@agent-gate/core";
@@ -16,6 +19,11 @@ import {
 import { AGENT_GATE_VERSION } from "./version.js";
 
 type Mode = AgentGateConfig["mode"];
+
+interface LoadedConfig {
+  config: AgentGateConfig;
+  source: ConfigSource;
+}
 
 interface RepositoryRef {
   owner: string;
@@ -294,6 +302,44 @@ function isFileContent(
   return typeof data === "object" && data !== null && !Array.isArray(data);
 }
 
+function githubStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) {
+    return undefined;
+  }
+
+  if ("status" in error && typeof error.status === "number") {
+    return error.status;
+  }
+
+  if (
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
+  ) {
+    return error.response.status;
+  }
+
+  return undefined;
+}
+
+function decodeRepositoryFileContent(data: unknown, path: string): string {
+  if (!isFileContent(data)) {
+    throw new Error(`${path} content response was not a file.`);
+  }
+
+  if (data.type !== "file") {
+    throw new Error(`${path} content response was not a file.`);
+  }
+
+  if (data.encoding !== "base64" || typeof data.content !== "string") {
+    throw new Error(`${path} content response was not base64 file content.`);
+  }
+
+  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
+}
+
 export async function fetchRepositoryTextContent(
   octokit: OctokitLike,
   options: FetchContentOptions,
@@ -316,6 +362,24 @@ export async function fetchRepositoryTextContent(
     return Buffer.from(response.data.content.replace(/\n/g, ""), "base64").toString("utf8");
   } catch {
     return null;
+  }
+}
+
+async function fetchConfigTextContent(
+  octokit: OctokitLike,
+  options: FetchContentOptions,
+): Promise<string | null> {
+  try {
+    const response = await octokit.rest.repos.getContent(options);
+    return decodeRepositoryFileContent(response.data, options.path);
+  } catch (error) {
+    if (githubStatus(error) === 404) {
+      return null;
+    }
+
+    throw new Error(
+      `Unable to load ${options.path} from base ref ${options.ref}: ${errorMessage(error)}`,
+    );
   }
 }
 
@@ -481,28 +545,44 @@ async function loadConfig(
   repo: string,
   baseSha: string,
   path: string,
-): Promise<AgentGateConfig> {
-  const configText = await fetchRepositoryTextContent(runtime.octokit, {
+): Promise<LoadedConfig> {
+  const configText = await fetchConfigTextContent(runtime.octokit, {
     owner,
     repo,
     path,
     ref: baseSha,
   });
+  const modeOverride = parseModeOverride(runtime.getInput("mode"));
 
   if (configText === null) {
-    throw new Error(`Unable to load ${path} from base ref ${baseSha}.`);
+    if (path !== CONFIG_FILE_NAME) {
+      throw new Error(
+        `Unable to load ${path} from base ref ${baseSha}: config file was not found.`,
+      );
+    }
+
+    runtime.warning(
+      `Agent Gate could not load ${path} from the base branch; using built-in default policy.`,
+    );
+    return {
+      config: modeOverride ? { ...DEFAULT_CONFIG, mode: modeOverride } : DEFAULT_CONFIG,
+      source: "default",
+    };
   }
 
   const config = parseConfig(configText);
-  const modeOverride = parseModeOverride(runtime.getInput("mode"));
 
-  return modeOverride ? { ...config, mode: modeOverride } : config;
+  return {
+    config: modeOverride ? { ...config, mode: modeOverride } : config,
+    source: "base-branch",
+  };
 }
 
 function analysisInput(
   context: ActionContext,
   pr: ActionPullRequest,
   config: AgentGateConfig,
+  configSource: ConfigSource,
   files: FileChange[],
   now: Date,
 ): AnalysisInput {
@@ -523,7 +603,7 @@ function analysisInput(
     reviews: [],
     checks: [],
     now: now.toISOString(),
-    configSource: "base-branch",
+    configSource,
     version: AGENT_GATE_VERSION,
   };
 }
@@ -546,9 +626,17 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
   const baseRepo = baseRepository(context);
   const headRepo = headRepository(context, pr);
-  const config = await loadConfig(runtime, baseRepo.owner, baseRepo.repo, pr.base.sha, configPath);
+  const loadedConfig = await loadConfig(
+    runtime,
+    baseRepo.owner,
+    baseRepo.repo,
+    pr.base.sha,
+    configPath,
+  );
   const files = await loadChangedFiles(runtime.octokit, baseRepo, headRepo, pr);
-  const result = await analyze(analysisInput(context, pr, config, files, runtime.now()));
+  const result = await analyze(
+    analysisInput(context, pr, loadedConfig.config, loadedConfig.source, files, runtime.now()),
+  );
   const jsonReport = renderJsonReport(result);
   const markdownReport = renderMarkdownReport(result);
   const plainTextReportSummary = renderPlainTextReportSummary(result);

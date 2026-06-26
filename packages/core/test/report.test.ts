@@ -37,6 +37,28 @@ describe("report renderers", () => {
     expect(JSON.parse(renderJsonReport(result))).toEqual(result);
   });
 
+  it("renders default config source metadata in JSON reports", () => {
+    const result: AnalysisResult = {
+      decision: "pass",
+      riskScore: 0,
+      summary: {
+        title: "Agent Gate: passed",
+        agentDetected: false,
+        contractPresent: false,
+        errorCount: 0,
+        warnCount: 0,
+        infoCount: 0,
+      },
+      findings: [],
+      metadata: {
+        ...metadata,
+        configSource: "default",
+      },
+    };
+
+    expect(JSON.parse(renderJsonReport(result)).metadata.configSource).toBe("default");
+  });
+
   it("renders evidence snapshots in JSON reports", async () => {
     const result = await analyze(
       createAnalysisInput({
@@ -78,6 +100,7 @@ describe("report renderers", () => {
     expect(markdown).toContain("Policy status: no blocking or warning findings.");
     expect(markdown).toContain("- Agent detected: no");
     expect(markdown).toContain("- Contract present: no");
+    expect(markdown).toContain("- Policy source: local fixture");
     expect(markdown).toContain("No findings.");
   });
 
@@ -128,6 +151,7 @@ describe("report renderers", () => {
     expect(markdown).toContain("- ruleId: evidence/missing-test-change");
     expect(markdown).toContain("- severity: warn");
     expect(markdown).toContain("- path: src/auth/session.ts");
+    expect(markdown).toContain("- Policy source: local fixture");
     expect(markdown).toContain("- required tests: tests/auth/**");
     expect(markdown).toContain("Remediation:");
     expect(markdown).toContain("- Add or update matching auth tests.");

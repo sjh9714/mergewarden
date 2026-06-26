@@ -28,6 +28,12 @@ function contentResponse(text: string) {
   };
 }
 
+function githubApiError(status: number, message: string) {
+  const error = new Error(message) as Error & { status: number };
+  error.status = status;
+  return error;
+}
+
 function validContractBody() {
   return [
     "<!-- agent-gate-contract",
@@ -102,7 +108,8 @@ interface IssueComment {
 function createOctokit(options: {
   files?: PullFile[];
   contents?: Record<string, string>;
-  errors?: Record<string, Error>;
+  rawContents?: Record<string, unknown>;
+  errors?: Record<string, unknown>;
   comments?: IssueComment[];
   commentErrors?: {
     list?: Error;
@@ -112,6 +119,7 @@ function createOctokit(options: {
 }): OctokitLike {
   const files = options.files ?? [];
   const contents = options.contents ?? {};
+  const rawContents = options.rawContents ?? {};
   const errors = options.errors ?? {};
   const comments = options.comments ?? [];
   const commentErrors = options.commentErrors ?? {};
@@ -122,6 +130,10 @@ function createOctokit(options: {
 
     if (errors[key]) {
       throw errors[key];
+    }
+
+    if (key in rawContents) {
+      return { data: rawContents[key] };
     }
 
     const content = contents[key];
@@ -297,6 +309,7 @@ describe("runAction", () => {
     expect(jsonReport).toMatchObject({
       decision: "block",
       metadata: {
+        configSource: "base-branch",
         version: AGENT_GATE_VERSION,
       },
     });
@@ -321,6 +334,170 @@ describe("runAction", () => {
         ref: BASE_SHA,
       }),
     );
+  });
+
+  it("uses built-in defaults when base-branch config is missing", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      contents: {
+        [`${BASE_SHA}:.github/workflows/release.yml`]: "permissions:\n  contents: read\n",
+        [`${HEAD_SHA}:.github/workflows/release.yml`]: "permissions:\n  contents: write\n",
+      },
+      errors: {
+        [`${BASE_SHA}:agent-gate.yml`]: githubApiError(404, "Not Found"),
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    const result = await runAction(harness.runtime);
+    const jsonReport = JSON.parse(harness.writtenFiles.get("agent-gate-report.json") ?? "{}");
+
+    expect(result?.metadata.configSource).toBe("default");
+    expect(result?.decision).toBe("warn");
+    expect(result?.findings.map((finding) => finding.ruleId)).toContain(
+      "workflow/permission-escalation",
+    );
+    expect(jsonReport.metadata.configSource).toBe("default");
+    expect(harness.outputs.get("decision")).toBe("warn");
+    expect(harness.summaryText()).toContain("# Agent Gate: NEEDS HUMAN DECISION");
+    expect(harness.summaryText()).toContain("- Policy source: built-in default");
+    expect(harness.failures).toEqual([]);
+    expect(harness.warnings).toEqual([
+      "Agent Gate could not load agent-gate.yml from the base branch; using built-in default policy.",
+    ]);
+  });
+
+  it("applies mode overrides when using built-in defaults", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      contents: {
+        [`${BASE_SHA}:.github/workflows/release.yml`]: "permissions:\n  contents: read\n",
+        [`${HEAD_SHA}:.github/workflows/release.yml`]: "permissions:\n  contents: write\n",
+      },
+      errors: {
+        [`${BASE_SHA}:agent-gate.yml`]: githubApiError(404, "Not Found"),
+      },
+    });
+    const harness = createHarness({
+      octokit,
+      inputs: {
+        mode: "observe",
+      },
+    });
+
+    const result = await runAction(harness.runtime);
+
+    expect(result?.metadata.configSource).toBe("default");
+    expect(result?.decision).toBe("pass");
+    expect(result?.findings.map((finding) => finding.ruleId)).toContain(
+      "workflow/permission-escalation",
+    );
+    expect(harness.outputs.get("decision")).toBe("pass");
+    expect(harness.failures).toEqual([]);
+    expect(harness.warnings).toEqual([
+      "Agent Gate could not load agent-gate.yml from the base branch; using built-in default policy.",
+    ]);
+  });
+
+  it.each([
+    [403, "Forbidden"],
+    [429, "Rate limit exceeded"],
+    [500, "Internal Server Error"],
+  ])("fails fast for config fetch status %s", async (status, message) => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      errors: {
+        [`${BASE_SHA}:agent-gate.yml`]: githubApiError(status, message),
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    await runAction(harness.runtime);
+
+    expect(harness.failures).toEqual([
+      `Unable to load agent-gate.yml from base ref ${BASE_SHA}: ${message}`,
+    ]);
+    expect(harness.outputs.size).toBe(0);
+    expect(harness.warnings).toEqual([]);
+  });
+
+  it("fails fast for config fetch exceptions without a GitHub status", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      errors: {
+        [`${BASE_SHA}:agent-gate.yml`]: new Error("network unavailable"),
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    await runAction(harness.runtime);
+
+    expect(harness.failures).toEqual([
+      `Unable to load agent-gate.yml from base ref ${BASE_SHA}: network unavailable`,
+    ]);
+    expect(harness.outputs.size).toBe(0);
+    expect(harness.warnings).toEqual([]);
+  });
+
+  it("fails fast when an explicit custom config path is missing", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      errors: {
+        [`${BASE_SHA}:.github/agent-gtae.yml`]: githubApiError(404, "Not Found"),
+      },
+    });
+    const harness = createHarness({
+      octokit,
+      inputs: {
+        config: ".github/agent-gtae.yml",
+      },
+    });
+
+    await runAction(harness.runtime);
+
+    expect(harness.failures).toEqual([
+      `Unable to load .github/agent-gtae.yml from base ref ${BASE_SHA}: config file was not found.`,
+    ]);
+    expect(harness.outputs.size).toBe(0);
+    expect(harness.warnings).toEqual([]);
+  });
+
+  it.each([
+    ["directory response", []],
+    ["non-file response", { type: "dir" }],
+    ["non-base64 file response", { type: "file", encoding: "utf-8", content: "version: 1\n" }],
+  ])("fails fast for malformed config content: %s", async (_name, data) => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      rawContents: {
+        [`${BASE_SHA}:agent-gate.yml`]: data,
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    await runAction(harness.runtime);
+
+    expect(harness.failures[0]).toMatch(
+      new RegExp(`Unable to load agent-gate\\.yml from base ref ${BASE_SHA}:`),
+    );
+    expect(harness.outputs.size).toBe(0);
+    expect(harness.warnings).toEqual([]);
+  });
+
+  it("fails fast for invalid base-branch config instead of falling back", async () => {
+    const octokit = createOctokit({
+      files: [workflowFile()],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 2\n",
+      },
+    });
+    const harness = createHarness({ octokit });
+
+    await runAction(harness.runtime);
+
+    expect(harness.failures[0]).toMatch(/Invalid agent-gate\.yml: version/);
+    expect(harness.outputs.size).toBe(0);
+    expect(harness.warnings).toEqual([]);
   });
 
   it("fetches renamed file base content from previousPath and head content from current path", async () => {

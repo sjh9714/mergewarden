@@ -11,6 +11,18 @@ function yesNo(value: boolean): "yes" | "no" {
   return value ? "yes" : "no";
 }
 
+function policySource(source: AnalysisResult["metadata"]["configSource"]): string {
+  if (source === "base-branch") {
+    return "base branch";
+  }
+
+  if (source === "default") {
+    return "built-in default";
+  }
+
+  return "local fixture";
+}
+
 function whyLines(result: AnalysisResult): string[] {
   const finding = highestActionableFinding(result.findings);
 
@@ -76,6 +88,7 @@ export function renderMarkdownReport(result: AnalysisResult): string {
     "",
     `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
     `- Contract present: ${yesNo(result.summary.contractPresent)}`,
+    `- Policy source: ${policySource(result.metadata.configSource)}`,
     `- Errors: ${result.summary.errorCount}`,
     `- Warnings: ${result.summary.warnCount}`,
     `- Info: ${result.summary.infoCount}`,

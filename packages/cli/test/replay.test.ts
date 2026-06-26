@@ -158,10 +158,15 @@ describe("CLI replay", () => {
     expect(readme).toContain("Why Deterministic?");
     expect(readme).toContain("10-Minute Observe Path");
     expect(readme).toContain("Start in warn mode");
+    expect(readme).toContain("Zero-config fallback is implemented for the next `v0.2.3` release");
+    expect(readme).toContain("built-in default policy");
+    expect(readme).toContain("configSource: default");
+    expect(readme).toContain("Repository-specific checks");
     expect(readme).toContain("allowed_paths");
     expect(readme).toContain("Action Reference");
     expect(readme).toContain("| `config`");
     expect(readme).toContain("| `agent-gate.yml`");
+    expect(readme).toContain("default path is confirmed missing");
     expect(readme).toContain("| `decision`");
     expect(readme).toContain("Final decision: `pass`, `warn`, or `block`.");
     expect(readme).toContain(

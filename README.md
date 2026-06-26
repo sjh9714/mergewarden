@@ -163,6 +163,8 @@ jobs:
           fail-on-block: false
 ```
 
+For `@v0.2.2`, add `agent-gate.yml` before running the Action. Zero-config fallback is implemented for the next `v0.2.3` release; install references will move to `@v0.2.3` after release verification.
+
 Start with a small `agent-gate.yml`:
 
 ```yaml
@@ -232,15 +234,15 @@ Use the root action with `sjh9714/Agent-Gate@v0.2.2`. No checkout step is requir
 
 ### Inputs
 
-| Input             | Default                  | Description                                          |
-| ----------------- | ------------------------ | ---------------------------------------------------- |
-| `config`          | `agent-gate.yml`         | Path to policy config on the PR base branch.         |
-| `github-token`    | `${{ github.token }}`    | Token used for API-only pull request reads.          |
-| `mode`            | config value             | Override policy mode: `observe`, `warn`, or `block`. |
-| `comment`         | `false`                  | Create or update a marked PR report comment.         |
-| `fail-on-block`   | `true`                   | Exit with code 1 when the decision is `block`.       |
-| `report-json`     | `agent-gate-report.json` | Path to write the JSON report.                       |
-| `report-markdown` | `agent-gate-report.md`   | Path to write the Markdown report.                   |
+| Input             | Default                  | Description                                                                                                                             |
+| ----------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `config`          | `agent-gate.yml`         | Optional policy config path on the PR base branch. In `v0.2.3+`, built-in defaults are used when the default path is confirmed missing. |
+| `github-token`    | `${{ github.token }}`    | Token used for API-only pull request reads.                                                                                             |
+| `mode`            | config value             | Override policy mode: `observe`, `warn`, or `block`.                                                                                    |
+| `comment`         | `false`                  | Create or update a marked PR report comment.                                                                                            |
+| `fail-on-block`   | `true`                   | Exit with code 1 when the decision is `block`.                                                                                          |
+| `report-json`     | `agent-gate-report.json` | Path to write the JSON report.                                                                                                          |
+| `report-markdown` | `agent-gate-report.md`   | Path to write the Markdown report.                                                                                                      |
 
 ### Outputs
 
@@ -310,6 +312,8 @@ Teams can add auth, payments, infra, and agent-control-plane paths as their poli
 
 Current `agent-gate.yml` support is intentionally narrow: agent detection, PR-body contracts, high-risk paths with matching test-file evidence, agent control-plane paths, and GitHub Actions workflow rules. File-based contracts, risk budgets, dependency drift, claim-vs-CI evidence, reviewer requirements, and rollback-plan requirements are planned areas and are rejected today instead of being accepted as no-op settings.
 
+Starting in `v0.2.3`, if the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate can use its built-in default policy and record `configSource: default` in report metadata. That default policy gives repository-agnostic first signals for GitHub Actions workflow checks, agent control-plane drift, and pinned-action warnings. Repository-specific checks such as agent detection, required PR contracts, high-risk source paths, and matching test-file evidence still require `agent-gate.yml`.
+
 ## Status And Roadmap
 
 Agent Gate is pre-release. The latest prerelease is `v0.2.2`.
@@ -328,7 +332,7 @@ See `docs/repository-governance.md` for recommended branch protection and releas
 
 ## Action Package
 
-External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, write the job summary, and optionally upsert one marked PR report comment. They do not checkout the pull request or execute repository scripts.
+External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref when present, fall back to built-in defaults only when the default file is confirmed absent, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, write the job summary, and optionally upsert one marked PR report comment. They do not checkout the pull request or execute repository scripts.
 
 ## Self-Dogfooding
 

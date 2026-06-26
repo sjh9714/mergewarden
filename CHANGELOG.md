@@ -8,7 +8,11 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Changed
+
+- Allow first-run installs without `agent-gate.yml` by falling back to the
+  built-in default policy when the base-branch config is missing.
+- Record default-policy fallback in report metadata as `configSource: default`.
 
 ## v0.2.2 - 2026-06-24
 

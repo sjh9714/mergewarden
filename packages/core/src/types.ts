@@ -3,7 +3,7 @@ import type { ParseContractResult } from "./contract/schema.js";
 
 export type Severity = "info" | "warn" | "error";
 export type Decision = "pass" | "warn" | "block";
-export type ConfigSource = "base-branch" | "local";
+export type ConfigSource = "base-branch" | "default" | "local";
 
 export interface Evidence {
   label: string;

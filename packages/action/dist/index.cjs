@@ -48651,6 +48651,15 @@ function policyStatus(result) {
 function yesNo(value) {
   return value ? "yes" : "no";
 }
+function policySource(source) {
+  if (source === "base-branch") {
+    return "base branch";
+  }
+  if (source === "default") {
+    return "built-in default";
+  }
+  return "local fixture";
+}
 function whyLines(result) {
   const finding = highestActionableFinding(result.findings);
   if (!finding) {
@@ -48706,6 +48715,7 @@ function renderMarkdownReport(result) {
     "",
     `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
     `- Contract present: ${yesNo(result.summary.contractPresent)}`,
+    `- Policy source: ${policySource(result.metadata.configSource)}`,
     `- Errors: ${result.summary.errorCount}`,
     `- Warnings: ${result.summary.warnCount}`,
     `- Info: ${result.summary.infoCount}`,
@@ -48801,7 +48811,7 @@ function renderPlainTextReportSummary(result) {
 }
 
 // src/version.ts
-var AGENT_GATE_VERSION = "0.2.2";
+var AGENT_GATE_VERSION = "0.2.3";
 
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
@@ -48898,6 +48908,30 @@ function headRepository(context3, pr) {
 function isFileContent(data) {
   return typeof data === "object" && data !== null && !Array.isArray(data);
 }
+function githubStatus(error52) {
+  if (typeof error52 !== "object" || error52 === null) {
+    return void 0;
+  }
+  if ("status" in error52 && typeof error52.status === "number") {
+    return error52.status;
+  }
+  if ("response" in error52 && typeof error52.response === "object" && error52.response !== null && "status" in error52.response && typeof error52.response.status === "number") {
+    return error52.response.status;
+  }
+  return void 0;
+}
+function decodeRepositoryFileContent(data, path) {
+  if (!isFileContent(data)) {
+    throw new Error(`${path} content response was not a file.`);
+  }
+  if (data.type !== "file") {
+    throw new Error(`${path} content response was not a file.`);
+  }
+  if (data.encoding !== "base64" || typeof data.content !== "string") {
+    throw new Error(`${path} content response was not base64 file content.`);
+  }
+  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
+}
 async function fetchRepositoryTextContent(octokit, options) {
   try {
     const response = await octokit.rest.repos.getContent(options);
@@ -48913,6 +48947,19 @@ async function fetchRepositoryTextContent(octokit, options) {
     return Buffer.from(response.data.content.replace(/\n/g, ""), "base64").toString("utf8");
   } catch {
     return null;
+  }
+}
+async function fetchConfigTextContent(octokit, options) {
+  try {
+    const response = await octokit.rest.repos.getContent(options);
+    return decodeRepositoryFileContent(response.data, options.path);
+  } catch (error52) {
+    if (githubStatus(error52) === 404) {
+      return null;
+    }
+    throw new Error(
+      `Unable to load ${options.path} from base ref ${options.ref}: ${errorMessage(error52)}`
+    );
   }
 }
 async function listPullFiles(octokit, repository, pullNumber) {
@@ -49024,20 +49071,34 @@ async function upsertPullRequestComment(octokit, repository, issueNumber, markdo
   });
 }
 async function loadConfig(runtime, owner, repo, baseSha, path) {
-  const configText = await fetchRepositoryTextContent(runtime.octokit, {
+  const configText = await fetchConfigTextContent(runtime.octokit, {
     owner,
     repo,
     path,
     ref: baseSha
   });
+  const modeOverride = parseModeOverride(runtime.getInput("mode"));
   if (configText === null) {
-    throw new Error(`Unable to load ${path} from base ref ${baseSha}.`);
+    if (path !== CONFIG_FILE_NAME) {
+      throw new Error(
+        `Unable to load ${path} from base ref ${baseSha}: config file was not found.`
+      );
+    }
+    runtime.warning(
+      `Agent Gate could not load ${path} from the base branch; using built-in default policy.`
+    );
+    return {
+      config: modeOverride ? { ...DEFAULT_CONFIG, mode: modeOverride } : DEFAULT_CONFIG,
+      source: "default"
+    };
   }
   const config2 = parseConfig(configText);
-  const modeOverride = parseModeOverride(runtime.getInput("mode"));
-  return modeOverride ? { ...config2, mode: modeOverride } : config2;
+  return {
+    config: modeOverride ? { ...config2, mode: modeOverride } : config2,
+    source: "base-branch"
+  };
 }
-function analysisInput(context3, pr, config2, files, now) {
+function analysisInput(context3, pr, config2, configSource, files, now) {
   return {
     repo: {
       owner: context3.repo.owner,
@@ -49055,7 +49116,7 @@ function analysisInput(context3, pr, config2, files, now) {
     reviews: [],
     checks: [],
     now: now.toISOString(),
-    configSource: "base-branch",
+    configSource,
     version: AGENT_GATE_VERSION
   };
 }
@@ -49075,9 +49136,17 @@ async function runActionInner(runtime) {
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
   const baseRepo = baseRepository(context3);
   const headRepo = headRepository(context3, pr);
-  const config2 = await loadConfig(runtime, baseRepo.owner, baseRepo.repo, pr.base.sha, configPath);
+  const loadedConfig = await loadConfig(
+    runtime,
+    baseRepo.owner,
+    baseRepo.repo,
+    pr.base.sha,
+    configPath
+  );
   const files = await loadChangedFiles(runtime.octokit, baseRepo, headRepo, pr);
-  const result = await analyze(analysisInput(context3, pr, config2, files, runtime.now()));
+  const result = await analyze(
+    analysisInput(context3, pr, loadedConfig.config, loadedConfig.source, files, runtime.now())
+  );
   const jsonReport = renderJsonReport(result);
   const markdownReport = renderMarkdownReport(result);
   const plainTextReportSummary = renderPlainTextReportSummary(result);
