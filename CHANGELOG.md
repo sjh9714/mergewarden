@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.2.3 - 2026-06-26
+
 ### Changed
 
 - Allow first-run installs without `agent-gate.yml` by falling back to the
