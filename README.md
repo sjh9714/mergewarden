@@ -7,10 +7,11 @@
 
 > Catch risky AI-generated PRs before merge — without checking out PR code.
 
-Agent Gate is a GitHub Action that checks deterministic merge evidence:
-out-of-scope edits, GitHub Actions permission escalation, agent instruction
-drift, MCP config drift, missing test-file evidence, and package lifecycle
-script drift.
+Agent Gate is a checkout-free GitHub Action that gives maintainers
+deterministic evidence when AI-generated PRs cross risky policy boundaries.
+
+It checks workflow permissions, PR scope contracts, agent-control-plane drift,
+MCP config drift, missing test evidence, and package lifecycle script drift.
 
 The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
 

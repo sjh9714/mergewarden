@@ -15,6 +15,7 @@ pre-release, so APIs and rule names may change between versions.
 
 ### Changed
 
+- Sharpen README top copy around checkout-free deterministic evidence.
 - Reorder README onboarding around first-run install and default-policy report
   interpretation.
 - Document v0.2.5 first-run smoke evidence and simplify README package

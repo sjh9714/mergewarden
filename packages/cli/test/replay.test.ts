@@ -162,6 +162,11 @@ describe("CLI replay", () => {
 
     expect(readme).toContain("@v0.2.5");
     expect(readme).not.toContain("v0.2.4+");
+    expect(readme).toContain("checkout-free GitHub Action");
+    expect(readme).toContain(
+      "deterministic evidence when AI-generated PRs cross risky policy boundaries",
+    );
+    expect(readme).toContain("It checks workflow permissions, PR scope contracts");
     expect(readme).toContain("Policy boundaries for AI PRs, backed by repeatable evidence");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
