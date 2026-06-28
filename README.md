@@ -68,6 +68,10 @@ Policy source: built-in default
 New to the report? See `docs/first-report.md` for how to read decisions,
 finding IDs, evidence snapshots, and policy source.
 
+See a real first-run sandbox smoke PR:
+[sandbox PR #11](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/11).
+More examples are listed in [docs/demo-prs.md](docs/demo-prs.md).
+
 ## What Runs Without `agent-gate.yml`?
 
 | Check                              | First run without config    | With `agent-gate.yml` |

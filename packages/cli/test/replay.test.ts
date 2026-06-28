@@ -175,6 +175,10 @@ describe("CLI replay", () => {
     );
     expect(readme).toContain("Real Report Example");
     expect(readme).toContain("docs/first-report.md");
+    expect(readme).toContain("docs/demo-prs.md");
+    expect(readme).toContain(
+      "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/11",
+    );
     expect(readme).toContain("What Agent Gate Does Not Do");
     expect(readme).toContain("prove that a PR is semantically correct");
     expect(readme).toContain("When To Use Agent Gate");
