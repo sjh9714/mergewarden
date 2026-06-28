@@ -12,7 +12,7 @@ external pull requests.
 - Action ref: `sjh9714/Agent-Gate@v0.2.5`
 - Checkout step: not used
 - Base-branch `agent-gate.yml`: absent
-- Policy source: built-in default policy
+- Policy source: built-in default
 - Report metadata: `configSource: default`
 - Final decision: `warn`
 - Finding: `dependency/lifecycle-script-added` for `package.json`
