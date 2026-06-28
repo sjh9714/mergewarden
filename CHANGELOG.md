@@ -16,6 +16,8 @@ pre-release, so APIs and rule names may change between versions.
 
 - Reorder README onboarding around first-run install and default-policy report
   interpretation.
+- Document v0.2.5 first-run smoke evidence and simplify README package
+  lifecycle wording.
 
 ## v0.2.5 - 2026-06-26
 

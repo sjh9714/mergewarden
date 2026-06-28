@@ -161,6 +161,7 @@ describe("CLI replay", () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
     expect(readme).toContain("@v0.2.5");
+    expect(readme).not.toContain("v0.2.4+");
     expect(readme).toContain("Policy boundaries for AI PRs, backed by repeatable evidence");
     expect(readme.toLowerCase()).toContain("no checkout");
     expect(readme).toContain("Catch risky AI-generated PRs before merge");
@@ -202,8 +203,9 @@ describe("CLI replay", () => {
     expect(readme).toContain("Once tuned, Agent Gate can report contract-scope evidence too");
     expect(readme).toContain("That released default policy gives");
     expect(readme).toContain(
-      "In `v0.2.4+`, the built-in default policy also includes warning-mode package lifecycle script drift checks.",
+      "Starting in `v0.2.4`, the built-in default policy also includes warning-mode",
     );
+    expect(readme).toContain("package lifecycle script drift checks. Repository-specific checks");
     expect(readme).toContain("Repository-specific checks");
     expect(readme).toContain("allowed_paths");
     expect(readme).toContain("Action Reference");
@@ -216,9 +218,8 @@ describe("CLI replay", () => {
       "`mode` controls rollout behavior. `decision` is the analyzer result.",
     );
     expect(readme).toContain("Status And Roadmap");
-    expect(readme).toContain(
-      "Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.4.md`",
-    );
+    expect(readme).toContain("Latest external install smoke evidence is recorded in");
+    expect(readme).toContain("docs/external-install-smoke-v0.2.5.md");
     expect(readme).toContain("safe to observe");
     expect(readme).toContain("needs human decision");
     expect(readme).toContain("must block");

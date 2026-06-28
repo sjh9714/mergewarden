@@ -7,7 +7,10 @@
 
 > Catch risky AI-generated PRs before merge — without checking out PR code.
 
-Agent Gate is a GitHub Action that checks deterministic merge evidence: out-of-scope edits, GitHub Actions permission escalation, agent instruction drift, MCP config drift, missing test-file evidence, and package lifecycle script drift in `v0.2.4+`.
+Agent Gate is a GitHub Action that checks deterministic merge evidence:
+out-of-scope edits, GitHub Actions permission escalation, agent instruction
+drift, MCP config drift, missing test-file evidence, and package lifecycle
+script drift.
 
 The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
 
@@ -152,7 +155,8 @@ Read the first runs as observation, not proof of semantic correctness:
 - Agent control-plane drift (`agent-control-plane/drift`): instruction or tool config changes that affect future agents.
 - Missing test evidence: high-risk source changes without matching test file changes.
 - MCP config drift: `.mcp.json` changes that alter which tools agents can call.
-- Package lifecycle script drift: risky `package.json` lifecycle scripts added or changed in `v0.2.4+` ([rule guide](docs/rules/package-lifecycle-scripts.md)).
+- Package lifecycle script drift: risky `package.json` lifecycle scripts added
+  or changed ([rule guide](docs/rules/package-lifecycle-scripts.md)).
 
 ## What Agent Gate Does Not Do
 
@@ -192,7 +196,7 @@ Agent Gate does not try to find every semantic bug or replace code review. It ch
 - did agent control-plane files drift?
 - did high-risk code change without matching test-file evidence?
 - did MCP config changes get surfaced?
-- did package lifecycle scripts change? (`v0.2.4+`)
+- did package lifecycle scripts change?
 
 Use your LLM reviewer for judgment. Use Agent Gate for deterministic merge evidence.
 
@@ -246,7 +250,8 @@ Additional unsafe-pr-zoo demos:
 - `out-of-scope-agent-edit`: blocks a payment webhook edit outside the PR contract's `allowed_paths`.
 - `missing-test-evidence`: blocks an auth logic change without matching auth test changes.
 - `mcp-config-drift`: blocks `.mcp.json` changes because MCP config can change which tools an agent can call.
-- `package-lifecycle-script-added`: warns on a new risky package lifecycle script in `v0.2.4+`.
+- `package-lifecycle-script-added`: warns on a new risky package lifecycle
+  script.
 
 ```bash
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/agent-control-plane-drift
@@ -350,7 +355,10 @@ package_scripts:
 
 Starting in `v0.2.3`, if the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate can use its built-in default policy and record `configSource: default` in report metadata. That released default policy gives repository-agnostic first signals for GitHub Actions workflow checks, agent-control-plane drift, and pinned-action warnings.
 
-In `v0.2.4+`, the built-in default policy also includes warning-mode package lifecycle script drift checks. Repository-specific checks such as agent detection, required PR contracts, high-risk source paths, and matching test-file evidence still require `agent-gate.yml`.
+Starting in `v0.2.4`, the built-in default policy also includes warning-mode
+package lifecycle script drift checks. Repository-specific checks such as agent
+detection, required PR contracts, high-risk source paths, and matching test-file
+evidence still require `agent-gate.yml`.
 
 ## Status And Roadmap
 
@@ -358,7 +366,9 @@ Agent Gate is pre-release. The latest prerelease is `v0.2.5`.
 
 Use `sjh9714/Agent-Gate@v0.2.5` or a pinned commit SHA for installs. `@main` tracks active development and may change.
 
-See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the current evidence model. Latest external install smoke evidence is recorded in `docs/external-install-smoke-v0.2.4.md`.
+See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the
+current evidence model. Latest external install smoke evidence is recorded in
+`docs/external-install-smoke-v0.2.5.md`.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings. Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
 
