@@ -199,9 +199,16 @@ describe("CLI replay", () => {
     expect(readme).toContain("does not execute a remote");
     expect(readme).toContain("Commit `.github/workflows/agent-gate.yml`.");
     expect(readme).toContain("Read the Agent Gate job summary.");
-    expect(readme).toContain("package.json added a preinstall script");
-    expect(readme).toContain("review the lifecycle script before merging");
+    expect(readme).toContain("contents permission increased from read to write");
+    expect(readme).toContain("Path: .github/workflows/demo-release.yml");
+    expect(readme).toContain("review the workflow permission change before merging");
+    expect(readme).toContain("Rule: workflow/permission-escalation");
     expect(readme).toContain("Policy source: built-in default");
+    expect(readme).toContain(
+      "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12",
+    );
+    expect(readme).toContain("Recommended installs should use `sjh9714/Agent-Gate@v0.2.5`");
+    expect(readme).toContain("Marketplace currently may lag on prerelease display");
     expect(readme).toContain("What Runs Without `agent-gate.yml`?");
     expect(readme).toContain("First run without config");
     expect(readme).toContain("only when a contract exists");

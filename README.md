@@ -53,16 +53,18 @@ Next:
 ## Real Report Example
 
 On a first run without `agent-gate.yml`, Agent Gate can still surface built-in
-default-policy warnings. For example, package lifecycle script drift:
+default-policy warnings. For example, workflow permission escalation:
 
 ```text
 Agent Gate: NEEDS HUMAN DECISION
 Decision: warn
-Why: package.json added a preinstall script.
-Recommended next step: review the lifecycle script before merging.
+Why: contents permission increased from read to write.
+Path: .github/workflows/demo-release.yml
+Recommended next step: review the workflow permission change before merging.
 Policy status: warning today; eligible to become a merge gate after tuning.
 
 Finding ID: agf_...
+Rule: workflow/permission-escalation
 Policy source: built-in default
 ```
 
@@ -70,6 +72,10 @@ New to the report? See `docs/first-report.md` for how to read decisions,
 finding IDs, evidence snapshots, and policy source.
 
 See a real first-run sandbox smoke PR:
+[sandbox PR #12](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12).
+That PR changes `permissions.contents` from `read` to `write` and Agent Gate
+reports `workflow/permission-escalation` without checkout or `agent-gate.yml`.
+The package lifecycle first-run proof remains available in
 [sandbox PR #11](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/11).
 More examples are listed in [docs/demo-prs.md](docs/demo-prs.md).
 
@@ -370,6 +376,10 @@ evidence still require `agent-gate.yml`.
 Agent Gate is pre-release. The latest prerelease is `v0.2.5`.
 
 Use `sjh9714/Agent-Gate@v0.2.5` or a pinned commit SHA for installs. `@main` tracks active development and may change.
+
+Recommended installs should use `sjh9714/Agent-Gate@v0.2.5`. GitHub
+Marketplace currently may lag on prerelease display even when the release is
+published and Marketplace-enabled.
 
 See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the
 current evidence model. Latest external install smoke evidence is recorded in

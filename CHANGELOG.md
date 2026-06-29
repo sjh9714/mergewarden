@@ -21,6 +21,7 @@ pre-release, so APIs and rule names may change between versions.
   interpretation.
 - Document v0.2.5 first-run smoke evidence and simplify README package
   lifecycle wording.
+- Promote workflow permission escalation as the primary README proof example.
 
 ## v0.2.5 - 2026-06-26
 
