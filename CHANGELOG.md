@@ -14,6 +14,7 @@ pre-release, so APIs and rule names may change between versions.
 - Add live first-run demo PR references for README conversion.
 - Add live workflow permission escalation demo evidence.
 - Add opt-in PR comment demo evidence.
+- Add manual copy-paste install guidance with strict pinning notes.
 
 ### Changed
 
