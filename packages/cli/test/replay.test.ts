@@ -199,6 +199,12 @@ describe("CLI replay", () => {
     expect(readme).toContain("does not execute a remote");
     expect(readme).toContain("Commit `.github/workflows/agent-gate.yml`.");
     expect(readme).toContain("Read the Agent Gate job summary.");
+    expect(readme).toContain("Manual Copy-Paste Install");
+    expect(readme).toContain("Prefer to inspect the workflow before adding it?");
+    expect(readme).toContain("uses: sjh9714/Agent-Gate@v0.2.5");
+    expect(readme).toContain("pull-requests: read");
+    expect(readme).toContain("For stricter supply-chain pinning");
+    expect(readme).toContain("replace `@v0.2.5` with the verified");
     expect(readme).toContain("contents permission increased from read to write");
     expect(readme).toContain("Path: .github/workflows/demo-release.yml");
     expect(readme).toContain("review the workflow permission change before merging");

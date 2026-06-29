@@ -50,6 +50,36 @@ Next:
 2. Open a pull request.
 3. Read the Agent Gate job summary.
 
+### Manual Copy-Paste Install
+
+Prefer to inspect the workflow before adding it? Create
+`.github/workflows/agent-gate.yml` with:
+
+```yaml
+name: Agent Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  agent-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: sjh9714/Agent-Gate@v0.2.5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: warn
+          fail-on-block: false
+```
+
+For stricter supply-chain pinning, replace `@v0.2.5` with the verified
+release commit SHA.
+
 ## Real Report Example
 
 On a first run without `agent-gate.yml`, Agent Gate can still surface built-in
