@@ -48209,6 +48209,12 @@ function findPermissionEscalations(before, after) {
     ];
   });
 }
+function findScopedPermissionEscalations(before, after, scope) {
+  return findPermissionEscalations(before, after).map((escalation) => ({
+    ...escalation,
+    scope
+  }));
+}
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -48442,8 +48448,111 @@ function isWorkflowFile3(ctx, path) {
 function permissionsForWorkflow(workflow) {
   return normalizeWorkflowPermissions(workflow?.permissions);
 }
+function isRecord4(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function jobsForWorkflow(workflow) {
+  if (!isRecord4(workflow?.jobs)) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(workflow.jobs).filter(
+      (entry) => isRecord4(entry[1])
+    )
+  );
+}
+function hasExplicitPermissions(value) {
+  return value !== void 0 && Object.prototype.hasOwnProperty.call(value, "permissions");
+}
 function needsBaseContent(file2) {
   return file2.status !== "added" && file2.baseContent == null;
+}
+function affectedArea(permission) {
+  switch (permission) {
+    case "contents":
+      return "release, tag, and repository content writes";
+    case "pull-requests":
+      return "pull request writes";
+    case "issues":
+      return "issue and PR comment writes";
+    case "deployments":
+      return "deployment writes";
+    case "packages":
+      return "package publishing";
+    case "pages":
+      return "GitHub Pages publishing";
+    case "id-token":
+      return "OIDC token minting for cloud credentials";
+    case "security-events":
+      return "code scanning and security event writes";
+    case "checks":
+      return "check run writes";
+    case "statuses":
+      return "commit status writes";
+    default:
+      return "GitHub API writes for this permission";
+  }
+}
+function scopeLabel(escalation) {
+  return escalation.scope.kind;
+}
+function scopeDescription(escalation) {
+  if (escalation.scope.kind === "job") {
+    return `job '${escalation.scope.job}'`;
+  }
+  return "workflow";
+}
+function escalationFinding(ctx, filePath, escalation) {
+  const area = affectedArea(escalation.permission);
+  const evidence = [
+    { label: "changed_file", value: filePath },
+    { label: "permission", value: escalation.permission },
+    { label: "before", value: escalation.before },
+    { label: "after", value: escalation.after },
+    { label: "permission_scope", value: scopeLabel(escalation) },
+    { label: "affected_area", value: area }
+  ];
+  if (escalation.scope.kind === "job") {
+    evidence.push({ label: "job", value: escalation.scope.job });
+  }
+  return {
+    ruleId: "workflow/permission-escalation",
+    severity: ctx.input.config.github_actions.severity,
+    title: "GitHub Actions permission escalation",
+    message: `${escalation.permission} permission increased from ${escalation.before} to ${escalation.after} at ${scopeDescription(escalation)} scope; this can affect ${area}. Confirm whether this permission boundary change is expected.`,
+    path: filePath,
+    evidence,
+    remediation: [
+      "Review the workflow permission boundary before merging.",
+      "Scope the permission to the smallest workflow or job that needs it.",
+      "Record reviewer approval or repo policy justification before promoting this finding to block."
+    ],
+    tags: ["workflow", "permission-escalation"],
+    confidence: "high"
+  };
+}
+function workflowPermissionEscalations(baseWorkflow, headWorkflow) {
+  const escalations = findScopedPermissionEscalations(
+    permissionsForWorkflow(baseWorkflow),
+    permissionsForWorkflow(headWorkflow),
+    { kind: "workflow" }
+  );
+  const baseJobs = jobsForWorkflow(baseWorkflow);
+  const headJobs = jobsForWorkflow(headWorkflow);
+  for (const [job, headJob] of Object.entries(headJobs)) {
+    if (!hasExplicitPermissions(headJob)) {
+      continue;
+    }
+    const basePermissions = hasExplicitPermissions(baseJobs[job]) ? normalizeWorkflowPermissions(baseJobs[job]?.permissions) : permissionsForWorkflow(baseWorkflow);
+    escalations.push(
+      ...findScopedPermissionEscalations(
+        basePermissions,
+        normalizeWorkflowPermissions(headJob.permissions),
+        { kind: "job", job }
+      )
+    );
+  }
+  return escalations;
 }
 var workflowPermissionEscalationRule = {
   id: "workflow/permission-escalation",
@@ -48463,27 +48572,9 @@ var workflowPermissionEscalationRule = {
       }
       const base = file2.baseContent ? parseWorkflow(file2.baseContent) : void 0;
       const baseWorkflow = base?.kind === "valid" ? base.workflow : void 0;
-      const escalations = findPermissionEscalations(
-        permissionsForWorkflow(baseWorkflow),
-        permissionsForWorkflow(head.workflow)
-      );
+      const escalations = workflowPermissionEscalations(baseWorkflow, head.workflow);
       for (const escalation of escalations) {
-        findings.push({
-          ruleId: "workflow/permission-escalation",
-          severity: ctx.input.config.github_actions.severity,
-          title: "GitHub Actions permission escalation",
-          message: `${escalation.permission} permission increased from ${escalation.before} to ${escalation.after}.`,
-          path: file2.path,
-          evidence: [
-            { label: "changed_file", value: file2.path },
-            { label: "permission", value: escalation.permission },
-            { label: "before", value: escalation.before },
-            { label: "after", value: escalation.after }
-          ],
-          remediation: ["Reduce workflow permissions or justify the escalation before merging."],
-          tags: ["workflow", "permission-escalation"],
-          confidence: "high"
-        });
+        findings.push(escalationFinding(ctx, file2.path, escalation));
       }
     }
     return findings;
@@ -48978,7 +49069,7 @@ function renderPlainTextReportSummary(result) {
 }
 
 // src/version.ts
-var AGENT_GATE_VERSION = "0.2.4";
+var AGENT_GATE_VERSION = "0.2.6";
 
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";

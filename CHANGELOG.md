@@ -18,6 +18,8 @@ pre-release, so APIs and rule names may change between versions.
 
 ### Changed
 
+- Add workflow permission escalation scope and affected-area context to finding
+  evidence and reports.
 - Sharpen README top copy around checkout-free deterministic evidence.
 - Reorder README onboarding around first-run install and default-policy report
   interpretation.
