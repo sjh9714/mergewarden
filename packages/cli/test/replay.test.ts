@@ -243,7 +243,7 @@ describe("CLI replay", () => {
     );
     expect(readme).toContain("Status And Roadmap");
     expect(readme).toContain("Latest external install smoke evidence is recorded in");
-    expect(readme).toContain("docs/external-install-smoke-v0.2.5.md");
+    expect(readme).toContain("docs/external-install-smoke-v0.2.6.md");
     expect(readme).toContain("safe to observe");
     expect(readme).toContain("needs human decision");
     expect(readme).toContain("must block");
@@ -262,6 +262,41 @@ describe("CLI replay", () => {
       "Dependency additions and lockfile mismatch checks remain future work.",
     );
     expect(readme).toContain(".github/workflows/release.yml");
+  });
+
+  it("documents v0.2.6 release and external smoke evidence", async () => {
+    const releaseVerification = await readFile(
+      join(repoRoot, "docs", "release-verification-v0.2.6.md"),
+      "utf8",
+    );
+    const smoke = await readFile(
+      join(repoRoot, "docs", "external-install-smoke-v0.2.6.md"),
+      "utf8",
+    );
+    const demos = await readFile(join(repoRoot, "docs", "demo-prs.md"), "utf8");
+
+    expect(releaseVerification).toContain("Agent Gate `v0.2.6`");
+    expect(releaseVerification).toContain(
+      "https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.6",
+    );
+    expect(releaseVerification).toContain("docs/external-install-smoke-v0.2.6.md");
+    expect(smoke).toContain("sjh9714/Agent-Gate@v0.2.6");
+    expect(smoke).toContain("https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14");
+    expect(smoke).toContain(
+      "https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/28440045859",
+    );
+    expect(smoke).toContain("Checkout step: not used");
+    expect(smoke).toContain("Policy source: built-in default");
+    expect(smoke).toContain("configSource: default");
+    expect(smoke).toContain("workflow/permission-escalation");
+    expect(smoke).toContain("permission_scope: workflow");
+    expect(smoke).toContain("permission_scope: job");
+    expect(smoke).toContain("job: publish");
+    expect(smoke).toContain("affected_capability: repository_content_writes");
+    expect(demos).toContain("https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14");
+    expect(demos).toContain("docs/external-install-smoke-v0.2.6.md");
+    expect(demos).toContain("permission_scope: job");
+    expect(demos).toContain("affected_capability: repository_content_writes");
   });
 
   it("documents how to read the first Agent Gate report", async () => {

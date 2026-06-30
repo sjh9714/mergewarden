@@ -8,7 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
-No changes yet.
+### Added
+
+- Record v0.2.6 release verification and external workflow permission context
+  smoke evidence.
 
 ## v0.2.6 - 2026-06-30
 

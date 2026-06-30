@@ -1,8 +1,8 @@
 # Demo PRs
 
-This page collects concrete Agent Gate examples. The first two examples are live
-sandbox pull requests. The tuned contract example is a local replay fixture, not
-a live external pull request.
+This page collects concrete Agent Gate examples. The first three examples are
+live sandbox pull requests. The tuned contract example is a local replay
+fixture, not a live external pull request.
 
 ## First-Run Default Policy
 
@@ -23,21 +23,29 @@ or adding `agent-gate.yml` first.
 
 ## Workflow Permission Escalation
 
-- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12
-- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/28313128684
-- Action ref: `sjh9714/Agent-Gate@v0.2.5`
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/28440045859
+- Smoke record: `docs/external-install-smoke-v0.2.6.md`
+- Action ref: `sjh9714/Agent-Gate@v0.2.6`
 - Checkout step: not used
 - Base-branch `agent-gate.yml`: absent
 - Policy source: built-in default
 - Report metadata: `configSource: default`
 - Final decision: `warn`
 - Finding: `workflow/permission-escalation` for `.github/workflows/demo-release.yml`
-- Demo change: `permissions.contents` changed from `read` to `write`
+- Demo change: workflow-level `permissions.contents` changed from `read` to
+  `write`
+- Demo change: job-level restrictive `permissions.contents: read` was removed
+  from job `publish`, exposing the broader workflow-level permission
+- Observed evidence: `permission_scope: workflow`
+- Observed evidence: `permission_scope: job`
+- Observed evidence: `job: publish`
+- Observed evidence: `affected_capability: repository_content_writes`
 
 This PR verifies that the built-in default policy can surface workflow
-permission escalation evidence without checking out PR code or adding
-`agent-gate.yml` first. It intentionally avoids `pull_request_target` so the live
-demo stays focused on permission escalation.
+permission escalation evidence with workflow/job scope context, without checking
+out PR code or adding `agent-gate.yml` first. It intentionally avoids
+`pull_request_target` so the live demo stays focused on permission escalation.
 
 Related local replay fixture:
 

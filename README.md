@@ -413,7 +413,7 @@ published and Marketplace-enabled.
 
 See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the
 current evidence model. Latest external install smoke evidence is recorded in
-`docs/external-install-smoke-v0.2.5.md`.
+`docs/external-install-smoke-v0.2.6.md`.
 
 See `docs/repository-governance.md` for recommended branch protection and release safety settings. Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
 
