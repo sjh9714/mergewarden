@@ -101,11 +101,14 @@ Policy source: built-in default
 New to the report? See `docs/first-report.md` for how to read decisions,
 finding IDs, evidence snapshots, and policy source.
 
-See a real first-run sandbox smoke PR:
-[sandbox PR #12](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12).
-That PR changes `permissions.contents` from `read` to `write` and Agent Gate
-reports `workflow/permission-escalation` without checkout or `agent-gate.yml`.
-The package lifecycle first-run proof remains available in
+See a real `v0.2.6` first-run sandbox smoke PR:
+[sandbox PR #14](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14).
+That PR reports workflow-level and job-level `workflow/permission-escalation`
+evidence with `permission_scope`, `job`, and `affected_capability`, without
+checkout or `agent-gate.yml`.
+The earlier `v0.2.5` permission proof remains available in
+[sandbox PR #12](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12),
+and the package lifecycle first-run proof remains available in
 [sandbox PR #11](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/11).
 More examples are listed in [docs/demo-prs.md](docs/demo-prs.md).
 

@@ -13,6 +13,11 @@ pre-release, so APIs and rule names may change between versions.
 - Record v0.2.6 release verification and external workflow permission context
   smoke evidence.
 
+### Changed
+
+- Align README primary live proof with the v0.2.6 workflow permission context
+  smoke.
+
 ## v0.2.6 - 2026-06-30
 
 ### Added

@@ -213,8 +213,11 @@ describe("CLI replay", () => {
     expect(readme).toContain("Rule: workflow/permission-escalation");
     expect(readme).toContain("Policy source: built-in default");
     expect(readme).toContain(
-      "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12",
+      "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14",
     );
+    expect(readme).toContain("workflow-level and job-level `workflow/permission-escalation`");
+    expect(readme).toContain("`permission_scope`, `job`, and `affected_capability`");
+    expect(readme).toContain("earlier `v0.2.5` permission proof");
     expect(readme).toContain("Recommended installs should use `sjh9714/Agent-Gate@v0.2.6`");
     expect(readme).toContain("Marketplace currently may lag on prerelease display");
     expect(readme).toContain("What Runs Without `agent-gate.yml`?");
