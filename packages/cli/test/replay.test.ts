@@ -151,7 +151,9 @@ describe("CLI replay", () => {
 
     expect(output).toContain("Agent Gate: BLOCKED");
     expect(output).toContain("ERROR workflow/permission-escalation");
-    expect(output).toContain("contents permission increased from read to write.");
+    expect(output).toContain("contents permission increased from read to write at workflow scope");
+    expect(output).toContain("- permission_scope: workflow");
+    expect(output).toContain("- affected_capability: repository_content_writes");
     expect(output).toContain("ERROR workflow/dangerous-pattern");
     expect(output).toContain("Path: .github/workflows/release.yml");
     expect(output.endsWith("\n")).toBe(true);

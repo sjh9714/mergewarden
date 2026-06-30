@@ -8,6 +8,10 @@ pre-release, so APIs and rule names may change between versions.
 
 ## Unreleased
 
+No changes yet.
+
+## v0.2.6 - 2026-06-30
+
 ### Added
 
 - Add first-report onboarding guidance and Windows install instructions.
@@ -18,12 +22,20 @@ pre-release, so APIs and rule names may change between versions.
 
 ### Changed
 
+- Add workflow permission escalation scope and affected-capability context to finding
+  evidence and reports.
 - Sharpen README top copy around checkout-free deterministic evidence.
 - Reorder README onboarding around first-run install and default-policy report
   interpretation.
 - Document v0.2.5 first-run smoke evidence and simplify README package
   lifecycle wording.
 - Promote workflow permission escalation as the primary README proof example.
+
+### Compatibility
+
+- `workflow/permission-escalation` keeps the same `ruleId`, but finding IDs may
+  change because v0.2.6 records richer stable evidence for permission scope and
+  affected capability.
 
 ## v0.2.5 - 2026-06-26
 

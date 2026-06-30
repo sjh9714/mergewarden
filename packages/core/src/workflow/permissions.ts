@@ -29,6 +29,19 @@ export interface PermissionEscalation {
   after: WorkflowPermissionValue;
 }
 
+export type WorkflowPermissionScope =
+  | {
+      kind: "workflow";
+    }
+  | {
+      kind: "job";
+      job: string;
+    };
+
+export interface ScopedPermissionEscalation extends PermissionEscalation {
+  scope: WorkflowPermissionScope;
+}
+
 const PERMISSION_RANK: Record<WorkflowPermissionValue, number> = {
   none: 0,
   read: 1,
@@ -130,4 +143,15 @@ export function findPermissionEscalations(
       },
     ];
   });
+}
+
+export function findScopedPermissionEscalations(
+  before: NormalizedWorkflowPermissions,
+  after: NormalizedWorkflowPermissions,
+  scope: WorkflowPermissionScope,
+): ScopedPermissionEscalation[] {
+  return findPermissionEscalations(before, after).map((escalation) => ({
+    ...escalation,
+    scope,
+  }));
 }
