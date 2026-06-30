@@ -162,7 +162,7 @@ describe("CLI replay", () => {
   it("documents the headline replay output in the README", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
 
-    expect(readme).toContain("@v0.2.5");
+    expect(readme).toContain("@v0.2.6");
     expect(readme).not.toContain("v0.2.4+");
     expect(readme).toContain("checkout-free GitHub Action");
     expect(readme).toContain(
@@ -196,17 +196,17 @@ describe("CLI replay", () => {
     expect(readme).toContain("New-Item -ItemType Directory -Force .github/workflows");
     expect(readme).toContain("templates/agent-gate-observe.yml");
     expect(readme).toContain(
-      "raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml",
+      "raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.6/templates/agent-gate-observe.yml",
     );
     expect(readme).toContain("does not execute a remote");
     expect(readme).toContain("Commit `.github/workflows/agent-gate.yml`.");
     expect(readme).toContain("Read the Agent Gate job summary.");
     expect(readme).toContain("Manual Copy-Paste Install");
     expect(readme).toContain("Prefer to inspect the workflow before adding it?");
-    expect(readme).toContain("uses: sjh9714/Agent-Gate@v0.2.5");
+    expect(readme).toContain("uses: sjh9714/Agent-Gate@v0.2.6");
     expect(readme).toContain("pull-requests: read");
     expect(readme).toContain("For stricter supply-chain pinning");
-    expect(readme).toContain("replace `@v0.2.5` with the verified");
+    expect(readme).toContain("replace `@v0.2.6` with the verified");
     expect(readme).toContain("contents permission increased from read to write");
     expect(readme).toContain("Path: .github/workflows/demo-release.yml");
     expect(readme).toContain("review the workflow permission change before merging");
@@ -215,7 +215,7 @@ describe("CLI replay", () => {
     expect(readme).toContain(
       "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12",
     );
-    expect(readme).toContain("Recommended installs should use `sjh9714/Agent-Gate@v0.2.5`");
+    expect(readme).toContain("Recommended installs should use `sjh9714/Agent-Gate@v0.2.6`");
     expect(readme).toContain("Marketplace currently may lag on prerelease display");
     expect(readme).toContain("What Runs Without `agent-gate.yml`?");
     expect(readme).toContain("First run without config");
@@ -285,7 +285,7 @@ describe("CLI replay", () => {
 
     expect(template).toContain("contents: read");
     expect(template).toContain("pull-requests: read");
-    expect(template).toContain("uses: sjh9714/Agent-Gate@v0.2.5");
+    expect(template).toContain("uses: sjh9714/Agent-Gate@v0.2.6");
     expect(template).toContain("mode: warn");
     expect(template).toContain("fail-on-block: false");
     expect(template).not.toContain("actions/checkout");

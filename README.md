@@ -1,6 +1,6 @@
 # Agent Gate
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.5)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.6)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
@@ -27,7 +27,7 @@ macOS/Linux:
 
 ```bash
 mkdir -p .github/workflows \
-  && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml \
+  && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.6/templates/agent-gate-observe.yml \
   -o .github/workflows/agent-gate.yml
 ```
 
@@ -36,7 +36,7 @@ Windows PowerShell:
 ```powershell
 New-Item -ItemType Directory -Force .github/workflows | Out-Null
 Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.5/templates/agent-gate-observe.yml `
+  -Uri https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.6/templates/agent-gate-observe.yml `
   -OutFile .github/workflows/agent-gate.yml
 ```
 
@@ -70,14 +70,14 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.5
+      - uses: sjh9714/Agent-Gate@v0.2.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
 ```
 
-For stricter supply-chain pinning, replace `@v0.2.5` with the verified
+For stricter supply-chain pinning, replace `@v0.2.6` with the verified
 release commit SHA.
 
 ## Real Report Example
@@ -304,7 +304,7 @@ node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/package-lifecycle-s
 
 ## Action Reference
 
-Use the root action with `sjh9714/Agent-Gate@v0.2.5`. No checkout step is required.
+Use the root action with `sjh9714/Agent-Gate@v0.2.6`. No checkout step is required.
 
 ### Inputs
 
@@ -403,11 +403,11 @@ evidence still require `agent-gate.yml`.
 
 ## Status And Roadmap
 
-Agent Gate is pre-release. The latest prerelease is `v0.2.5`.
+Agent Gate is pre-release. The latest prerelease is `v0.2.6`.
 
-Use `sjh9714/Agent-Gate@v0.2.5` or a pinned commit SHA for installs. `@main` tracks active development and may change.
+Use `sjh9714/Agent-Gate@v0.2.6` or a pinned commit SHA for installs. `@main` tracks active development and may change.
 
-Recommended installs should use `sjh9714/Agent-Gate@v0.2.5`. GitHub
+Recommended installs should use `sjh9714/Agent-Gate@v0.2.6`. GitHub
 Marketplace currently may lag on prerelease display even when the release is
 published and Marketplace-enabled.
 
