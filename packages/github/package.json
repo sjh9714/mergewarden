@@ -1,0 +1,23 @@
+{
+  "name": "@agent-gate/github",
+  "version": "0.2.6",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@agent-gate/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --sourcemap",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

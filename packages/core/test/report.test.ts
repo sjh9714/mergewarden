@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   analyze,
   type AnalysisResult,
+  type Decision,
+  type Finding,
   type RawFinding,
   parseConfig,
   renderJsonReport,
@@ -19,7 +21,39 @@ describe("report renderers", () => {
     headSha: "head-sha",
     configSource: "local" as const,
     version: "0.0.0",
+    analysisComplete: true,
+    expectedFileCount: 1,
+    analyzedFileCount: 1,
+    contentFileCount: 1,
+    policyDigest: "test-policy-digest",
+    engineVersion: "0.0.0",
+    runtimeRef: "0.0.0",
+    totalFindingCount: 1,
+    omittedFindingCount: 0,
   };
+
+  function reportResult(value: {
+    decision: Decision;
+    riskScore: number;
+    summary: Omit<AnalysisResult["summary"], "waivedCount">;
+    findings: Finding[];
+    metadata?: Partial<AnalysisResult["metadata"]>;
+  }): AnalysisResult {
+    const status =
+      value.decision === "block"
+        ? "blocked"
+        : value.decision === "warn"
+          ? "needs-review"
+          : "passed";
+
+    return {
+      ...value,
+      status,
+      summary: { ...value.summary, waivedCount: 0 },
+      waivedFindings: [],
+      metadata: { ...metadata, ...value.metadata },
+    };
+  }
 
   function finding(rawFinding: RawFinding) {
     const [enrichedFinding] = attachFindingIds([rawFinding]);
@@ -37,8 +71,99 @@ describe("report renderers", () => {
     expect(JSON.parse(renderJsonReport(result))).toEqual(result);
   });
 
+  it("keeps JSON valid and within the two-megabyte surface limit", () => {
+    const findings = Array.from({ length: 250 }, (_, index) =>
+      finding({
+        ruleId: `test/large-${index}`,
+        severity: "error",
+        title: "T".repeat(2_048),
+        message: "M".repeat(2_048),
+        path: `src/${index}-${"p".repeat(2_048)}.ts`,
+        evidence: [
+          { label: "large", value: `${index}-${"e".repeat(2_048)}` },
+          { label: "second", value: `${index}-${"v".repeat(2_048)}` },
+        ],
+        remediation: ["R".repeat(2_048)],
+        tags: ["large-report"],
+        confidence: "high",
+      }),
+    );
+    const result = reportResult({
+      decision: "block",
+      riskScore: 100,
+      summary: {
+        title: "Agent Gate: blocked",
+        agentDetected: false,
+        contractPresent: false,
+        errorCount: findings.length,
+        warnCount: 0,
+        infoCount: 0,
+      },
+      findings,
+      metadata: { totalFindingCount: findings.length },
+    });
+
+    const report = renderJsonReport(result);
+    const parsed = JSON.parse(report) as AnalysisResult;
+
+    expect(Buffer.byteLength(report, "utf8")).toBeLessThanOrEqual(2_000_000);
+    expect(parsed.findings.length).toBeLessThan(findings.length);
+    expect(parsed.metadata.totalFindingCount).toBe(findings.length);
+    expect(parsed.metadata.omittedFindingCount).toBe(findings.length - parsed.findings.length);
+    expect(parsed.status).toBe("blocked");
+  });
+
+  it("keeps Markdown within its byte cap using whole findings and an exact omission count", () => {
+    const findings = Array.from({ length: 24 }, (_, index) =>
+      finding({
+        ruleId: `test/markdown-cap-${String(index).padStart(2, "0")}`,
+        severity: "error",
+        title: `Large finding ${index}`,
+        message: `${index}-${"m".repeat(1_500)}`,
+        path: `src/large-${index}.ts`,
+        evidence: [{ label: "payload", value: `${index}-${"e".repeat(1_500)}` }],
+        remediation: [`${index}-${"r".repeat(1_500)}`],
+        tags: ["large-report"],
+        confidence: "high",
+      }),
+    );
+    const result = reportResult({
+      decision: "block",
+      riskScore: 100,
+      summary: {
+        title: "Agent Gate: blocked",
+        agentDetected: false,
+        contractPresent: false,
+        errorCount: findings.length + 2,
+        warnCount: 0,
+        infoCount: 0,
+      },
+      findings,
+      metadata: {
+        totalFindingCount: findings.length + 2,
+        omittedFindingCount: 2,
+      },
+    });
+
+    const report = renderMarkdownReport(result, {
+      maxFindings: findings.length,
+      maxBytes: 12_000,
+      fullReportPath: "agent-gate-report.md",
+    });
+    const visibleFindingCount = (report.match(/^### ERROR test\/markdown-cap-/gm) ?? []).length;
+    const expectedOmitted = 2 + findings.length - visibleFindingCount;
+
+    expect(Buffer.byteLength(report, "utf8")).toBeLessThanOrEqual(12_000);
+    expect(visibleFindingCount).toBeGreaterThan(0);
+    expect(visibleFindingCount).toBeLessThan(findings.length);
+    expect(report.match(/^Finding ID:/gm)).toHaveLength(visibleFindingCount);
+    expect(report).toContain(`_${expectedOmitted} findings omitted from this surface._`);
+    expect(report).toContain("Full report: agent-gate-report.md");
+    expect(report).not.toContain("Report truncated");
+  });
+
   it("renders default config source metadata in JSON reports", () => {
-    const result: AnalysisResult = {
+    const result = reportResult({
       decision: "pass",
       riskScore: 0,
       summary: {
@@ -50,11 +175,8 @@ describe("report renderers", () => {
         infoCount: 0,
       },
       findings: [],
-      metadata: {
-        ...metadata,
-        configSource: "default",
-      },
-    };
+      metadata: { configSource: "default" },
+    });
 
     expect(JSON.parse(renderJsonReport(result)).metadata.configSource).toBe("default");
   });
@@ -95,17 +217,17 @@ describe("report renderers", () => {
 
     expect(markdown).toContain("# Agent Gate: PASSED");
     expect(markdown).toContain("Decision: pass");
-    expect(markdown).toContain("Risk score: 0 / 100");
-    expect(markdown).toContain("No warning or blocking findings were detected.");
-    expect(markdown).toContain("Policy status: no blocking or warning findings.");
+    expect(markdown).not.toContain("Risk score:");
+    expect(markdown).toContain("No active warning or blocking findings were detected.");
+    expect(markdown).toContain("Policy status: no active blocking or warning findings.");
     expect(markdown).toContain("- Agent detected: no");
-    expect(markdown).toContain("- Contract present: no");
+    expect(markdown).toContain("- PR-declared contract present: no");
     expect(markdown).toContain("- Policy source: local fixture");
-    expect(markdown).toContain("No findings.");
+    expect(markdown).toContain("No active findings.");
   });
 
   it("renders a human-decision-first Markdown report for warn results", () => {
-    const result = {
+    const result = reportResult({
       decision: "warn" as const,
       riskScore: 10,
       summary: {
@@ -135,10 +257,10 @@ describe("report renderers", () => {
         }),
       ],
       metadata,
-    };
+    });
     const markdown = renderMarkdownReport(result);
 
-    expect(markdown).toContain("# Agent Gate: NEEDS HUMAN DECISION");
+    expect(markdown).toContain("# Agent Gate: NEEDS REVIEW");
     expect(markdown).toContain("Decision: warn");
     expect(markdown).toContain("## Recommended Next Step");
     expect(markdown).toContain("Add or review matching test evidence before merging.");
@@ -152,14 +274,14 @@ describe("report renderers", () => {
     expect(markdown).toContain("- severity: warn");
     expect(markdown).toContain("- path: src/auth/session.ts");
     expect(markdown).toContain("- Policy source: local fixture");
-    expect(markdown).toContain("- required tests: tests/auth/**");
+    expect(markdown).toContain("- required tests: tests/auth/\\*\\*");
     expect(markdown).toContain("Remediation:");
     expect(markdown).toContain("- Add or update matching auth tests.");
     expect(JSON.parse(renderJsonReport(result))).toMatchObject({ decision: "warn" });
   });
 
   it("renders a compact plain-text summary for warn results", () => {
-    const result = {
+    const result = reportResult({
       decision: "warn" as const,
       riskScore: 89,
       summary: {
@@ -200,7 +322,7 @@ describe("report renderers", () => {
         }),
       ],
       metadata,
-    };
+    });
 
     const summary = renderPlainTextReportSummary(result);
     const workflowFinding = result.findings[0];
@@ -210,9 +332,9 @@ describe("report renderers", () => {
       throw new Error("Expected warn report fixture to include two findings");
     }
 
-    expect(summary).toContain("Agent Gate: NEEDS HUMAN DECISION");
+    expect(summary).toContain("Agent Gate: NEEDS REVIEW");
     expect(summary).toContain("Decision: warn");
-    expect(summary).toContain("Risk score: 89 / 100");
+    expect(summary).not.toContain("Risk score:");
     expect(summary).toContain("Why: Workflow permissions changed from read to write.");
     expect(summary).toContain("Path: .github/workflows/release.yml");
     expect(summary).toContain("Recommended next step: Review the workflow change before merging.");
@@ -266,7 +388,7 @@ describe("report renderers", () => {
       path: "package.json",
     });
     expect(markdown).toContain("### WARN dependency/lifecycle-script-added");
-    expect(markdown).toContain("Finding ID: `agf_");
+    expect(markdown).toContain("Finding ID: agf_");
     expect(markdown).toContain("- script: preinstall");
     expect(markdown).toContain("- after: node scripts/setup.js");
     expect(plainText).toContain(
@@ -277,7 +399,7 @@ describe("report renderers", () => {
   });
 
   it("keeps the top summary action-oriented for info-only pass results", () => {
-    const result: AnalysisResult = {
+    const result = reportResult({
       decision: "pass",
       riskScore: 1,
       summary: {
@@ -301,7 +423,7 @@ describe("report renderers", () => {
         }),
       ],
       metadata,
-    };
+    });
     const markdown = renderMarkdownReport(result);
     const plainText = renderPlainTextReportSummary(result);
     const infoFinding = result.findings[0];
@@ -311,7 +433,7 @@ describe("report renderers", () => {
     }
 
     expect(markdown).toContain("# Agent Gate: PASSED");
-    expect(markdown).toContain("No warning or blocking findings were detected.");
+    expect(markdown).toContain("No active warning or blocking findings were detected.");
     expect(markdown).toContain("### INFO agent/origin-detected");
     expect(plainText).toContain("Agent Gate: PASSED");
     expect(plainText).toContain("Why: No warning or blocking findings were detected.");
@@ -319,50 +441,85 @@ describe("report renderers", () => {
   });
 
   it("normalizes untrusted Markdown values in finding details", () => {
-    const longValue = "a".repeat(520);
-    const markdown = renderMarkdownReport({
-      decision: "warn",
-      riskScore: 10,
-      summary: {
-        title: "Agent Gate: warning",
-        agentDetected: true,
-        contractPresent: true,
-        errorCount: 0,
-        warnCount: 1,
-        infoCount: 0,
-      },
-      findings: [
-        finding({
-          ruleId: "evidence/missing-test-change",
-          severity: "warn",
-          title: "Missing test evidence",
-          message: "src/auth/session.ts changed without matching test evidence.",
-          path: "src/auth/session.ts\n<!-- hidden -->",
-          evidence: [
-            {
-              label: "required\ntests",
-              value: `tests/auth/**\n<!-- comment -->\n${longValue}`,
-            },
-          ],
-          remediation: ["Add matching tests.\n<!-- do not render as comment -->"],
-          tags: ["evidence"],
-          confidence: "medium",
-        }),
-      ],
-      metadata,
-    });
+    const longValue = "a".repeat(3_000);
+    const markdown = renderMarkdownReport(
+      reportResult({
+        decision: "warn",
+        riskScore: 10,
+        summary: {
+          title: "Agent Gate: warning",
+          agentDetected: true,
+          contractPresent: true,
+          errorCount: 0,
+          warnCount: 1,
+          infoCount: 0,
+        },
+        findings: [
+          finding({
+            ruleId: "evidence/missing-test-change",
+            severity: "warn",
+            title: "Missing test evidence",
+            message: "src/auth/session.ts changed without matching test evidence.",
+            path: "src/auth/session.ts\n<!-- hidden -->",
+            evidence: [
+              {
+                label: "required\ntests",
+                value: `tests/auth/**\n<!-- comment -->\n${longValue}`,
+              },
+            ],
+            remediation: ["Add matching tests.\n<!-- do not render as comment -->"],
+            tags: ["evidence"],
+            confidence: "medium",
+          }),
+        ],
+        metadata,
+      }),
+    );
 
-    expect(markdown).toContain("Path: `src/auth/session.ts\\n&lt;!-- hidden --&gt;`");
-    expect(markdown).toContain("- required\\ntests: tests/auth/**\\n&lt;!-- comment --&gt;");
+    expect(markdown).toContain("Path: src/auth/session.ts\\n&lt;!-- hidden --&gt;");
+    expect(markdown).toContain("- required\\ntests: tests/auth/\\*\\*\\n&lt;!-- comment --&gt;");
     expect(markdown).toContain("…");
     expect(markdown).not.toContain("<!-- hidden -->");
     expect(markdown).not.toContain("<!-- comment -->");
     expect(markdown).toContain("- Add matching tests.\\n&lt;!-- do not render as comment --&gt;");
   });
 
+  it.each(["- injected list", "+ injected list", "1. injected list", "# injected heading"])(
+    "renders standalone Markdown control text as data: %s",
+    (message) => {
+      const result = reportResult({
+        decision: "warn",
+        riskScore: 1,
+        summary: {
+          title: "Agent Gate: warning",
+          agentDetected: false,
+          contractPresent: false,
+          errorCount: 0,
+          warnCount: 1,
+          infoCount: 0,
+        },
+        findings: [
+          finding({
+            ruleId: "test/markdown-data",
+            severity: "warn",
+            title: "Markdown data",
+            message,
+            evidence: [],
+            remediation: [],
+            tags: ["test"],
+            confidence: "high",
+          }),
+        ],
+      });
+
+      const markdown = renderMarkdownReport(result);
+      expect(markdown).not.toContain(`\n${message}\n`);
+    },
+  );
+
   it("normalizes and truncates untrusted values in plain-text summaries", () => {
-    const longValue = "a".repeat(520);
-    const result = {
+    const longValue = "a".repeat(3_000);
+    const result = reportResult({
       decision: "warn" as const,
       riskScore: 10,
       summary: {
@@ -393,7 +550,7 @@ describe("report renderers", () => {
         }),
       ),
       metadata,
-    };
+    });
 
     const summary = renderPlainTextReportSummary(result);
 
@@ -406,7 +563,7 @@ describe("report renderers", () => {
   });
 
   it("renders finding severity, rule id, and path in Markdown reports", () => {
-    const result: AnalysisResult = {
+    const result = reportResult({
       decision: "block",
       riskScore: 20,
       summary: {
@@ -431,7 +588,7 @@ describe("report renderers", () => {
         }),
       ],
       metadata,
-    };
+    });
     const markdown = renderMarkdownReport(result);
     const plainText = renderPlainTextReportSummary(result);
 
@@ -439,8 +596,8 @@ describe("report renderers", () => {
     expect(markdown).toContain("Decision: block");
     expect(markdown).toContain("Review or split the out-of-scope file changes before merging.");
     expect(markdown).toContain("### ERROR contract/out-of-scope");
-    expect(markdown).toContain("Finding ID: `agf_");
-    expect(markdown).toContain("Path: `src/payments/webhook.ts`");
+    expect(markdown).toContain("Finding ID: agf_");
+    expect(markdown).toContain("Path: src/payments/webhook.ts");
     expect(plainText).toContain("Agent Gate: BLOCKED");
     expect(plainText).toContain("Decision: block");
     expect(plainText).toContain("agf_");
@@ -458,7 +615,7 @@ describe("report renderers", () => {
 
     expect(findingId).toMatch(/^agf_[0-9a-f]{16}$/);
     expect(JSON.parse(renderJsonReport(result)).findings[0].findingId).toBe(findingId);
-    expect(renderMarkdownReport(result)).toContain(`Finding ID: \`${findingId}\``);
+    expect(renderMarkdownReport(result)).toContain(`Finding ID: ${findingId}`);
     expect(renderPlainTextReportSummary(result)).toContain(findingId);
   });
 

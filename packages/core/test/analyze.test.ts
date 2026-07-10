@@ -9,8 +9,9 @@ describe("analyze", () => {
 
     const result = await analyze(input);
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       decision: "pass",
+      status: "passed",
       riskScore: 0,
       summary: {
         title: "Agent Gate: passed",
@@ -19,16 +20,28 @@ describe("analyze", () => {
         errorCount: 0,
         warnCount: 0,
         infoCount: 0,
+        waivedCount: 0,
       },
       findings: [],
+      waivedFindings: [],
       metadata: {
         analyzedAt: "2026-06-13T00:00:00.000Z",
         baseSha: "base-sha",
         headSha: "head-sha",
         configSource: "local",
         version: "0.0.0",
+        analysisComplete: true,
+        expectedFileCount: 0,
+        analyzedFileCount: 0,
+        contentFileCount: 0,
+        engineVersion: "0.0.0",
+        runtimeRef: "0.0.0",
+        totalFindingCount: 0,
+        omittedFindingCount: 0,
       },
     });
+    expect(result.metadata.policyDigest).toMatch(/^[0-9a-f]{64}$/);
+    expect(await analyze(input)).toEqual(result);
   });
 
   it("returns block in block mode when contract scope errors are present", async () => {
@@ -47,6 +60,7 @@ describe("analyze", () => {
     );
 
     expect(result.decision).toBe("block");
+    expect(result.status).toBe("blocked");
     expect(result.summary.errorCount).toBe(1);
     expect(result.riskScore).toBe(20);
   });
@@ -67,6 +81,7 @@ describe("analyze", () => {
     );
 
     expect(result.decision).toBe("warn");
+    expect(result.status).toBe("needs-review");
     expect(result.summary.errorCount).toBe(1);
   });
 
@@ -86,6 +101,7 @@ describe("analyze", () => {
     );
 
     expect(result.decision).toBe("pass");
+    expect(result.status).toBe("observed");
     expect(result.summary.errorCount).toBe(1);
   });
 

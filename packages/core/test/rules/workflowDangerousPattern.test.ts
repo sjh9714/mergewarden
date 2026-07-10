@@ -51,7 +51,7 @@ describe("workflow/dangerous-pattern", () => {
     expect(result.findings).toContainEqual(
       expect.objectContaining({
         ruleId: "workflow/dangerous-pattern",
-        severity: "error",
+        severity: "warn",
         evidence: expect.arrayContaining([{ label: "pattern", value: "id-token: write" }]),
       }),
     );
@@ -98,7 +98,7 @@ describe("workflow/dangerous-pattern", () => {
     expect(result.findings).toContainEqual(
       expect.objectContaining({
         ruleId: "workflow/dangerous-pattern",
-        severity: "error",
+        severity: "warn",
         evidence: expect.arrayContaining([
           { label: "pattern", value: "job id-token: write" },
           { label: "job", value: "deploy" },
@@ -217,8 +217,8 @@ describe("workflow/dangerous-pattern", () => {
         ruleId: "workflow/dangerous-pattern",
         severity: "warn",
         evidence: expect.arrayContaining([
-          { label: "pattern", value: "unpinned third-party action" },
-          { label: "action", value: "third-party/action@v1" },
+          { label: "pattern", value: "unpinned action" },
+          { label: "uses", value: "third-party/action@v1" },
         ]),
       }),
     );
@@ -243,7 +243,7 @@ describe("workflow/dangerous-pattern", () => {
     );
   });
 
-  it("allows actions/checkout@v4 without SHA pinning in v0.1", async () => {
+  it("emits for official actions that are not pinned to a commit SHA", async () => {
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig(
@@ -258,24 +258,33 @@ describe("workflow/dangerous-pattern", () => {
       }),
     );
 
-    expect(result.findings.map((finding) => finding.ruleId)).not.toContain(
-      "workflow/dangerous-pattern",
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({
+        ruleId: "workflow/dangerous-pattern",
+        severity: "warn",
+        evidence: expect.arrayContaining([
+          { label: "pattern", value: "unpinned action" },
+          { label: "uses", value: "actions/checkout@v4" },
+        ]),
+      }),
     );
   });
 
   it.each([
-    "+      TOKEN: ${{ secrets.MY_SECRET }}\n",
-    "+      TOKEN: ${{ secrets['MY_SECRET'] }}\n",
-    '+      TOKEN: ${{ secrets["MY_SECRET"] }}\n',
-    "+      echo '${{ toJson(secrets) }}'\n",
-  ])("emits a warning for added secrets references in patch line %s", async (patch) => {
+    "${{ secrets.MY_SECRET }}",
+    "${{ secrets['MY_SECRET'] }}",
+    '${{ secrets["MY_SECRET"] }}',
+    "${{ secrets [ 'MY_SECRET' ] }}",
+    "${{ secrets . MY_SECRET }}",
+    "${{ toJson(secrets) }}",
+  ])("emits a warning for a base/head-added secret reference %s", async (secretExpression) => {
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig("version: 1\nmode: block\n"),
         files: [
           workflowChange({
-            headContent: "permissions: {}\n",
-            patch,
+            baseContent: "permissions: {}\n",
+            headContent: `permissions: {}\njobs:\n  test:\n    env:\n      TOKEN: >-\n        ${secretExpression}\n    steps:\n      - run: echo test\n`,
           }),
         ],
       }),

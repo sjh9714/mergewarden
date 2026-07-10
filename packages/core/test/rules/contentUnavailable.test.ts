@@ -114,7 +114,9 @@ describe("analysis/content-unavailable", () => {
       }),
     );
 
-    expect(result.decision).toBe("warn");
+    expect(result.decision).toBe("block");
+    expect(result.status).toBe("incomplete");
+    expect(result.metadata.analysisComplete).toBe(false);
     expect(result.findings).toContainEqual(
       expect.objectContaining({
         ruleId: "analysis/content-unavailable",
@@ -172,5 +174,36 @@ describe("analysis/content-unavailable", () => {
     expect(result.findings.map((finding) => finding.ruleId)).not.toContain(
       "analysis/content-unavailable",
     );
+  });
+
+  it("suppresses per-file legacy gaps when the collector reports one aggregate budget gap", async () => {
+    const input = createAnalysisInput({
+      files: [fileChange({ baseContent: null, headContent: null })],
+    });
+    input.analysis = {
+      complete: false,
+      expectedFileCount: 1,
+      analyzedFileCount: 1,
+      contentFileCount: 0,
+      runtimeRef: "agent-gate@v0.3.0",
+      gaps: [
+        {
+          ruleId: "analysis/content-unavailable",
+          message: "Aggregate content budget exceeded.",
+          evidence: [{ label: "reason_code", value: "aggregate-content-budget-exceeded" }],
+        },
+      ],
+    };
+
+    const result = await analyze(input);
+
+    expect(result.status).toBe("incomplete");
+    expect(
+      result.findings.filter((finding) => finding.ruleId === "analysis/content-unavailable"),
+    ).toHaveLength(1);
+    expect(result.findings[0]?.evidence).toContainEqual({
+      label: "reason_code",
+      value: "aggregate-content-budget-exceeded",
+    });
   });
 });

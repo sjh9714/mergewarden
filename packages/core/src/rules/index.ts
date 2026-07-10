@@ -1,6 +1,7 @@
 import { findMatchingPatterns, matchesAny } from "../path/match.js";
 import type { AnalysisInput } from "../types.js";
 import { agentControlPlaneDriftRule } from "./agentControlPlane.js";
+import { agenticWorkflowInjectionRule } from "./agenticWorkflowInjection.js";
 import { agentOriginRule, detectAgentOrigin, type AgentOriginResult } from "./agentOrigin.js";
 import {
   contractBlockedPathRule,
@@ -29,6 +30,7 @@ export const builtInRules: Rule[] = [
   packageScriptDriftRule,
   workflowPermissionEscalationRule,
   workflowDangerousPatternRule,
+  agenticWorkflowInjectionRule,
 ];
 
 export function createRuleContext(input: AnalysisInput): RuleContext {

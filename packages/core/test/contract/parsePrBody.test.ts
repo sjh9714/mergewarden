@@ -13,9 +13,6 @@ allowed_paths:
 blocked_paths:
   - ".github/workflows/**"
   - "src/payments/**"
-required_evidence:
-  - "auth_tests_changed"
-  - "ci_passed"
 -->`;
 
 function expectInvalid(
@@ -47,7 +44,6 @@ describe("parseContractFromPrBody", () => {
         issue: 482,
         allowed_paths: ["src/auth/**", "tests/auth/**"],
         blocked_paths: [".github/workflows/**", "src/payments/**"],
-        required_evidence: ["auth_tests_changed", "ci_passed"],
       },
     });
   });
@@ -142,5 +138,17 @@ unexpected: true
 -->`);
 
     expect(expectInvalid(result).message).toMatch(/unexpected/);
+  });
+
+  it("rejects the removed required_evidence claim instead of silently accepting it", () => {
+    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+version: 1
+allowed_paths:
+  - "src/**"
+required_evidence:
+  - ci_passed
+-->`);
+
+    expect(expectInvalid(result).message).toMatch(/required_evidence/);
   });
 });

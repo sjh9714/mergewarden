@@ -1,51 +1,38 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
-
 const repoRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
+const requireFromCore = createRequire(join(repoRoot, "packages/core/package.json"));
+const { parse } = requireFromCore("yaml") as { parse(text: string): unknown };
 const rootAction = readFileSync(join(repoRoot, "action.yml"), "utf8");
 const packageAction = readFileSync(join(repoRoot, "packages/action/action.yml"), "utf8");
-const readme = readFileSync(join(repoRoot, "README.md"), "utf8");
 const selfDogfoodingWorkflow = readFileSync(
   join(repoRoot, ".github/workflows/agent-gate.yml"),
   "utf8",
 );
 
-const importantInputs = [
-  "github-token",
-  "mode",
-  "fail-on-block",
-  "comment",
-  "report-json",
-  "report-markdown",
-];
-const importantOutputs = ["decision", "risk-score", "report-json", "report-markdown"];
-
 describe("action metadata", () => {
   it("exposes matching root and package-local action metadata", () => {
-    expect(rootAction).toContain('name: "Agent Gate for AI PRs"');
-    expect(packageAction).toContain('name: "Agent Gate for AI PRs"');
-    expect(rootAction).toContain('using: "node24"');
-    expect(packageAction).toContain('using: "node24"');
-    expect(rootAction).toContain('main: "packages/action/dist/index.cjs"');
-    expect(packageAction).toContain('main: "dist/index.cjs"');
+    const rootMetadata = parse(rootAction) as Record<string, unknown> & {
+      runs: { main: string };
+    };
+    const packageMetadata = parse(packageAction) as Record<string, unknown> & {
+      runs: { main: string };
+    };
 
-    for (const input of importantInputs) {
-      expect(rootAction).toContain(`  ${input}:`);
-      expect(packageAction).toContain(`  ${input}:`);
-    }
+    expect(rootMetadata.runs.main).toBe("packages/action/dist/index.cjs");
+    expect(packageMetadata.runs.main).toBe("dist/index.cjs");
 
-    for (const output of importantOutputs) {
-      expect(rootAction).toContain(`  ${output}:`);
-      expect(packageAction).toContain(`  ${output}:`);
-    }
+    rootMetadata.runs.main = "<action-bundle>";
+    packageMetadata.runs.main = "<action-bundle>";
+    expect(rootMetadata).toEqual(packageMetadata);
   });
 
-  it("documents comment permissions without adding checkout to self-dogfooding", () => {
-    expect(readme).toContain("issues: write");
-    expect(readme).toContain("comment: true");
+  it("keeps self-dogfooding API-only and checkout-free", () => {
     expect(selfDogfoodingWorkflow).not.toContain("actions/checkout");
+    expect(selfDogfoodingWorkflow).toContain("contents: read");
   });
 });

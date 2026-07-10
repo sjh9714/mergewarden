@@ -39,9 +39,9 @@ export function renderPlainTextReportSummary(result: AnalysisResult): string {
   const findings = result.findings.slice(0, MAX_LOG_FINDINGS);
   const omittedFindings = result.findings.length - findings.length;
   const lines = [
-    `Agent Gate: ${humanDecisionLabel(result.decision)}`,
+    `Agent Gate: ${humanDecisionLabel(result)}`,
     `Decision: ${result.decision}`,
-    `Risk score: ${result.riskScore} / 100`,
+    `Status: ${result.status}`,
     `Why: ${whyText(result)}`,
   ];
 
@@ -65,6 +65,10 @@ export function renderPlainTextReportSummary(result: AnalysisResult): string {
 
   if (omittedFindings > 0) {
     lines.push(`... ${omittedFindings} more findings omitted`);
+  }
+
+  if (result.waivedFindings.length > 0) {
+    lines.push(`Waived findings: ${result.waivedFindings.length}`);
   }
 
   return `${lines.join("\n")}\n`;

@@ -1,0 +1,50 @@
+{
+  "repo": {
+    "baseSha": "base-composite",
+    "headSha": "head-composite"
+  },
+  "pr": {
+    "number": 303,
+    "title": "Clarify the installation guide",
+    "branchName": "codex/composite-boundary",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": "docs/getting-started.md",
+      "status": "modified",
+      "additions": 4,
+      "deletions": 1
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 3,
+      "baseContent": "name: Release\n'on':\n  push:\n    tags: ['v*']\npermissions:\n  contents: read\njobs:\n  release:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@1111111111111111111111111111111111111111\n",
+      "headContent": "name: Release\n'on':\n  issue_comment:\n    types: [created]\npermissions:\n  contents: write\n  id-token: write\njobs:\n  release:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v6\n      - uses: openai/codex-action@v1\n        with:\n          openai-api-key: ${{ secrets.OPENAI_API_KEY }}\n          prompt: ${{ github.event.comment.body }}\n"
+    },
+    {
+      "path": "AGENTS.md",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 0
+    },
+    {
+      "path": ".mcp.json",
+      "status": "modified",
+      "additions": 6,
+      "deletions": 1
+    },
+    {
+      "path": "package.json",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 0,
+      "baseContent": "{\"name\":\"demo\",\"scripts\":{\"test\":\"vitest\"}}",
+      "headContent": "{\"name\":\"demo\",\"scripts\":{\"test\":\"vitest\",\"postinstall\":\"node setup.js\"}}"
+    }
+  ],
+  "now": "2026-07-10T00:00:00.000Z",
+  "version": "0.3.0-demo"
+}

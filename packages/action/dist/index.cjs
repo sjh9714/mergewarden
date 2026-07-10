@@ -1782,11 +1782,11 @@ var require_request = __commonJS({
           }
         } else if (headers && typeof headers === "object") {
           if (headers[Symbol.iterator]) {
-            for (const header of headers) {
-              if (!Array.isArray(header) || header.length !== 2) {
+            for (const header2 of headers) {
+              if (!Array.isArray(header2) || header2.length !== 2) {
                 throw new InvalidArgumentError("headers must be in key-value pair format");
               }
-              processHeader(this, header[0], header[1]);
+              processHeader(this, header2[0], header2[1]);
             }
           } else {
             const keys = Object.keys(headers);
@@ -4112,9 +4112,9 @@ var require_util2 = __commonJS({
       return "success";
     }
     function appendFetchMetadata(httpRequest) {
-      let header = null;
-      header = httpRequest.mode;
-      httpRequest.headersList.set("sec-fetch-mode", header, true);
+      let header2 = null;
+      header2 = httpRequest.mode;
+      httpRequest.headersList.set("sec-fetch-mode", header2, true);
     }
     function appendRequestOriginHeader(request2) {
       let serializedOrigin = request2.origin;
@@ -6452,22 +6452,22 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path} HTTP/1.1\r
+      let header2 = `${method} ${path} HTTP/1.1\r
 `;
       if (typeof host === "string") {
-        header += `host: ${host}\r
+        header2 += `host: ${host}\r
 `;
       } else {
-        header += client[kHostHeader];
+        header2 += client[kHostHeader];
       }
       if (upgrade) {
-        header += `connection: upgrade\r
+        header2 += `connection: upgrade\r
 upgrade: ${upgrade}\r
 `;
       } else if (client[kPipelining] && !socket[kReset]) {
-        header += "connection: keep-alive\r\n";
+        header2 += "connection: keep-alive\r\n";
       } else {
-        header += "connection: close\r\n";
+        header2 += "connection: close\r\n";
       }
       if (Array.isArray(headers)) {
         for (let n = 0; n < headers.length; n += 2) {
@@ -6475,41 +6475,41 @@ upgrade: ${upgrade}\r
           const val = headers[n + 1];
           if (Array.isArray(val)) {
             for (let i = 0; i < val.length; i++) {
-              header += `${key}: ${val[i]}\r
+              header2 += `${key}: ${val[i]}\r
 `;
             }
           } else {
-            header += `${key}: ${val}\r
+            header2 += `${key}: ${val}\r
 `;
           }
         }
       }
       if (channels.sendHeaders.hasSubscribers) {
-        channels.sendHeaders.publish({ request: request2, headers: header, socket });
+        channels.sendHeaders.publish({ request: request2, headers: header2, socket });
       }
       if (!body || bodyLength === 0) {
-        writeBuffer(abort, null, client, request2, socket, contentLength, header, expectsPayload);
+        writeBuffer(abort, null, client, request2, socket, contentLength, header2, expectsPayload);
       } else if (util.isBuffer(body)) {
-        writeBuffer(abort, body, client, request2, socket, contentLength, header, expectsPayload);
+        writeBuffer(abort, body, client, request2, socket, contentLength, header2, expectsPayload);
       } else if (util.isBlobLike(body)) {
         if (typeof body.stream === "function") {
-          writeIterable(abort, body.stream(), client, request2, socket, contentLength, header, expectsPayload);
+          writeIterable(abort, body.stream(), client, request2, socket, contentLength, header2, expectsPayload);
         } else {
-          writeBlob(abort, body, client, request2, socket, contentLength, header, expectsPayload);
+          writeBlob(abort, body, client, request2, socket, contentLength, header2, expectsPayload);
         }
       } else if (util.isStream(body)) {
-        writeStream(abort, body, client, request2, socket, contentLength, header, expectsPayload);
+        writeStream(abort, body, client, request2, socket, contentLength, header2, expectsPayload);
       } else if (util.isIterable(body)) {
-        writeIterable(abort, body, client, request2, socket, contentLength, header, expectsPayload);
+        writeIterable(abort, body, client, request2, socket, contentLength, header2, expectsPayload);
       } else {
         assert2(false);
       }
       return true;
     }
-    function writeStream(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
+    function writeStream(abort, body, client, request2, socket, contentLength, header2, expectsPayload) {
       assert2(contentLength !== 0 || client[kRunning] === 0, "stream body cannot be pipelined");
       let finished = false;
-      const writer = new AsyncWriter({ abort, socket, request: request2, contentLength, client, expectsPayload, header });
+      const writer = new AsyncWriter({ abort, socket, request: request2, contentLength, client, expectsPayload, header: header2 });
       const onData = function(chunk) {
         if (finished) {
           return;
@@ -6575,22 +6575,22 @@ upgrade: ${upgrade}\r
         setImmediate(onClose);
       }
     }
-    function writeBuffer(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
+    function writeBuffer(abort, body, client, request2, socket, contentLength, header2, expectsPayload) {
       try {
         if (!body) {
           if (contentLength === 0) {
-            socket.write(`${header}content-length: 0\r
+            socket.write(`${header2}content-length: 0\r
 \r
 `, "latin1");
           } else {
             assert2(contentLength === null, "no body must not have content length");
-            socket.write(`${header}\r
+            socket.write(`${header2}\r
 `, "latin1");
           }
         } else if (util.isBuffer(body)) {
           assert2(contentLength === body.byteLength, "buffer body must have content length");
           socket.cork();
-          socket.write(`${header}content-length: ${contentLength}\r
+          socket.write(`${header2}content-length: ${contentLength}\r
 \r
 `, "latin1");
           socket.write(body);
@@ -6606,7 +6606,7 @@ upgrade: ${upgrade}\r
         abort(err);
       }
     }
-    async function writeBlob(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
+    async function writeBlob(abort, body, client, request2, socket, contentLength, header2, expectsPayload) {
       assert2(contentLength === body.size, "blob body must have content length");
       try {
         if (contentLength != null && contentLength !== body.size) {
@@ -6614,7 +6614,7 @@ upgrade: ${upgrade}\r
         }
         const buffer = Buffer.from(await body.arrayBuffer());
         socket.cork();
-        socket.write(`${header}content-length: ${contentLength}\r
+        socket.write(`${header2}content-length: ${contentLength}\r
 \r
 `, "latin1");
         socket.write(buffer);
@@ -6629,7 +6629,7 @@ upgrade: ${upgrade}\r
         abort(err);
       }
     }
-    async function writeIterable(abort, body, client, request2, socket, contentLength, header, expectsPayload) {
+    async function writeIterable(abort, body, client, request2, socket, contentLength, header2, expectsPayload) {
       assert2(contentLength !== 0 || client[kRunning] === 0, "iterator body cannot be pipelined");
       let callback = null;
       function onDrain() {
@@ -6648,7 +6648,7 @@ upgrade: ${upgrade}\r
         }
       });
       socket.on("close", onDrain).on("drain", onDrain);
-      const writer = new AsyncWriter({ abort, socket, request: request2, contentLength, client, expectsPayload, header });
+      const writer = new AsyncWriter({ abort, socket, request: request2, contentLength, client, expectsPayload, header: header2 });
       try {
         for await (const chunk of body) {
           if (socket[kError]) {
@@ -6666,19 +6666,19 @@ upgrade: ${upgrade}\r
       }
     }
     var AsyncWriter = class {
-      constructor({ abort, socket, request: request2, contentLength, client, expectsPayload, header }) {
+      constructor({ abort, socket, request: request2, contentLength, client, expectsPayload, header: header2 }) {
         this.socket = socket;
         this.request = request2;
         this.contentLength = contentLength;
         this.client = client;
         this.bytesWritten = 0;
         this.expectsPayload = expectsPayload;
-        this.header = header;
+        this.header = header2;
         this.abort = abort;
         socket[kWriting] = true;
       }
       write(chunk) {
-        const { socket, request: request2, contentLength, client, bytesWritten, expectsPayload, header } = this;
+        const { socket, request: request2, contentLength, client, bytesWritten, expectsPayload, header: header2 } = this;
         if (socket[kError]) {
           throw socket[kError];
         }
@@ -6701,10 +6701,10 @@ upgrade: ${upgrade}\r
             socket[kReset] = true;
           }
           if (contentLength === null) {
-            socket.write(`${header}transfer-encoding: chunked\r
+            socket.write(`${header2}transfer-encoding: chunked\r
 `, "latin1");
           } else {
-            socket.write(`${header}content-length: ${contentLength}\r
+            socket.write(`${header2}content-length: ${contentLength}\r
 \r
 `, "latin1");
           }
@@ -6728,7 +6728,7 @@ ${len.toString(16)}\r
         return ret;
       }
       end() {
-        const { socket, contentLength, client, bytesWritten, expectsPayload, header, request: request2 } = this;
+        const { socket, contentLength, client, bytesWritten, expectsPayload, header: header2, request: request2 } = this;
         request2.onRequestSent();
         socket[kWriting] = false;
         if (socket[kError]) {
@@ -6739,11 +6739,11 @@ ${len.toString(16)}\r
         }
         if (bytesWritten === 0) {
           if (expectsPayload) {
-            socket.write(`${header}content-length: 0\r
+            socket.write(`${header2}content-length: 0\r
 \r
 `, "latin1");
           } else {
-            socket.write(`${header}\r
+            socket.write(`${header2}\r
 `, "latin1");
           }
         } else if (contentLength === null) {
@@ -7440,15 +7440,15 @@ var require_redirect_handler = __commonJS({
         }
       }
     }
-    function shouldRemoveHeader(header, removeContent, unknownOrigin) {
-      if (header.length === 4) {
-        return util.headerNameToString(header) === "host";
+    function shouldRemoveHeader(header2, removeContent, unknownOrigin) {
+      if (header2.length === 4) {
+        return util.headerNameToString(header2) === "host";
       }
-      if (removeContent && util.headerNameToString(header).startsWith("content-")) {
+      if (removeContent && util.headerNameToString(header2).startsWith("content-")) {
         return true;
       }
-      if (unknownOrigin && (header.length === 13 || header.length === 6 || header.length === 19)) {
-        const name = util.headerNameToString(header);
+      if (unknownOrigin && (header2.length === 13 || header2.length === 6 || header2.length === 19)) {
+        const name = util.headerNameToString(header2);
         return name === "authorization" || name === "cookie" || name === "proxy-authorization";
       }
       return false;
@@ -11624,16 +11624,16 @@ var require_dns = __commonJS({
       setRecords(origin, addresses) {
         const timestamp = Date.now();
         const records = { records: { 4: null, 6: null } };
-        for (const record2 of addresses) {
-          record2.timestamp = timestamp;
-          if (typeof record2.ttl === "number") {
-            record2.ttl = Math.min(record2.ttl, this.#maxTTL);
+        for (const record3 of addresses) {
+          record3.timestamp = timestamp;
+          if (typeof record3.ttl === "number") {
+            record3.ttl = Math.min(record3.ttl, this.#maxTTL);
           } else {
-            record2.ttl = this.#maxTTL;
+            record3.ttl = this.#maxTTL;
           }
-          const familyRecords = records.records[record2.family] ?? { ips: [] };
-          familyRecords.ips.push(record2);
-          records.records[record2.family] = familyRecords;
+          const familyRecords = records.records[record3.family] ?? { ips: [] };
+          familyRecords.ips.push(record3);
+          records.records[record3.family] = familyRecords;
         }
         this.#records.set(origin.hostname, records);
       }
@@ -11784,14 +11784,14 @@ var require_headers = __commonJS({
     function fill(headers, object2) {
       if (Array.isArray(object2)) {
         for (let i = 0; i < object2.length; ++i) {
-          const header = object2[i];
-          if (header.length !== 2) {
+          const header2 = object2[i];
+          if (header2.length !== 2) {
             throw webidl.errors.exception({
               header: "Headers constructor",
-              message: `expected name/value pair to be length 2, found ${header.length}.`
+              message: `expected name/value pair to be length 2, found ${header2.length}.`
             });
           }
-          appendHeader(headers, header[0], header[1]);
+          appendHeader(headers, header2[0], header2[1]);
         }
       } else if (typeof object2 === "object" && object2 !== null) {
         const keys = Object.keys(object2);
@@ -15237,10 +15237,10 @@ var require_util5 = __commonJS({
       const serializedB = URLSerializer(B, excludeFragment);
       return serializedA === serializedB;
     }
-    function getFieldValues(header) {
-      assert2(header !== null);
+    function getFieldValues(header2) {
+      assert2(header2 !== null);
       const values = [];
-      for (let value of header.split(",")) {
+      for (let value of header2.split(",")) {
         value = value.trim();
         if (isValidHeaderName(value)) {
           values.push(value);
@@ -16101,20 +16101,20 @@ var require_parse = __commonJS({
     var { isCTLExcludingHtab } = require_util6();
     var { collectASequenceOfCodePointsFast } = require_data_url();
     var assert2 = require("assert");
-    function parseSetCookie(header) {
-      if (isCTLExcludingHtab(header)) {
+    function parseSetCookie(header2) {
+      if (isCTLExcludingHtab(header2)) {
         return null;
       }
       let nameValuePair = "";
       let unparsedAttributes = "";
       let name = "";
       let value = "";
-      if (header.includes(";")) {
+      if (header2.includes(";")) {
         const position = { position: 0 };
-        nameValuePair = collectASequenceOfCodePointsFast(";", header, position);
-        unparsedAttributes = header.slice(position.position);
+        nameValuePair = collectASequenceOfCodePointsFast(";", header2, position);
+        unparsedAttributes = header2.slice(position.position);
       } else {
-        nameValuePair = header;
+        nameValuePair = header2;
       }
       if (!nameValuePair.includes("=")) {
         value = nameValuePair;
@@ -19016,7 +19016,7 @@ var require_lib = __commonJS({
       return parsedUrl.protocol === "https:";
     }
     var HttpClient3 = class {
-      constructor(userAgent2, handlers, requestOptions) {
+      constructor(userAgent2, handlers, requestOptions2) {
         this._ignoreSslError = false;
         this._allowRedirects = true;
         this._allowRedirectDowngrade = false;
@@ -19027,29 +19027,29 @@ var require_lib = __commonJS({
         this._disposed = false;
         this.userAgent = this._getUserAgentWithOrchestrationId(userAgent2);
         this.handlers = handlers || [];
-        this.requestOptions = requestOptions;
-        if (requestOptions) {
-          if (requestOptions.ignoreSslError != null) {
-            this._ignoreSslError = requestOptions.ignoreSslError;
+        this.requestOptions = requestOptions2;
+        if (requestOptions2) {
+          if (requestOptions2.ignoreSslError != null) {
+            this._ignoreSslError = requestOptions2.ignoreSslError;
           }
-          this._socketTimeout = requestOptions.socketTimeout;
-          if (requestOptions.allowRedirects != null) {
-            this._allowRedirects = requestOptions.allowRedirects;
+          this._socketTimeout = requestOptions2.socketTimeout;
+          if (requestOptions2.allowRedirects != null) {
+            this._allowRedirects = requestOptions2.allowRedirects;
           }
-          if (requestOptions.allowRedirectDowngrade != null) {
-            this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+          if (requestOptions2.allowRedirectDowngrade != null) {
+            this._allowRedirectDowngrade = requestOptions2.allowRedirectDowngrade;
           }
-          if (requestOptions.maxRedirects != null) {
-            this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+          if (requestOptions2.maxRedirects != null) {
+            this._maxRedirects = Math.max(requestOptions2.maxRedirects, 0);
           }
-          if (requestOptions.keepAlive != null) {
-            this._keepAlive = requestOptions.keepAlive;
+          if (requestOptions2.keepAlive != null) {
+            this._keepAlive = requestOptions2.keepAlive;
           }
-          if (requestOptions.allowRetries != null) {
-            this._allowRetries = requestOptions.allowRetries;
+          if (requestOptions2.allowRetries != null) {
+            this._allowRetries = requestOptions2.allowRetries;
           }
-          if (requestOptions.maxRetries != null) {
-            this._maxRetries = requestOptions.maxRetries;
+          if (requestOptions2.maxRetries != null) {
+            this._maxRetries = requestOptions2.maxRetries;
           }
         }
       }
@@ -19174,9 +19174,9 @@ var require_lib = __commonJS({
               }
               yield response.readBody();
               if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
-                for (const header in headers) {
-                  if (header.toLowerCase() === "authorization") {
-                    delete headers[header];
+                for (const header2 in headers) {
+                  if (header2.toLowerCase() === "authorization") {
+                    delete headers[header2];
                   }
                 }
               }
@@ -19329,15 +19329,15 @@ var require_lib = __commonJS({
        * For headers that must always be a single string (like Content-Type), use the
        * specialized _getExistingOrDefaultContentTypeHeader method instead.
        */
-      _getExistingOrDefaultHeader(additionalHeaders, header, _default3) {
+      _getExistingOrDefaultHeader(additionalHeaders, header2, _default3) {
         let clientHeader;
         if (this.requestOptions && this.requestOptions.headers) {
-          const headerValue = lowercaseKeys2(this.requestOptions.headers)[header];
+          const headerValue = lowercaseKeys2(this.requestOptions.headers)[header2];
           if (headerValue) {
             clientHeader = typeof headerValue === "number" ? headerValue.toString() : headerValue;
           }
         }
-        const additionalValue = additionalHeaders[header];
+        const additionalValue = additionalHeaders[header2];
         if (additionalValue !== void 0) {
           return typeof additionalValue === "number" ? additionalValue.toString() : additionalValue;
         }
@@ -19559,14 +19559,14 @@ var require_dist = __commonJS({
       }
       return result;
     }
-    function parse5(header, options) {
-      const len = header.length;
-      let index = skipOWS(header, 0, len);
+    function parse5(header2, options) {
+      const len = header2.length;
+      let index = skipOWS(header2, 0, len);
       const valueStart = index;
-      index = skipValue(header, index, len);
-      const valueEnd = trailingOWS(header, valueStart, index);
-      const type = header.slice(valueStart, valueEnd).toLowerCase();
-      const parameters = options?.parameters === false ? new NullObject() : parseParameters(header, index, len);
+      index = skipValue(header2, index, len);
+      const valueEnd = trailingOWS(header2, valueStart, index);
+      const type = header2.slice(valueStart, valueEnd).toLowerCase();
+      const parameters = options?.parameters === false ? new NullObject() : parseParameters(header2, index, len);
       return { type, parameters };
     }
     var SP = 32;
@@ -19575,32 +19575,32 @@ var require_dist = __commonJS({
     var EQ = 61;
     var DQUOTE = 34;
     var BSLASH = 92;
-    function parseParameters(header, index, len) {
+    function parseParameters(header2, index, len) {
       const parameters = new NullObject();
       parameter: while (index < len) {
-        index = skipOWS(header, index + 1, len);
+        index = skipOWS(header2, index + 1, len);
         const keyStart = index;
         while (index < len) {
-          const code = header.charCodeAt(index);
+          const code = header2.charCodeAt(index);
           if (code === SEMI)
             continue parameter;
           if (code === EQ) {
-            const keyEnd = trailingOWS(header, keyStart, index);
-            const key = header.slice(keyStart, keyEnd).toLowerCase();
-            index = skipOWS(header, index + 1, len);
-            if (index < len && header.charCodeAt(index) === DQUOTE) {
+            const keyEnd = trailingOWS(header2, keyStart, index);
+            const key = header2.slice(keyStart, keyEnd).toLowerCase();
+            index = skipOWS(header2, index + 1, len);
+            if (index < len && header2.charCodeAt(index) === DQUOTE) {
               index++;
               let value = "";
               while (index < len) {
-                const code2 = header.charCodeAt(index++);
+                const code2 = header2.charCodeAt(index++);
                 if (code2 === DQUOTE) {
-                  index = skipValue(header, index, len);
+                  index = skipValue(header2, index, len);
                   if (parameters[key] === void 0)
                     parameters[key] = value;
                   break;
                 }
                 if (code2 === BSLASH && index < len) {
-                  value += header[index++];
+                  value += header2[index++];
                   continue;
                 }
                 value += String.fromCharCode(code2);
@@ -19608,10 +19608,10 @@ var require_dist = __commonJS({
               continue parameter;
             }
             const valueStart = index;
-            index = skipValue(header, index, len);
+            index = skipValue(header2, index, len);
             if (parameters[key] === void 0) {
-              const valueEnd = trailingOWS(header, valueStart, index);
-              parameters[key] = header.slice(valueStart, valueEnd);
+              const valueEnd = trailingOWS(header2, valueStart, index);
+              parameters[key] = header2.slice(valueStart, valueEnd);
             }
             continue parameter;
           }
@@ -19629,18 +19629,18 @@ var require_dist = __commonJS({
       }
       return index;
     }
-    function skipOWS(header, index, len) {
+    function skipOWS(header2, index, len) {
       while (index < len) {
-        const char = header.charCodeAt(index);
+        const char = header2.charCodeAt(index);
         if (char !== SP && char !== HTAB)
           break;
         index++;
       }
       return index;
     }
-    function trailingOWS(header, start, end) {
+    function trailingOWS(header2, start, end) {
       while (end > start) {
-        const char = header.charCodeAt(end - 1);
+        const char = header2.charCodeAt(end - 1);
         if (char !== SP && char !== HTAB)
           break;
         end--;
@@ -22693,9 +22693,9 @@ ${indent}`) + "'";
         start = start.replace(/\n+/g, `$&${indent}`);
       }
       const indentSize = indent ? "2" : "1";
-      let header = (startWithSpace ? indentSize : "") + chomp;
+      let header2 = (startWithSpace ? indentSize : "") + chomp;
       if (comment) {
-        header += " " + commentString(comment.replace(/ ?[\r\n]+/g, " "));
+        header2 += " " + commentString(comment.replace(/ ?[\r\n]+/g, " "));
         if (onComment)
           onComment();
       }
@@ -22710,11 +22710,11 @@ ${indent}`) + "'";
         }
         const body = foldFlowLines.foldFlowLines(`${start}${foldedValue}${end}`, indent, foldFlowLines.FOLD_BLOCK, foldOptions);
         if (!literalFallback)
-          return `>${header}
+          return `>${header2}
 ${indent}${body}`;
       }
       value = value.replace(/\n+/g, `$&${indent}`);
-      return `|${header}
+      return `|${header2}
 ${indent}${start}${value}${end}`;
     }
     function plainString(item, ctx, onComment, onChompKeep) {
@@ -25817,10 +25817,10 @@ var require_resolve_block_scalar = __commonJS({
     var Scalar = require_Scalar();
     function resolveBlockScalar(ctx, scalar, onError) {
       const start = scalar.offset;
-      const header = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
-      if (!header)
+      const header2 = parseBlockScalarHeader(scalar, ctx.options.strict, onError);
+      if (!header2)
         return { value: "", type: null, comment: "", range: [start, start, start] };
-      const type = header.mode === ">" ? Scalar.Scalar.BLOCK_FOLDED : Scalar.Scalar.BLOCK_LITERAL;
+      const type = header2.mode === ">" ? Scalar.Scalar.BLOCK_FOLDED : Scalar.Scalar.BLOCK_LITERAL;
       const lines = scalar.source ? splitLines(scalar.source) : [];
       let chompStart = lines.length;
       for (let i = lines.length - 1; i >= 0; --i) {
@@ -25831,26 +25831,26 @@ var require_resolve_block_scalar = __commonJS({
           break;
       }
       if (chompStart === 0) {
-        const value2 = header.chomp === "+" && lines.length > 0 ? "\n".repeat(Math.max(1, lines.length - 1)) : "";
-        let end2 = start + header.length;
+        const value2 = header2.chomp === "+" && lines.length > 0 ? "\n".repeat(Math.max(1, lines.length - 1)) : "";
+        let end2 = start + header2.length;
         if (scalar.source)
           end2 += scalar.source.length;
-        return { value: value2, type, comment: header.comment, range: [start, end2, end2] };
+        return { value: value2, type, comment: header2.comment, range: [start, end2, end2] };
       }
-      let trimIndent = scalar.indent + header.indent;
-      let offset = scalar.offset + header.length;
+      let trimIndent = scalar.indent + header2.indent;
+      let offset = scalar.offset + header2.length;
       let contentStart = 0;
       for (let i = 0; i < chompStart; ++i) {
         const [indent, content] = lines[i];
         if (content === "" || content === "\r") {
-          if (header.indent === 0 && indent.length > trimIndent)
+          if (header2.indent === 0 && indent.length > trimIndent)
             trimIndent = indent.length;
         } else {
           if (indent.length < trimIndent) {
             const message = "Block scalars with more-indented leading empty lines must use an explicit indentation indicator";
             onError(offset + indent.length, "MISSING_CHAR", message);
           }
-          if (header.indent === 0)
+          if (header2.indent === 0)
             trimIndent = indent.length;
           contentStart = i;
           if (trimIndent === 0 && !ctx.atRoot) {
@@ -25877,7 +25877,7 @@ var require_resolve_block_scalar = __commonJS({
         if (crlf)
           content = content.slice(0, -1);
         if (content && indent.length < trimIndent) {
-          const src = header.indent ? "explicit indentation indicator" : "first line";
+          const src = header2.indent ? "explicit indentation indicator" : "first line";
           const message = `Block scalar lines must not be less indented than their ${src}`;
           onError(offset - content.length - (crlf ? 2 : 1), "BAD_INDENT", message);
           indent = "";
@@ -25904,7 +25904,7 @@ var require_resolve_block_scalar = __commonJS({
           prevMoreIndented = false;
         }
       }
-      switch (header.chomp) {
+      switch (header2.chomp) {
         case "-":
           break;
         case "+":
@@ -25916,8 +25916,8 @@ var require_resolve_block_scalar = __commonJS({
         default:
           value += "\n";
       }
-      const end = start + header.length + scalar.source.length;
-      return { value, type, comment: header.comment, range: [start, end, end] };
+      const end = start + header2.length + scalar.source.length;
+      return { value, type, comment: header2.comment, range: [start, end, end] };
     }
     function parseBlockScalarHeader({ offset, props }, strict, onError) {
       if (props[0].type !== "block-scalar-header") {
@@ -26755,10 +26755,10 @@ var require_cst_scalar = __commonJS({
             type = "QUOTE_DOUBLE";
             break;
           case "block-scalar": {
-            const header = token.props[0];
-            if (header.type !== "block-scalar-header")
+            const header2 = token.props[0];
+            if (header2.type !== "block-scalar-header")
               throw new Error("Invalid block scalar header");
-            type = header.source[0] === ">" ? "BLOCK_FOLDED" : "BLOCK_LITERAL";
+            type = header2.source[0] === ">" ? "BLOCK_FOLDED" : "BLOCK_LITERAL";
             break;
           }
           default:
@@ -26790,10 +26790,10 @@ var require_cst_scalar = __commonJS({
       const head = source.substring(0, he);
       const body = source.substring(he + 1) + "\n";
       if (token.type === "block-scalar") {
-        const header = token.props[0];
-        if (header.type !== "block-scalar-header")
+        const header2 = token.props[0];
+        if (header2.type !== "block-scalar-header")
           throw new Error("Invalid block scalar header");
-        header.source = head;
+        header2.source = head;
         token.source = body;
       } else {
         const { offset } = token;
@@ -29078,8 +29078,8 @@ var Summary = class {
         if (typeof cell === "string") {
           return this.wrap("td", cell);
         }
-        const { header, data, colspan, rowspan } = cell;
-        const tag = header ? "th" : "td";
+        const { header: header2, data, colspan, rowspan } = cell;
+        const tag = header2 ? "th" : "td";
         const attrs = Object.assign(Object.assign({}, colspan && { colspan }), rowspan && { rowspan });
         return this.wrap(tag, data, attrs);
       }).join("");
@@ -29945,33 +29945,33 @@ function isPlainObject2(value) {
   return typeof Ctor === "function" && Ctor instanceof Ctor && Function.prototype.call(Ctor) === Function.prototype.call(value);
 }
 var noop = () => "";
-async function fetchWrapper(requestOptions) {
-  const fetch2 = requestOptions.request?.fetch || globalThis.fetch;
+async function fetchWrapper(requestOptions2) {
+  const fetch2 = requestOptions2.request?.fetch || globalThis.fetch;
   if (!fetch2) {
     throw new Error(
       "fetch is not set. Please pass a fetch implementation as new Octokit({ request: { fetch }}). Learn more at https://github.com/octokit/octokit.js/#fetch-missing"
     );
   }
-  const log = requestOptions.request?.log || console;
-  const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
-  const body = isPlainObject2(requestOptions.body) || Array.isArray(requestOptions.body) ? JSONStringify(requestOptions.body) : requestOptions.body;
+  const log = requestOptions2.request?.log || console;
+  const parseSuccessResponseBody = requestOptions2.request?.parseSuccessResponseBody !== false;
+  const body = isPlainObject2(requestOptions2.body) || Array.isArray(requestOptions2.body) ? JSONStringify(requestOptions2.body) : requestOptions2.body;
   const requestHeaders = Object.fromEntries(
-    Object.entries(requestOptions.headers).map(([name, value]) => [
+    Object.entries(requestOptions2.headers).map(([name, value]) => [
       name,
       String(value)
     ])
   );
   let fetchResponse;
   try {
-    fetchResponse = await fetch2(requestOptions.url, {
-      method: requestOptions.method,
+    fetchResponse = await fetch2(requestOptions2.url, {
+      method: requestOptions2.method,
       body,
-      redirect: requestOptions.request?.redirect,
+      redirect: requestOptions2.request?.redirect,
       headers: requestHeaders,
-      signal: requestOptions.request?.signal,
+      signal: requestOptions2.request?.signal,
       // duplex must be set if request.body is ReadableStream or Async Iterables.
       // See https://fetch.spec.whatwg.org/#dom-requestinit-duplex.
-      ...requestOptions.body && { duplex: "half" }
+      ...requestOptions2.body && { duplex: "half" }
     });
   } catch (error52) {
     let message = "Unknown Error";
@@ -29990,7 +29990,7 @@ async function fetchWrapper(requestOptions) {
       }
     }
     const requestError = new RequestError(message, 500, {
-      request: requestOptions
+      request: requestOptions2
     });
     requestError.cause = error52;
     throw requestError;
@@ -30011,33 +30011,33 @@ async function fetchWrapper(requestOptions) {
     const matches = responseHeaders.link && responseHeaders.link.match(/<([^<>]+)>; rel="deprecation"/);
     const deprecationLink = matches && matches.pop();
     log.warn(
-      `[@octokit/request] "${requestOptions.method} ${requestOptions.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
+      `[@octokit/request] "${requestOptions2.method} ${requestOptions2.url}" is deprecated. It is scheduled to be removed on ${responseHeaders.sunset}${deprecationLink ? `. See ${deprecationLink}` : ""}`
     );
   }
   if (status === 204 || status === 205) {
     return octokitResponse;
   }
-  if (requestOptions.method === "HEAD") {
+  if (requestOptions2.method === "HEAD") {
     if (status < 400) {
       return octokitResponse;
     }
     throw new RequestError(fetchResponse.statusText, status, {
       response: octokitResponse,
-      request: requestOptions
+      request: requestOptions2
     });
   }
   if (status === 304) {
     octokitResponse.data = await getResponseData(fetchResponse);
     throw new RequestError("Not modified", status, {
       response: octokitResponse,
-      request: requestOptions
+      request: requestOptions2
     });
   }
   if (status >= 400) {
     octokitResponse.data = await getResponseData(fetchResponse);
     throw new RequestError(toErrorMessage(octokitResponse.data), status, {
       response: octokitResponse,
-      request: requestOptions
+      request: requestOptions2
     });
   }
   octokitResponse.data = parseSuccessResponseBody ? await getResponseData(fetchResponse) : fetchResponse.body;
@@ -30158,7 +30158,7 @@ function graphql(request2, query, options) {
     }
   }
   const parsedOptions = typeof query === "string" ? Object.assign({ query }, options) : query;
-  const requestOptions = Object.keys(
+  const requestOptions2 = Object.keys(
     parsedOptions
   ).reduce((result, key) => {
     if (NON_VARIABLE_OPTIONS.includes(key)) {
@@ -30173,16 +30173,16 @@ function graphql(request2, query, options) {
   }, {});
   const baseUrl2 = parsedOptions.baseUrl || request2.endpoint.DEFAULTS.baseUrl;
   if (GHES_V3_SUFFIX_REGEX.test(baseUrl2)) {
-    requestOptions.url = baseUrl2.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+    requestOptions2.url = baseUrl2.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
   }
-  return request2(requestOptions).then((response) => {
+  return request2(requestOptions2).then((response) => {
     if (response.data.errors) {
       const headers = {};
       for (const key of Object.keys(response.headers)) {
         headers[key] = response.headers[key];
       }
       throw new GraphqlResponseError(
-        requestOptions,
+        requestOptions2,
         headers,
         response.data
       );
@@ -32988,6 +32988,7 @@ async function writeTextFile(path, content) {
 
 // ../core/dist/index.js
 var import_crypto = require("crypto");
+var import_crypto2 = require("crypto");
 var import_picomatch = __toESM(require_picomatch2(), 1);
 var import_yaml = __toESM(require_dist2(), 1);
 
@@ -35657,10 +35658,10 @@ function isValidJWT(token, algorithm = null) {
     const tokensParts = token.split(".");
     if (tokensParts.length !== 3)
       return false;
-    const [header] = tokensParts;
-    if (!header)
+    const [header2] = tokensParts;
+    if (!header2)
       return false;
-    const parsedHeader = JSON.parse(atob(header));
+    const parsedHeader = JSON.parse(atob(header2));
     if ("typ" in parsedHeader && parsedHeader?.typ !== "JWT")
       return false;
     if (!parsedHeader.alg)
@@ -45270,21 +45271,21 @@ var allProcessors = {
 };
 function toJSONSchema(input, params) {
   if ("_idmap" in input) {
-    const registry2 = input;
+    const registry3 = input;
     const ctx2 = initializeContext({ ...params, processors: allProcessors });
     const defs = {};
-    for (const entry of registry2._idmap.entries()) {
+    for (const entry of registry3._idmap.entries()) {
       const [_, schema] = entry;
       process2(schema, ctx2);
     }
     const schemas = {};
     const external = {
-      registry: registry2,
+      registry: registry3,
       uri: params?.uri,
       defs
     };
     ctx2.external = external;
-    for (const entry of registry2._idmap.entries()) {
+    for (const entry of registry3._idmap.entries()) {
       const [key, schema] = entry;
       extractDefs(ctx2, schema);
       schemas[key] = finalize(ctx2, schema);
@@ -47508,11 +47509,52 @@ config(en_default());
 // ../core/dist/index.js
 var import_yaml2 = __toESM(require_dist2(), 1);
 var import_yaml3 = __toESM(require_dist2(), 1);
-function normalizeStableText(value) {
-  return value.normalize("NFC").replace(/\r\n?/g, "\n");
+var import_crypto3 = require("crypto");
+var MAX_FINDING_VALUE_LENGTH = 2048;
+function isSafePublicCharacter(codePoint) {
+  return codePoint === 10 || codePoint > 31 && !(codePoint >= 127 && codePoint <= 159) && !(codePoint >= 8234 && codePoint <= 8238) && !(codePoint >= 8294 && codePoint <= 8297);
 }
-function sortedEvidence(finding) {
-  return finding.evidence.map((item) => ({
+function utf8Preview(value, maxBytes) {
+  let byteLength = 0;
+  let codeUnitEnd = 0;
+  for (const codePoint of value) {
+    const codePointBytes = Buffer.byteLength(codePoint, "utf8");
+    if (byteLength + codePointBytes > maxBytes) {
+      break;
+    }
+    byteLength += codePointBytes;
+    codeUnitEnd += codePoint.length;
+  }
+  return value.slice(0, codeUnitEnd);
+}
+function normalizeStableText(value) {
+  const normalized = value.normalize("NFC").replace(/\r\n?/g, "\n").split("").filter((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return isSafePublicCharacter(codePoint);
+  }).join("");
+  if (Buffer.byteLength(normalized, "utf8") <= MAX_FINDING_VALUE_LENGTH) {
+    return normalized;
+  }
+  const digest = (0, import_crypto2.createHash)("sha256").update(normalized).digest("hex");
+  return `${utf8Preview(normalized, MAX_FINDING_VALUE_LENGTH)}\u2026 [sha256:${digest}]`;
+}
+function normalizeFinding(finding2) {
+  return {
+    ...finding2,
+    ruleId: normalizeStableText(finding2.ruleId),
+    title: normalizeStableText(finding2.title),
+    message: normalizeStableText(finding2.message),
+    ...finding2.path ? { path: normalizeStableText(finding2.path) } : {},
+    evidence: finding2.evidence.map((item) => ({
+      label: normalizeStableText(item.label),
+      value: normalizeStableText(item.value)
+    })),
+    remediation: finding2.remediation.map(normalizeStableText),
+    tags: finding2.tags.map(normalizeStableText)
+  };
+}
+function sortedEvidence(finding2) {
+  return finding2.evidence.map((item) => ({
     label: normalizeStableText(item.label),
     value: normalizeStableText(item.value)
   })).sort((left, right) => {
@@ -47531,26 +47573,36 @@ function sortedEvidence(finding) {
     return 0;
   });
 }
-function createEvidenceSnapshot(finding) {
+function createEvidenceSnapshot(finding2) {
   return {
-    ruleId: finding.ruleId,
-    severity: finding.severity,
-    ...finding.path ? { path: normalizeStableText(finding.path) } : {},
-    ...finding.line !== void 0 ? { line: finding.line } : {},
-    evidence: sortedEvidence(finding)
+    ruleId: finding2.ruleId,
+    severity: finding2.severity,
+    ...finding2.path ? { path: normalizeStableText(finding2.path) } : {},
+    ...finding2.line !== void 0 ? { line: finding2.line } : {},
+    evidence: sortedEvidence(finding2)
   };
 }
-function createFindingId(finding) {
-  const stableInput = createEvidenceSnapshot(finding);
-  const hash2 = (0, import_crypto.createHash)("sha256").update(JSON.stringify(stableInput)).digest("hex").slice(0, 16);
+function createFindingId(finding2) {
+  const snapshot = createEvidenceSnapshot(finding2);
+  const stableInput = {
+    ruleId: snapshot.ruleId,
+    ...snapshot.path ? { path: snapshot.path } : {},
+    ...snapshot.line !== void 0 ? { line: snapshot.line } : {},
+    evidence: snapshot.evidence
+  };
+  const hash2 = (0, import_crypto2.createHash)("sha256").update(JSON.stringify(stableInput)).digest("hex").slice(0, 16);
   return `agf_${hash2}`;
 }
 function attachFindingIds(findings) {
-  return findings.map((finding) => ({
-    ...finding,
-    findingId: createFindingId(finding),
-    evidenceSnapshot: createEvidenceSnapshot(finding)
-  }));
+  return findings.map((rawFinding) => {
+    const finding2 = normalizeFinding(rawFinding);
+    return {
+      ...finding2,
+      findingId: createFindingId(finding2),
+      evidenceSnapshot: createEvidenceSnapshot(finding2),
+      disposition: "active"
+    };
+  });
 }
 function normalizePath(path) {
   return path.replace(/\\/g, "/").replace(/^(\.\/)+/, "");
@@ -47582,7 +47634,7 @@ var agentControlPlaneDriftRule = {
       if (patterns.length === 0) {
         continue;
       }
-      const finding = {
+      const finding2 = {
         ruleId: "agent-control-plane/drift",
         severity: config2.severity,
         title: "Agent control-plane file changed",
@@ -47594,10 +47646,553 @@ var agentControlPlaneDriftRule = {
         confidence: "high"
       };
       if (file2.previousPath) {
-        finding.evidence.push({ label: "previous_path", value: file2.previousPath });
+        finding2.evidence.push({ label: "previous_path", value: file2.previousPath });
       }
-      finding.evidence.push({ label: "matched_patterns", value: patterns.join(", ") });
-      findings.push(finding);
+      finding2.evidence.push({ label: "matched_patterns", value: patterns.join(", ") });
+      findings.push(finding2);
+    }
+    return findings;
+  }
+};
+var KNOWN_WORKFLOW_PERMISSIONS = [
+  "actions",
+  "artifact-metadata",
+  "attestations",
+  "checks",
+  "code-quality",
+  "contents",
+  "deployments",
+  "discussions",
+  "id-token",
+  "issues",
+  "models",
+  "packages",
+  "pages",
+  "pull-requests",
+  "repository-projects",
+  "security-events",
+  "statuses",
+  "vulnerability-alerts"
+];
+var PERMISSION_RANK = {
+  none: 0,
+  read: 1,
+  write: 2
+};
+var READ_ONLY_PERMISSIONS = /* @__PURE__ */ new Set(["models", "vulnerability-alerts"]);
+var WRITE_ONLY_OR_NONE_PERMISSIONS = /* @__PURE__ */ new Set(["id-token"]);
+function emptyPermissions() {
+  return Object.fromEntries(
+    KNOWN_WORKFLOW_PERMISSIONS.map((permission) => [permission, "none"])
+  );
+}
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function normalizePermissionValue(permission, value) {
+  if (typeof value !== "string") {
+    return "none";
+  }
+  const normalized = value.toLowerCase();
+  if (WRITE_ONLY_OR_NONE_PERMISSIONS.has(permission)) {
+    return normalized === "write" ? "write" : "none";
+  }
+  if (READ_ONLY_PERMISSIONS.has(permission)) {
+    return normalized === "read" ? "read" : "none";
+  }
+  if (normalized === "read" || normalized === "write" || normalized === "none") {
+    return normalized;
+  }
+  return "none";
+}
+function normalizeWorkflowPermissions(input) {
+  const permissions = emptyPermissions();
+  if (typeof input === "string") {
+    const normalized = input.toLowerCase();
+    if (normalized === "write-all") {
+      for (const permission of KNOWN_WORKFLOW_PERMISSIONS) {
+        permissions[permission] = READ_ONLY_PERMISSIONS.has(permission) ? "read" : "write";
+      }
+    }
+    if (normalized === "read-all") {
+      for (const permission of KNOWN_WORKFLOW_PERMISSIONS) {
+        permissions[permission] = WRITE_ONLY_OR_NONE_PERMISSIONS.has(permission) ? "none" : "read";
+      }
+    }
+    return permissions;
+  }
+  if (!isRecord(input)) {
+    return permissions;
+  }
+  for (const permission of KNOWN_WORKFLOW_PERMISSIONS) {
+    permissions[permission] = normalizePermissionValue(permission, input[permission]);
+  }
+  return permissions;
+}
+function comparePermissionRank(left, right) {
+  return PERMISSION_RANK[left] - PERMISSION_RANK[right];
+}
+function findPermissionEscalations(before, after) {
+  return KNOWN_WORKFLOW_PERMISSIONS.flatMap((permission) => {
+    if (comparePermissionRank(after[permission], before[permission]) <= 0) {
+      return [];
+    }
+    return [
+      {
+        permission,
+        before: before[permission],
+        after: after[permission]
+      }
+    ];
+  });
+}
+function findScopedPermissionEscalations(before, after, scope) {
+  return findPermissionEscalations(before, after).map((escalation) => ({
+    ...escalation,
+    scope
+  }));
+}
+function canonicalizeExpressionReferences(value) {
+  return value.replace(/\[\s*['"]([A-Za-z_][A-Za-z0-9_-]*)['"]\s*\]/g, ".$1").replace(/\s*\.\s*/g, ".");
+}
+function extractGitHubExpressionBodies(value) {
+  return [...value.matchAll(/\$\{\{([\s\S]*?)\}\}/g)].flatMap(
+    (match) => match[1] ? [canonicalizeExpressionReferences(match[1])] : []
+  );
+}
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function asString(value) {
+  return typeof value === "string" ? value : void 0;
+}
+function workflowOn(workflow) {
+  return workflow.on ?? workflow["on"];
+}
+function hasWorkflowEvent(workflow, eventName) {
+  const event = workflowOn(workflow);
+  if (typeof event === "string") {
+    return event === eventName;
+  }
+  if (Array.isArray(event)) {
+    return event.includes(eventName);
+  }
+  return isRecord2(event) && Object.hasOwn(event, eventName);
+}
+function hasWriteAllPermissions(workflow) {
+  return typeof workflow.permissions === "string" && workflow.permissions.toLowerCase() === "write-all";
+}
+function hasIdTokenWritePermission(workflow) {
+  return normalizeWorkflowPermissions(workflow.permissions)["id-token"] === "write";
+}
+function hasOwnWorkflowPermissions(workflow) {
+  return Object.hasOwn(workflow, "permissions");
+}
+function workflowJobs(workflow) {
+  return isRecord2(workflow.jobs) ? workflow.jobs : {};
+}
+function findJobPermissions(workflow) {
+  return Object.entries(workflowJobs(workflow)).flatMap(([jobId, job]) => {
+    if (!isRecord2(job) || !Object.hasOwn(job, "permissions")) {
+      return [];
+    }
+    return [{ jobId, permissions: job.permissions }];
+  });
+}
+function findJobsWithWriteAllPermissions(workflow) {
+  return findJobPermissions(workflow).filter(
+    ({ permissions }) => typeof permissions === "string" && permissions.toLowerCase() === "write-all"
+  ).map(({ jobId }) => jobId);
+}
+function findJobsWithIdTokenWritePermission(workflow) {
+  return findJobPermissions(workflow).filter(({ permissions }) => normalizeWorkflowPermissions(permissions)["id-token"] === "write").map(({ jobId }) => jobId);
+}
+function jobSteps(job) {
+  return isRecord2(job) && Array.isArray(job.steps) ? job.steps : [];
+}
+function containerImage(value) {
+  if (typeof value === "string") {
+    return value;
+  }
+  return isRecord2(value) ? asString(value.image) : void 0;
+}
+function findWorkflowUses(workflow) {
+  const uses = [];
+  for (const [jobId, job] of Object.entries(workflowJobs(workflow))) {
+    if (!isRecord2(job)) {
+      continue;
+    }
+    const reusable = asString(job.uses);
+    if (reusable) {
+      uses.push({ kind: "reusable-workflow", uses: reusable, job: jobId });
+    }
+    const container = containerImage(job.container);
+    if (container) {
+      uses.push({ kind: "container", uses: container, job: jobId });
+    }
+    if (isRecord2(job.services)) {
+      for (const [service, definition] of Object.entries(job.services)) {
+        const image = containerImage(definition);
+        if (image) {
+          uses.push({ kind: "container", uses: image, job: jobId, service });
+        }
+      }
+    }
+    for (const step of jobSteps(job)) {
+      if (!isRecord2(step)) {
+        continue;
+      }
+      const stepUses = asString(step.uses);
+      if (!stepUses) {
+        continue;
+      }
+      if (stepUses.startsWith("docker://")) {
+        uses.push({ kind: "container", uses: stepUses.slice("docker://".length), job: jobId });
+      } else {
+        uses.push({ kind: "action", uses: stepUses, job: jobId });
+      }
+    }
+  }
+  return uses;
+}
+function findCheckoutSteps(workflow) {
+  return Object.values(workflowJobs(workflow)).flatMap(
+    (job) => jobSteps(job).flatMap((step) => {
+      if (!isRecord2(step)) {
+        return [];
+      }
+      const uses = asString(step.uses);
+      if (!uses?.toLowerCase().startsWith("actions/checkout@")) {
+        return [];
+      }
+      const withConfig = isRecord2(step.with) ? step.with : {};
+      return [
+        {
+          uses,
+          ref: asString(withConfig.ref),
+          repository: asString(withConfig.repository)
+        }
+      ];
+    })
+  );
+}
+var PR_HEAD_CONTEXT = /github\.(?:event\.pull_request\.head(?:\.(?:sha|ref|label)|\.repo\.full_name)?|head_ref)/i;
+function findPullRequestTargetHeadPatterns(workflow) {
+  if (!hasWorkflowEvent(workflow, "pull_request_target")) {
+    return [];
+  }
+  const patterns = [];
+  for (const step of findCheckoutSteps(workflow)) {
+    const ref = canonicalizeExpressionReferences(step.ref ?? "");
+    const repository = canonicalizeExpressionReferences(step.repository ?? "");
+    const hasHeadExpression = [step.ref ?? "", step.repository ?? ""].some(
+      (value) => extractGitHubExpressionBodies(value).some((expression) => PR_HEAD_CONTEXT.test(expression))
+    );
+    if (hasHeadExpression) {
+      patterns.push(`checkout:${ref}:${repository}`);
+    }
+  }
+  for (const [jobId, job] of Object.entries(workflowJobs(workflow))) {
+    for (const [stepIndex, step] of jobSteps(job).entries()) {
+      if (!isRecord2(step) || typeof step.run !== "string") {
+        continue;
+      }
+      for (const [lineIndex, line] of step.run.split(/\r?\n/).entries()) {
+        const canonicalLine = canonicalizeExpressionReferences(line);
+        const hasHeadExpression = extractGitHubExpressionBodies(line).some(
+          (expression) => PR_HEAD_CONTEXT.test(expression)
+        );
+        if (/\bgit\s+(?:fetch|checkout)\b/i.test(line) && hasHeadExpression) {
+          patterns.push(`shell:${jobId}:${stepIndex}:${lineIndex}:${canonicalLine.trim()}`);
+        }
+      }
+    }
+  }
+  return patterns;
+}
+function isLocalUse(uses) {
+  return uses.startsWith("./") || uses.startsWith("../");
+}
+function isShaPinnedAction(uses) {
+  const atIndex = uses.lastIndexOf("@");
+  return atIndex >= 0 && /^[a-f0-9]{40}$/i.test(uses.slice(atIndex + 1));
+}
+function isDigestPinnedContainer(image) {
+  return /@sha256:[a-f0-9]{64}$/i.test(image);
+}
+function findUnpinnedWorkflowUses(workflow) {
+  return findWorkflowUses(workflow).filter((item) => {
+    if (isLocalUse(item.uses)) {
+      return false;
+    }
+    return item.kind === "container" ? !isDigestPinnedContainer(item.uses) : !isShaPinnedAction(item.uses);
+  });
+}
+function findSecretReferences(content) {
+  if (!content) {
+    return [];
+  }
+  const references = /* @__PURE__ */ new Set();
+  const expressionBodies = extractGitHubExpressionBodies(content);
+  const canonicalContent = expressionBodies.join("\n");
+  const patterns = [/secrets\.([A-Za-z0-9_]+)/gi];
+  for (const pattern of patterns) {
+    for (const match of canonicalContent.matchAll(pattern)) {
+      if (match[1]) {
+        references.add(match[1]);
+      }
+    }
+  }
+  if (/toJson\s*\(\s*secrets\s*\)/i.test(canonicalContent)) {
+    references.add("*");
+  }
+  if (expressionBodies.some((expression) => /\bsecrets\s*\[/.test(expression))) {
+    references.add("*dynamic*");
+  }
+  return [...references].sort();
+}
+function unknownWritePermissions(permissions, scope, job) {
+  if (!isRecord2(permissions)) {
+    return [];
+  }
+  const known = new Set(KNOWN_WORKFLOW_PERMISSIONS);
+  return Object.entries(permissions).flatMap(([permission, value]) => {
+    if (known.has(permission) || typeof value !== "string" || value.toLowerCase() !== "write") {
+      return [];
+    }
+    return [{ permission, scope, ...job ? { job } : {} }];
+  });
+}
+function findUnknownWritePermissions(workflow) {
+  return [
+    ...unknownWritePermissions(workflow.permissions, "workflow"),
+    ...findJobPermissions(workflow).flatMap(
+      ({ jobId, permissions }) => unknownWritePermissions(permissions, "job", jobId)
+    )
+  ];
+}
+function isRecord3(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function parseWorkflow(yamlText) {
+  if (!yamlText?.trim()) {
+    return { kind: "invalid", message: "workflow is empty" };
+  }
+  try {
+    const document = (0, import_yaml.parseDocument)(yamlText, { prettyErrors: false });
+    if (document.errors.length > 0) {
+      return {
+        kind: "invalid",
+        message: document.errors.map((error52) => error52.message).join("; ")
+      };
+    }
+    const value = document.toJS();
+    if (!isRecord3(value)) {
+      return { kind: "invalid", message: "workflow must be a YAML object" };
+    }
+    return { kind: "valid", workflow: value };
+  } catch (error52) {
+    return {
+      kind: "invalid",
+      message: error52 instanceof Error ? error52.message : "workflow could not be parsed"
+    };
+  }
+}
+var DEFAULT_AGENTIC_ACTIONS = [
+  { uses: "openai/codex-action", promptInputs: ["prompt"] },
+  { uses: "anthropics/claude-code-action", promptInputs: ["prompt"] },
+  { uses: "google-github-actions/run-gemini-cli", promptInputs: ["prompt"] }
+];
+var UNTRUSTED_CONTEXT_PATTERN = /github\.(?:event\.(?:pull_request\.(?:body|title|head\.(?:ref|label))|issue\.(?:body|title)|comment\.body|review\.body|review_comment\.body|discussion\.(?:body|title)|head_commit\.message)|head_ref)/gi;
+var ENV_REFERENCE_PATTERN = /\benv\.([A-Za-z_][A-Za-z0-9_]*)\b/g;
+function isRecord4(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function stringRecord(value) {
+  if (!isRecord4(value)) {
+    return {};
+  }
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry) => typeof entry[1] === "string"
+    )
+  );
+}
+function actionName(uses) {
+  const index = uses.lastIndexOf("@");
+  return (index >= 0 ? uses.slice(0, index) : uses).toLowerCase();
+}
+function registry2(config2) {
+  const entries = [
+    ...DEFAULT_AGENTIC_ACTIONS,
+    ...config2.additional_actions.map((action) => ({
+      uses: action.uses,
+      promptInputs: action.prompt_inputs
+    }))
+  ];
+  const byAction = /* @__PURE__ */ new Map();
+  for (const entry of entries) {
+    const name = actionName(entry.uses);
+    const inputs = byAction.get(name) ?? /* @__PURE__ */ new Set();
+    entry.promptInputs.forEach((input) => inputs.add(input));
+    byAction.set(name, inputs);
+  }
+  return [...byAction.entries()].map(([uses, inputs]) => ({
+    uses,
+    promptInputs: [...inputs].sort()
+  }));
+}
+function untrustedSources(value) {
+  return [
+    ...new Set(
+      extractGitHubExpressionBodies(value).flatMap(
+        (expression) => [...expression.matchAll(UNTRUSTED_CONTEXT_PATTERN)].map((match) => match[0])
+      )
+    )
+  ].sort();
+}
+function effectiveEnv(workflow, job, step) {
+  return {
+    ...stringRecord(workflow.env),
+    ...stringRecord(job.env),
+    ...stringRecord(step.env)
+  };
+}
+function promptSources(prompt, env) {
+  const sources = new Set(untrustedSources(prompt));
+  for (const expression of extractGitHubExpressionBodies(prompt)) {
+    for (const match of expression.matchAll(ENV_REFERENCE_PATTERN)) {
+      const name = match[1];
+      if (!name) {
+        continue;
+      }
+      for (const source of untrustedSources(env[name] ?? "")) {
+        sources.add(`${source} via env.${name}`);
+      }
+    }
+  }
+  return [...sources].sort();
+}
+function stepHasSecret(step, env) {
+  return [...Object.values(stringRecord(step.with)), ...Object.values(env)].some(
+    (value) => findSecretReferences(value).length > 0
+  );
+}
+function effectiveCapability(workflow, job, step, env) {
+  if (stepHasSecret(step, env)) {
+    return "secret";
+  }
+  const hasJobPermissions = Object.hasOwn(job, "permissions");
+  const hasWorkflowPermissions = Object.hasOwn(workflow, "permissions");
+  if (!hasJobPermissions && !hasWorkflowPermissions) {
+    return "unknown";
+  }
+  const effectivePermissions = hasJobPermissions ? job.permissions : workflow.permissions;
+  if (findUnknownWritePermissions({ permissions: effectivePermissions }).length > 0) {
+    return "unknown";
+  }
+  const permissions = normalizeWorkflowPermissions(effectivePermissions);
+  return Object.values(permissions).some((value) => value === "write") ? "write" : "read-only";
+}
+function candidates(workflow, config2) {
+  if (!workflow) {
+    return [];
+  }
+  const registered = new Map(
+    registry2(config2).map((action) => [action.uses, new Set(action.promptInputs)])
+  );
+  const results = [];
+  for (const [jobId, rawJob] of Object.entries(workflowJobs(workflow))) {
+    if (!isRecord4(rawJob) || !Array.isArray(rawJob.steps)) {
+      continue;
+    }
+    for (const rawStep of rawJob.steps) {
+      if (!isRecord4(rawStep) || typeof rawStep.uses !== "string") {
+        continue;
+      }
+      const action = actionName(rawStep.uses);
+      const promptInputs = registered.get(action);
+      if (!promptInputs) {
+        continue;
+      }
+      const withConfig = stringRecord(rawStep.with);
+      const env = effectiveEnv(workflow, rawJob, rawStep);
+      const capability = effectiveCapability(workflow, rawJob, rawStep, env);
+      for (const input of promptInputs) {
+        const prompt = withConfig[input];
+        if (!prompt) {
+          continue;
+        }
+        for (const source of promptSources(prompt, env)) {
+          results.push({
+            key: `${action}:${jobId}:${input}:${source}:${capability}`,
+            action,
+            input,
+            job: jobId,
+            source,
+            capability
+          });
+        }
+      }
+    }
+  }
+  return results;
+}
+function finding(filePath, candidate, config2) {
+  const privileged = candidate.capability !== "read-only";
+  const evidence = [
+    { label: "changed_file", value: filePath },
+    { label: "source_expression", value: candidate.source },
+    { label: "sink_action", value: candidate.action },
+    { label: "sink_input", value: candidate.input },
+    { label: "job", value: candidate.job },
+    { label: "effective_capability", value: candidate.capability }
+  ];
+  return {
+    ruleId: "workflow/agentic-untrusted-input",
+    severity: privileged ? config2.agentic_workflows.privileged_severity : config2.agentic_workflows.severity,
+    title: "Untrusted event data reaches an agent prompt",
+    message: `${filePath} passes untrusted GitHub event data into an agent prompt input.`,
+    path: filePath,
+    evidence,
+    remediation: [
+      "Replace the untrusted prompt value with reviewed, fixed instructions or isolate the agent in a read-only workflow."
+    ],
+    tags: ["workflow", "agentic-workflow", "prompt-injection"],
+    confidence: "high"
+  };
+}
+var agenticWorkflowInjectionRule = {
+  id: "workflow/agentic-untrusted-input",
+  title: "Untrusted event data reaches an agent prompt",
+  run(ctx) {
+    const config2 = ctx.input.config;
+    if (!config2.agentic_workflows.enabled) {
+      return [];
+    }
+    const findings = [];
+    for (const file2 of ctx.helpers.changedFiles()) {
+      const wasWorkflow = ctx.helpers.matchesAny(
+        file2.previousPath ?? file2.path,
+        config2.github_actions.paths
+      );
+      if (file2.status === "removed" || file2.headContent == null || !ctx.helpers.matchesAny(file2.path, config2.github_actions.paths)) {
+        continue;
+      }
+      const head = parseWorkflow(file2.headContent);
+      if (head.kind !== "valid") {
+        continue;
+      }
+      const base = file2.status === "added" || !wasWorkflow ? void 0 : parseWorkflow(file2.baseContent);
+      const baseWorkflow = base?.kind === "valid" ? base.workflow : void 0;
+      const baseKeys = new Set(
+        candidates(baseWorkflow, config2.agentic_workflows).map((candidate) => candidate.key)
+      );
+      for (const candidate of candidates(head.workflow, config2.agentic_workflows)) {
+        if (!baseKeys.has(candidate.key)) {
+          findings.push(finding(file2.path, candidate, config2));
+        }
+      }
     }
     return findings;
   }
@@ -47662,7 +48257,7 @@ var agentOriginRule = {
     if (!origin.detected) {
       return [];
     }
-    const finding = {
+    const finding2 = {
       ruleId: "agent/origin-detected",
       severity: "info",
       title: "Agent origin detected",
@@ -47675,7 +48270,7 @@ var agentOriginRule = {
       tags: ["agent-pr", "origin"],
       confidence: "high"
     };
-    return [finding];
+    return [finding2];
   }
 };
 function baseFinding(ruleId, severity, title, message) {
@@ -47704,15 +48299,15 @@ var contractInvalidRule = {
     if (ctx.input.contract.kind !== "invalid") {
       return [];
     }
-    const finding = baseFinding(
+    const finding2 = baseFinding(
       "contract/invalid",
       "error",
       "Invalid agent contract",
       "This PR contains an agent-gate contract, but it could not be parsed."
     );
-    finding.evidence.push({ label: "parser_message", value: ctx.input.contract.message });
-    finding.remediation.push("Fix the agent-gate contract block in the PR body.");
-    return [finding];
+    finding2.evidence.push({ label: "parser_message", value: ctx.input.contract.message });
+    finding2.remediation.push("Fix the agent-gate contract block in the PR body.");
+    return [finding2];
   }
 };
 var contractMissingRule = {
@@ -47723,18 +48318,18 @@ var contractMissingRule = {
       return [];
     }
     const severity = ctx.input.config.mode === "observe" && ctx.input.config.contract.allow_missing_in_observe_mode ? "warn" : "error";
-    const finding = baseFinding(
+    const finding2 = baseFinding(
       "contract/missing",
       severity,
       "Missing agent contract",
       "Agent-generated PRs must include an agent-gate contract."
     );
-    finding.evidence.push({
+    finding2.evidence.push({
       label: "required_for",
       value: ctx.input.config.contract.required_for.join(", ")
     });
-    finding.remediation.push("Add an agent-gate contract block to the PR body.");
-    return [finding];
+    finding2.remediation.push("Add an agent-gate contract block to the PR body.");
+    return [finding2];
   }
 };
 var contractOutOfScopeRule = {
@@ -47751,23 +48346,23 @@ var contractOutOfScopeRule = {
         (path) => !ctx.helpers.matchesAny(path, contract.allowed_paths)
       )
     })).filter(({ outOfScopePaths }) => outOfScopePaths.length > 0).map(({ file: file2, outOfScopePaths }) => {
-      const finding = baseFinding(
+      const finding2 = baseFinding(
         "contract/out-of-scope",
         "error",
         "File changed outside contract scope",
         `${file2.path} changed outside the allowed contract scope.`
       );
-      finding.path = file2.path;
-      finding.evidence.push({ label: "changed_file", value: file2.path });
+      finding2.path = file2.path;
+      finding2.evidence.push({ label: "changed_file", value: file2.path });
       if (file2.previousPath) {
-        finding.evidence.push({ label: "previous_path", value: file2.previousPath });
+        finding2.evidence.push({ label: "previous_path", value: file2.previousPath });
       }
-      finding.evidence.push(
+      finding2.evidence.push(
         { label: "out_of_scope_paths", value: outOfScopePaths.join(", ") },
         { label: "allowed_paths", value: contract.allowed_paths.join(", ") }
       );
-      finding.remediation.push("Remove the out-of-scope change or update the contract.");
-      return finding;
+      finding2.remediation.push("Remove the out-of-scope change or update the contract.");
+      return finding2;
     });
   }
 };
@@ -47790,20 +48385,20 @@ var contractBlockedPathRule = {
         )
       ]
     })).filter(({ patterns }) => patterns.length > 0).map(({ file: file2, patterns }) => {
-      const finding = baseFinding(
+      const finding2 = baseFinding(
         "contract/blocked-path",
         "error",
         "File changed in blocked contract path",
         `${file2.path} matches blocked contract paths.`
       );
-      finding.path = file2.path;
-      finding.evidence.push({ label: "changed_file", value: file2.path });
+      finding2.path = file2.path;
+      finding2.evidence.push({ label: "changed_file", value: file2.path });
       if (file2.previousPath) {
-        finding.evidence.push({ label: "previous_path", value: file2.previousPath });
+        finding2.evidence.push({ label: "previous_path", value: file2.previousPath });
       }
-      finding.evidence.push({ label: "blocked_patterns", value: patterns.join(", ") });
-      finding.remediation.push("Remove the blocked-path change from this PR.");
-      return finding;
+      finding2.evidence.push({ label: "blocked_patterns", value: patterns.join(", ") });
+      finding2.remediation.push("Remove the blocked-path change from this PR.");
+      return finding2;
     });
   }
 };
@@ -47813,11 +48408,16 @@ function isWorkflowFile(ctx, path) {
 function isPackageManifest(ctx, path) {
   return ctx.input.config.package_scripts.enabled && ctx.helpers.matchesAny(path, ctx.input.config.package_scripts.paths);
 }
-function missingBaseContent(file2) {
-  return file2.status !== "added" && file2.baseContent == null;
+function missingBaseContent(file2, baseRequired = true) {
+  return baseRequired && (file2.status === "modified" || file2.status === "renamed") && file2.baseContent == null;
 }
 function missingHeadContent(file2) {
   return file2.status !== "removed" && file2.headContent == null;
+}
+function hasExplicitGap(ctx, file2, ref) {
+  return (ctx.input.analysis?.gaps ?? []).some(
+    (gap) => gap.ruleId === "analysis/content-unavailable" && gap.path === file2.path && gap.evidence.some((evidence) => evidence.label === "content_ref" && evidence.value === ref)
+  );
 }
 function contentUnavailableFinding(file2, ref, options) {
   return {
@@ -47842,9 +48442,22 @@ var contentUnavailableRule = {
   id: "analysis/content-unavailable",
   title: "Changed file content unavailable",
   run(ctx) {
+    const aggregateBudgetGap = (ctx.input.analysis?.gaps ?? []).some(
+      (gap) => gap.ruleId === "analysis/content-unavailable" && gap.evidence.some(
+        (evidence) => evidence.label === "reason_code" && evidence.value === "aggregate-content-budget-exceeded"
+      )
+    );
+    if (aggregateBudgetGap) {
+      return [];
+    }
     const findings = [];
     for (const file2 of ctx.helpers.changedFiles()) {
       const workflowFile = isWorkflowFile(ctx, file2.path);
+      const previousWorkflowFile = isWorkflowFile(ctx, file2.previousPath ?? file2.path);
+      const workflowRenamedOut = file2.status === "renamed" && previousWorkflowFile && !workflowFile;
+      if (workflowRenamedOut) {
+        continue;
+      }
       const packageManifest = !workflowFile && isPackageManifest(ctx, file2.path);
       if (!workflowFile && !packageManifest) {
         continue;
@@ -47858,10 +48471,11 @@ var contentUnavailableRule = {
         subject: "package manifest",
         tags: ["analysis", "content-unavailable", "dependency", "package-script"]
       };
-      if (missingBaseContent(file2)) {
+      const baseRequired = !workflowFile || previousWorkflowFile;
+      if (missingBaseContent(file2, baseRequired) && !hasExplicitGap(ctx, file2, "base")) {
         findings.push(contentUnavailableFinding(file2, "base", findingOptions));
       }
-      if (missingHeadContent(file2)) {
+      if (missingHeadContent(file2) && !hasExplicitGap(ctx, file2, "head")) {
         findings.push(contentUnavailableFinding(file2, "head", findingOptions));
       }
     }
@@ -47894,7 +48508,7 @@ var highRiskPathRule = {
         if (patterns.length === 0) {
           continue;
         }
-        const finding = {
+        const finding2 = {
           ruleId: "risk/high-risk-path",
           severity: area.severity,
           title: "High-risk path changed",
@@ -47909,10 +48523,10 @@ var highRiskPathRule = {
           confidence: "high"
         };
         if (file2.previousPath) {
-          finding.evidence.push({ label: "previous_path", value: file2.previousPath });
+          finding2.evidence.push({ label: "previous_path", value: file2.previousPath });
         }
-        finding.evidence.push({ label: "matched_patterns", value: patterns.join(", ") });
-        findings.push(finding);
+        finding2.evidence.push({ label: "matched_patterns", value: patterns.join(", ") });
+        findings.push(finding2);
       }
     }
     return findings;
@@ -48117,252 +48731,22 @@ var missingTestEvidenceRule = {
     return findings;
   }
 };
-var KNOWN_WORKFLOW_PERMISSIONS = [
-  "actions",
-  "artifact-metadata",
-  "attestations",
-  "checks",
-  "code-quality",
-  "contents",
-  "deployments",
-  "discussions",
-  "id-token",
-  "issues",
-  "models",
-  "packages",
-  "pages",
-  "pull-requests",
-  "repository-projects",
-  "security-events",
-  "statuses",
-  "vulnerability-alerts"
-];
-var PERMISSION_RANK = {
-  none: 0,
-  read: 1,
-  write: 2
-};
-var READ_ONLY_PERMISSIONS = /* @__PURE__ */ new Set(["models", "vulnerability-alerts"]);
-var WRITE_ONLY_OR_NONE_PERMISSIONS = /* @__PURE__ */ new Set(["id-token"]);
-function emptyPermissions() {
-  return Object.fromEntries(
-    KNOWN_WORKFLOW_PERMISSIONS.map((permission) => [permission, "none"])
-  );
-}
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function normalizePermissionValue(permission, value) {
-  if (typeof value !== "string") {
-    return "none";
-  }
-  const normalized = value.toLowerCase();
-  if (WRITE_ONLY_OR_NONE_PERMISSIONS.has(permission)) {
-    return normalized === "write" ? "write" : "none";
-  }
-  if (READ_ONLY_PERMISSIONS.has(permission)) {
-    return normalized === "read" ? "read" : "none";
-  }
-  if (normalized === "read" || normalized === "write" || normalized === "none") {
-    return normalized;
-  }
-  return "none";
-}
-function normalizeWorkflowPermissions(input) {
-  const permissions = emptyPermissions();
-  if (typeof input === "string") {
-    const normalized = input.toLowerCase();
-    if (normalized === "write-all") {
-      for (const permission of KNOWN_WORKFLOW_PERMISSIONS) {
-        permissions[permission] = READ_ONLY_PERMISSIONS.has(permission) ? "read" : "write";
-      }
-    }
-    if (normalized === "read-all") {
-      for (const permission of KNOWN_WORKFLOW_PERMISSIONS) {
-        permissions[permission] = WRITE_ONLY_OR_NONE_PERMISSIONS.has(permission) ? "none" : "read";
-      }
-    }
-    return permissions;
-  }
-  if (!isRecord(input)) {
-    return permissions;
-  }
-  for (const permission of KNOWN_WORKFLOW_PERMISSIONS) {
-    permissions[permission] = normalizePermissionValue(permission, input[permission]);
-  }
-  return permissions;
-}
-function comparePermissionRank(left, right) {
-  return PERMISSION_RANK[left] - PERMISSION_RANK[right];
-}
-function findPermissionEscalations(before, after) {
-  return KNOWN_WORKFLOW_PERMISSIONS.flatMap((permission) => {
-    if (comparePermissionRank(after[permission], before[permission]) <= 0) {
-      return [];
-    }
-    return [
-      {
-        permission,
-        before: before[permission],
-        after: after[permission]
-      }
-    ];
-  });
-}
-function findScopedPermissionEscalations(before, after, scope) {
-  return findPermissionEscalations(before, after).map((escalation) => ({
-    ...escalation,
-    scope
-  }));
-}
-function isRecord2(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function asString(value) {
-  return typeof value === "string" ? value : void 0;
-}
-function workflowOn(workflow) {
-  return workflow.on ?? workflow["on"];
-}
-function hasWorkflowEvent(workflow, eventName) {
-  const event = workflowOn(workflow);
-  if (typeof event === "string") {
-    return event === eventName;
-  }
-  if (Array.isArray(event)) {
-    return event.includes(eventName);
-  }
-  return isRecord2(event) && Object.hasOwn(event, eventName);
-}
-function hasWriteAllPermissions(workflow) {
-  return typeof workflow.permissions === "string" && workflow.permissions.toLowerCase() === "write-all";
-}
-function hasIdTokenWritePermission(workflow) {
-  return normalizeWorkflowPermissions(workflow.permissions)["id-token"] === "write";
-}
-function hasOwnWorkflowPermissions(workflow) {
-  return Object.hasOwn(workflow, "permissions");
-}
-function workflowJobs(workflow) {
-  return isRecord2(workflow.jobs) ? workflow.jobs : {};
-}
-function findJobPermissions(workflow) {
-  return Object.entries(workflowJobs(workflow)).flatMap(([jobId, job]) => {
-    if (!isRecord2(job) || !Object.hasOwn(job, "permissions")) {
-      return [];
-    }
-    return [{ jobId, permissions: job.permissions }];
-  });
-}
-function findJobsWithWriteAllPermissions(workflow) {
-  return findJobPermissions(workflow).filter(
-    ({ permissions }) => typeof permissions === "string" && permissions.toLowerCase() === "write-all"
-  ).map(({ jobId }) => jobId);
-}
-function findJobsWithIdTokenWritePermission(workflow) {
-  return findJobPermissions(workflow).filter(({ permissions }) => normalizeWorkflowPermissions(permissions)["id-token"] === "write").map(({ jobId }) => jobId);
-}
-function jobSteps(job) {
-  return isRecord2(job) && Array.isArray(job.steps) ? job.steps : [];
-}
-function findWorkflowActionUses(workflow) {
-  return Object.values(workflowJobs(workflow)).flatMap(
-    (job) => jobSteps(job).flatMap((step) => {
-      if (!isRecord2(step)) {
-        return [];
-      }
-      const uses = asString(step.uses);
-      return uses ? [uses] : [];
-    })
-  );
-}
-function findCheckoutSteps(workflow) {
-  return Object.values(workflowJobs(workflow)).flatMap(
-    (job) => jobSteps(job).flatMap((step) => {
-      if (!isRecord2(step)) {
-        return [];
-      }
-      const uses = asString(step.uses);
-      if (!uses?.startsWith("actions/checkout@")) {
-        return [];
-      }
-      const ref = isRecord2(step.with) ? asString(step.with.ref) : void 0;
-      return [{ uses, ref }];
-    })
-  );
-}
-function hasPullRequestTargetCheckoutOfHead(workflow) {
-  if (!hasWorkflowEvent(workflow, "pull_request_target")) {
-    return false;
-  }
-  return findCheckoutSteps(workflow).some(
-    (step) => step.ref?.includes("github.event.pull_request.head")
-  );
-}
-function isThirdPartyAction(uses) {
-  return !uses.startsWith("actions/") && !uses.startsWith("./") && !uses.startsWith("../") && !uses.startsWith(".github/") && !uses.startsWith("docker://");
-}
-function isShaPinnedAction(uses) {
-  const atIndex = uses.lastIndexOf("@");
-  if (atIndex < 0) {
-    return false;
-  }
-  return /^[a-f0-9]{40}$/i.test(uses.slice(atIndex + 1));
-}
-function findUnpinnedThirdPartyActions(workflow) {
-  return findWorkflowActionUses(workflow).filter(
-    (uses) => isThirdPartyAction(uses) && !isShaPinnedAction(uses)
-  );
-}
-function hasAddedSecretsReference(patch) {
-  if (!patch) {
-    return false;
-  }
-  const secretPatterns = [
-    /secrets\.[A-Za-z0-9_]+/,
-    /secrets\[['"][A-Za-z0-9_]+['"]\]/,
-    /toJson\(\s*secrets\s*\)/
-  ];
-  return patch.split("\n").some(
-    (line) => line.startsWith("+") && !line.startsWith("+++") && secretPatterns.some((pattern) => pattern.test(line))
-  );
-}
-function isRecord3(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function parseWorkflow(yamlText) {
-  if (!yamlText?.trim()) {
-    return { kind: "invalid", message: "workflow is empty" };
-  }
-  try {
-    const document = (0, import_yaml.parseDocument)(yamlText, { prettyErrors: false });
-    if (document.errors.length > 0) {
-      return {
-        kind: "invalid",
-        message: document.errors.map((error52) => error52.message).join("; ")
-      };
-    }
-    const value = document.toJS();
-    if (!isRecord3(value)) {
-      return { kind: "invalid", message: "workflow must be a YAML object" };
-    }
-    return { kind: "valid", workflow: value };
-  } catch (error52) {
-    return {
-      kind: "invalid",
-      message: error52 instanceof Error ? error52.message : "workflow could not be parsed"
-    };
-  }
-}
 function isWorkflowFile2(ctx, path) {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
+}
+function wasWorkflowFile(ctx, file2) {
+  return isWorkflowFile2(ctx, file2.previousPath ?? file2.path);
+}
+function severityFor(config2, check2) {
+  const value = config2.checks[check2];
+  return value === "off" ? void 0 : value;
 }
 function dangerousFinding(filePath, severity, pattern, extraEvidence = []) {
   return {
     ruleId: "workflow/dangerous-pattern",
     severity,
     title: "Dangerous GitHub Actions workflow pattern",
-    message: `${filePath} contains a dangerous GitHub Actions workflow pattern.`,
+    message: pattern === "workflow deleted" ? `${filePath} deletes a GitHub Actions workflow and its policy-enforced automation.` : `${filePath} introduces or expands a dangerous GitHub Actions workflow pattern.`,
     path: filePath,
     evidence: [
       { label: "changed_file", value: filePath },
@@ -48374,8 +48758,41 @@ function dangerousFinding(filePath, severity, pattern, extraEvidence = []) {
     confidence: "high"
   };
 }
-function pinnedActionSeverity(config2) {
-  return config2.require_pinned_actions === "off" ? void 0 : config2.require_pinned_actions;
+function setDifference(head, base, key) {
+  const baseKeys = new Set(base.map(key));
+  return head.filter((value) => !baseKeys.has(key(value)));
+}
+function writeAllPatterns(workflow) {
+  if (!workflow) {
+    return [];
+  }
+  return [
+    ...hasWriteAllPermissions(workflow) ? [{ key: "workflow", pattern: "permissions: write-all", evidence: [] }] : [],
+    ...findJobsWithWriteAllPermissions(workflow).map((job) => ({
+      key: `job:${job}`,
+      pattern: "job permissions: write-all",
+      evidence: [{ label: "job", value: job }]
+    }))
+  ];
+}
+function idTokenPatterns(workflow) {
+  if (!workflow) {
+    return [];
+  }
+  return [
+    ...hasIdTokenWritePermission(workflow) ? [{ key: "workflow", pattern: "id-token: write", evidence: [] }] : [],
+    ...findJobsWithIdTokenWritePermission(workflow).map((job) => ({
+      key: `job:${job}`,
+      pattern: "job id-token: write",
+      evidence: [{ label: "job", value: job }]
+    }))
+  ];
+}
+function parsedBase(file2, treatAsAdded) {
+  if (file2.status === "added" || treatAsAdded || file2.baseContent == null) {
+    return void 0;
+  }
+  return parseWorkflow(file2.baseContent);
 }
 var workflowDangerousPatternRule = {
   id: "workflow/dangerous-pattern",
@@ -48384,59 +48801,149 @@ var workflowDangerousPatternRule = {
     const findings = [];
     const config2 = ctx.input.config.github_actions;
     for (const file2 of ctx.helpers.changedFiles()) {
-      if (!isWorkflowFile2(ctx, file2.path) || file2.status === "removed" || !file2.headContent) {
+      const isHeadWorkflow = isWorkflowFile2(ctx, file2.path);
+      const isBaseWorkflow = wasWorkflowFile(ctx, file2);
+      if (!isHeadWorkflow && !isBaseWorkflow) {
         continue;
       }
-      const parsed = parseWorkflow(file2.headContent);
-      if (parsed.kind === "invalid") {
-        findings.push(
-          dangerousFinding(file2.path, config2.severity, "malformed workflow YAML", [
-            { label: "parse_error", value: parsed.message }
-          ])
-        );
+      if (file2.status === "removed" || file2.status === "renamed" && !isHeadWorkflow) {
+        const severity = severityFor(config2, "workflow_deleted");
+        if (severity) {
+          findings.push(
+            dangerousFinding(file2.previousPath ?? file2.path, severity, "workflow deleted")
+          );
+        }
         continue;
       }
-      if (hasWriteAllPermissions(parsed.workflow)) {
-        findings.push(dangerousFinding(file2.path, config2.severity, "permissions: write-all"));
+      if (file2.headContent == null) {
+        continue;
       }
-      if (hasIdTokenWritePermission(parsed.workflow)) {
-        findings.push(dangerousFinding(file2.path, config2.severity, "id-token: write"));
+      const head = parseWorkflow(file2.headContent);
+      if (head.kind === "invalid") {
+        const severity = severityFor(config2, "malformed_workflow");
+        if (severity) {
+          findings.push(
+            dangerousFinding(file2.path, severity, "malformed workflow YAML", [
+              { label: "parse_error", value: head.message }
+            ])
+          );
+        }
+        continue;
       }
-      for (const jobId of findJobsWithWriteAllPermissions(parsed.workflow)) {
-        findings.push(
-          dangerousFinding(file2.path, config2.severity, "job permissions: write-all", [
-            { label: "job", value: jobId }
-          ])
-        );
+      const treatAsAdded = file2.status === "added" || !isBaseWorkflow;
+      const base = parsedBase(file2, treatAsAdded);
+      let baseWorkflow;
+      if (base?.kind === "invalid") {
+        findings.push({
+          ruleId: "workflow/base-invalid",
+          severity: "warn",
+          title: "Base workflow could not be parsed",
+          message: `${file2.path} has a valid head workflow, but its base workflow cannot be parsed for differential checks.`,
+          path: file2.path,
+          evidence: [
+            { label: "changed_file", value: file2.path },
+            { label: "parse_error", value: base.message }
+          ],
+          remediation: ["Review the complete workflow manually before merging."],
+          tags: ["workflow", "analysis", "base-invalid"],
+          confidence: "high"
+        });
+      } else {
+        baseWorkflow = base?.workflow;
       }
-      for (const jobId of findJobsWithIdTokenWritePermission(parsed.workflow)) {
-        findings.push(
-          dangerousFinding(file2.path, config2.severity, "job id-token: write", [
-            { label: "job", value: jobId }
-          ])
-        );
+      const writeAllSeverity = severityFor(config2, "write_all");
+      if (writeAllSeverity) {
+        for (const item of setDifference(
+          writeAllPatterns(head.workflow),
+          writeAllPatterns(baseWorkflow),
+          (value) => value.key
+        )) {
+          findings.push(dangerousFinding(file2.path, writeAllSeverity, item.pattern, item.evidence));
+        }
       }
-      const base = file2.baseContent ? parseWorkflow(file2.baseContent) : void 0;
-      if (base?.kind === "valid" && hasOwnWorkflowPermissions(base.workflow) && !hasOwnWorkflowPermissions(parsed.workflow)) {
+      const idTokenSeverity = severityFor(config2, "id_token_write");
+      if (idTokenSeverity) {
+        for (const item of setDifference(
+          idTokenPatterns(head.workflow),
+          idTokenPatterns(baseWorkflow),
+          (value) => value.key
+        )) {
+          findings.push(dangerousFinding(file2.path, idTokenSeverity, item.pattern, item.evidence));
+        }
+      }
+      if (baseWorkflow && hasOwnWorkflowPermissions(baseWorkflow) && !hasOwnWorkflowPermissions(head.workflow)) {
         findings.push(dangerousFinding(file2.path, "warn", "explicit workflow permissions removed"));
       }
-      if (config2.block_pull_request_target_checkout && hasPullRequestTargetCheckoutOfHead(parsed.workflow)) {
-        findings.push(
-          dangerousFinding(file2.path, config2.severity, "pull_request_target checkout of PR head")
-        );
+      if (treatAsAdded) {
+        const severity = severityFor(config2, "missing_permissions");
+        if (severity && !hasOwnWorkflowPermissions(head.workflow)) {
+          findings.push(dangerousFinding(file2.path, severity, "top-level permissions missing"));
+        }
       }
-      const actionPinSeverity = pinnedActionSeverity(config2);
-      if (actionPinSeverity) {
-        for (const action of findUnpinnedThirdPartyActions(parsed.workflow)) {
+      const unknownPermissionSeverity = severityFor(config2, "unknown_write_permission");
+      if (unknownPermissionSeverity) {
+        for (const permission of setDifference(
+          findUnknownWritePermissions(head.workflow),
+          findUnknownWritePermissions(baseWorkflow ?? {}),
+          (value) => `${value.scope}:${value.job ?? ""}:${value.permission}`
+        )) {
           findings.push(
-            dangerousFinding(file2.path, actionPinSeverity, "unpinned third-party action", [
-              { label: "action", value: action }
+            dangerousFinding(file2.path, unknownPermissionSeverity, "unknown write permission", [
+              { label: "permission", value: permission.permission },
+              { label: "permission_scope", value: permission.scope },
+              ...permission.job ? [{ label: "job", value: permission.job }] : []
             ])
           );
         }
       }
-      if (hasAddedSecretsReference(file2.patch)) {
-        findings.push(dangerousFinding(file2.path, "warn", "added secrets reference"));
+      const headPatterns = findPullRequestTargetHeadPatterns(head.workflow);
+      const basePatterns = findPullRequestTargetHeadPatterns(baseWorkflow ?? {});
+      const pullRequestTargetSeverity = severityFor(config2, "pull_request_target_head");
+      if (pullRequestTargetSeverity) {
+        for (const headPattern of setDifference(headPatterns, basePatterns, String)) {
+          findings.push(
+            dangerousFinding(
+              file2.path,
+              pullRequestTargetSeverity,
+              "pull_request_target checkout of PR head",
+              [{ label: "head_reference", value: headPattern }]
+            )
+          );
+        }
+      }
+      const newUnpinnedUses = setDifference(
+        findUnpinnedWorkflowUses(head.workflow),
+        findUnpinnedWorkflowUses(baseWorkflow ?? {}),
+        (value) => `${value.kind}:${value.job ?? ""}:${value.service ?? ""}:${value.uses}`
+      );
+      for (const use of newUnpinnedUses) {
+        const check2 = use.kind === "action" ? "unpinned_action" : use.kind === "reusable-workflow" ? "unpinned_reusable_workflow" : "unpinned_container";
+        const severity = severityFor(config2, check2);
+        if (severity) {
+          const pattern = use.kind === "action" ? "unpinned action" : use.kind === "reusable-workflow" ? "unpinned reusable workflow" : "unpinned container";
+          findings.push(
+            dangerousFinding(file2.path, severity, pattern, [
+              { label: "uses", value: use.uses },
+              ...use.job ? [{ label: "job", value: use.job }] : [],
+              ...use.service ? [{ label: "service", value: use.service }] : []
+            ])
+          );
+        }
+      }
+      const secretSeverity = severityFor(config2, "added_secret_reference");
+      if (secretSeverity) {
+        const addedSecretReferences = setDifference(
+          findSecretReferences(file2.headContent),
+          findSecretReferences(file2.baseContent),
+          String
+        );
+        for (const secret of addedSecretReferences) {
+          findings.push(
+            dangerousFinding(file2.path, secretSeverity, "added secrets reference", [
+              { label: "secret", value: secret }
+            ])
+          );
+        }
       }
     }
     return findings;
@@ -48445,27 +48952,30 @@ var workflowDangerousPatternRule = {
 function isWorkflowFile3(ctx, path) {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
 }
+function wasWorkflowFile2(ctx, file2) {
+  return isWorkflowFile3(ctx, file2.previousPath ?? file2.path);
+}
 function permissionsForWorkflow(workflow) {
   return normalizeWorkflowPermissions(workflow?.permissions);
 }
-function isRecord4(value) {
+function isRecord5(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function jobsForWorkflow(workflow) {
-  if (!isRecord4(workflow?.jobs)) {
+  if (!isRecord5(workflow?.jobs)) {
     return {};
   }
   return Object.fromEntries(
     Object.entries(workflow.jobs).filter(
-      (entry) => isRecord4(entry[1])
+      (entry) => isRecord5(entry[1])
     )
   );
 }
 function hasExplicitPermissions(value) {
   return value !== void 0 && Object.prototype.hasOwnProperty.call(value, "permissions");
 }
-function needsBaseContent(file2) {
-  return file2.status !== "added" && file2.baseContent == null;
+function needsBaseContent(file2, treatAsAdded) {
+  return !treatAsAdded && file2.baseContent == null;
 }
 function affectedArea(permission) {
   switch (permission) {
@@ -48544,7 +49054,7 @@ function escalationFinding(ctx, filePath, escalation) {
   }
   return {
     ruleId: "workflow/permission-escalation",
-    severity: ctx.input.config.github_actions.severity,
+    severity: ctx.input.config.github_actions.checks.permission_escalation === "off" ? "warn" : ctx.input.config.github_actions.checks.permission_escalation,
     title: "GitHub Actions permission escalation",
     message: `${escalation.permission} permission increased from ${escalation.before} to ${escalation.after} at ${scopeDescription(escalation)} scope; this can affect ${area}. Confirm whether this permission boundary change is expected.`,
     path: filePath,
@@ -48566,11 +49076,12 @@ function effectiveJobPermissions(workflow, job) {
   return permissionsForWorkflow(workflow);
 }
 function workflowPermissionEscalations(baseWorkflow, headWorkflow) {
-  const escalations = findScopedPermissionEscalations(
+  const baseIsAddedBaseline = baseWorkflow === void 0;
+  const escalations = baseIsAddedBaseline || hasExplicitPermissions(baseWorkflow) ? findScopedPermissionEscalations(
     permissionsForWorkflow(baseWorkflow),
     permissionsForWorkflow(headWorkflow),
     { kind: "workflow" }
-  );
+  ) : [];
   const baseJobs = jobsForWorkflow(baseWorkflow);
   const headJobs = jobsForWorkflow(headWorkflow);
   const jobNames = /* @__PURE__ */ new Set([...Object.keys(baseJobs), ...Object.keys(headJobs)]);
@@ -48580,6 +49091,9 @@ function workflowPermissionEscalations(baseWorkflow, headWorkflow) {
       continue;
     }
     if (!hasExplicitPermissions(baseJobs[job]) && !hasExplicitPermissions(headJob)) {
+      continue;
+    }
+    if (!baseIsAddedBaseline && !hasExplicitPermissions(baseJobs[job]) && !hasExplicitPermissions(baseWorkflow)) {
       continue;
     }
     escalations.push(
@@ -48596,19 +49110,23 @@ var workflowPermissionEscalationRule = {
   id: "workflow/permission-escalation",
   title: "GitHub Actions permission escalation",
   run(ctx) {
-    if (!ctx.input.config.github_actions.block_permission_escalation) {
+    if (ctx.input.config.github_actions.checks.permission_escalation === "off") {
       return [];
     }
     const findings = [];
     for (const file2 of ctx.helpers.changedFiles()) {
-      if (!isWorkflowFile3(ctx, file2.path) || file2.status === "removed" || !file2.headContent || needsBaseContent(file2)) {
+      const treatAsAdded = file2.status === "added" || !wasWorkflowFile2(ctx, file2);
+      if (!isWorkflowFile3(ctx, file2.path) || file2.status === "removed" || !file2.headContent || needsBaseContent(file2, treatAsAdded)) {
         continue;
       }
       const head = parseWorkflow(file2.headContent);
       if (head.kind !== "valid") {
         continue;
       }
-      const base = file2.baseContent ? parseWorkflow(file2.baseContent) : void 0;
+      const base = !treatAsAdded && file2.baseContent ? parseWorkflow(file2.baseContent) : void 0;
+      if (base?.kind === "invalid") {
+        continue;
+      }
       const baseWorkflow = base?.kind === "valid" ? base.workflow : void 0;
       const escalations = workflowPermissionEscalations(baseWorkflow, head.workflow);
       for (const escalation of escalations) {
@@ -48630,7 +49148,8 @@ var builtInRules = [
   contentUnavailableRule,
   packageScriptDriftRule,
   workflowPermissionEscalationRule,
-  workflowDangerousPatternRule
+  workflowDangerousPatternRule,
+  agenticWorkflowInjectionRule
 ];
 function createRuleContext(input) {
   let cachedAgentOrigin;
@@ -48667,47 +49186,281 @@ var severityScore = {
   info: 1
 };
 function calculateRiskScore(findings) {
-  const score = findings.reduce((total, finding) => total + severityScore[finding.severity], 0);
+  const score = findings.reduce((total, finding2) => total + severityScore[finding2.severity], 0);
   return Math.min(score, 100);
 }
-function titleForDecision(decision) {
+var MAX_RESULT_FINDINGS = 250;
+var severityRank = {
+  error: 2,
+  warn: 1,
+  info: 0
+};
+function stableValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(stableValue);
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).sort(([left], [right]) => left.localeCompare(right)).map(([key, item]) => [key, stableValue(item)])
+    );
+  }
+  return value;
+}
+function policyDigest(input) {
+  return (0, import_crypto.createHash)("sha256").update(JSON.stringify(stableValue(input.config))).digest("hex");
+}
+function rawFindingForGap(gap) {
+  return {
+    ruleId: gap.ruleId,
+    severity: "error",
+    title: gap.ruleId === "analysis/file-list-incomplete" ? "Pull request file list incomplete" : "Changed file content unavailable",
+    message: gap.message,
+    ...gap.path ? { path: gap.path } : {},
+    evidence: gap.evidence,
+    remediation: [
+      gap.ruleId === "analysis/file-list-incomplete" ? "Reduce or split the pull request, then rerun Agent Gate with a complete file list." : "Rerun Agent Gate once the required base and head content can be read."
+    ],
+    tags: ["analysis", "incomplete"],
+    confidence: "high"
+  };
+}
+function compareFindings(left, right) {
+  const severityDifference = severityRank[right.severity] - severityRank[left.severity];
+  if (severityDifference !== 0) {
+    return severityDifference;
+  }
+  return left.ruleId.localeCompare(right.ruleId) || (left.path ?? "").localeCompare(right.path ?? "") || left.findingId.localeCompare(right.findingId);
+}
+function dedupeFindings(findings) {
+  const findingsById = /* @__PURE__ */ new Map();
+  for (const finding2 of findings) {
+    const previous = findingsById.get(finding2.findingId);
+    if (!previous || severityRank[finding2.severity] > severityRank[previous.severity]) {
+      findingsById.set(finding2.findingId, finding2);
+    }
+  }
+  return [...findingsById.values()];
+}
+function waiverPolicyFindings(input, findings) {
+  if (input.configSource !== "base-branch") {
+    return [];
+  }
+  const findingsById = new Map(findings.map((finding2) => [finding2.findingId, finding2]));
+  const now = Date.parse(input.now);
+  return input.config.waivers.flatMap((waiver) => {
+    const matchingFinding = findingsById.get(waiver.finding_id);
+    const expired = Date.parse(waiver.expires_at) <= now;
+    if (expired) {
+      return [
+        {
+          ruleId: "policy/waiver-expired",
+          severity: "warn",
+          title: "Finding waiver expired",
+          message: `The policy waiver for ${waiver.finding_id} has expired.`,
+          evidence: [
+            { label: "finding_id", value: waiver.finding_id },
+            { label: "expires_at", value: waiver.expires_at },
+            { label: "reason", value: waiver.reason }
+          ],
+          remediation: ["Remove or renew the waiver in base-branch policy after review."],
+          tags: ["policy", "waiver", "expired"],
+          confidence: "high"
+        }
+      ];
+    }
+    if (matchingFinding?.ruleId.startsWith("analysis/")) {
+      return [
+        {
+          ruleId: "policy/waiver-forbidden",
+          severity: "error",
+          title: "Analysis integrity finding cannot be waived",
+          message: `${matchingFinding.ruleId} is an analysis integrity finding and remains active.`,
+          evidence: [
+            { label: "finding_id", value: waiver.finding_id },
+            { label: "rule_id", value: matchingFinding.ruleId }
+          ],
+          remediation: ["Remove the waiver and restore complete analysis evidence."],
+          tags: ["policy", "waiver", "analysis-integrity"],
+          confidence: "high"
+        }
+      ];
+    }
+    return [];
+  });
+}
+function partitionWaivers(input, findings) {
+  if (input.configSource !== "base-branch") {
+    return { active: findings, waived: [] };
+  }
+  const now = Date.parse(input.now);
+  const waiverById = new Map(input.config.waivers.map((waiver) => [waiver.finding_id, waiver]));
+  const active = [];
+  const waived = [];
+  for (const finding2 of findings) {
+    const waiver = waiverById.get(finding2.findingId);
+    if (waiver && !finding2.ruleId.startsWith("analysis/") && Date.parse(waiver.expires_at) > now) {
+      waived.push({
+        ...finding2,
+        disposition: "waived",
+        waiver: {
+          findingId: waiver.finding_id,
+          reason: waiver.reason,
+          expiresAt: waiver.expires_at
+        }
+      });
+    } else {
+      active.push(finding2);
+    }
+  }
+  return { active, waived };
+}
+function capFinding(total, retained) {
+  const [finding2] = attachFindingIds([
+    {
+      ruleId: "analysis/finding-limit-exceeded",
+      severity: "error",
+      title: "Analysis finding limit exceeded",
+      message: `Agent Gate produced ${total} findings; only ${retained} are included in this result.`,
+      evidence: [
+        { label: "total_findings", value: String(total) },
+        { label: "retained_findings", value: String(retained) },
+        { label: "finding_limit", value: String(MAX_RESULT_FINDINGS) }
+      ],
+      remediation: ["Split the pull request and rerun Agent Gate to obtain complete evidence."],
+      tags: ["analysis", "incomplete", "limit"],
+      confidence: "high"
+    }
+  ]);
+  if (!finding2) {
+    throw new Error("Unable to construct finding-limit finding");
+  }
+  return finding2;
+}
+function statusFor(input, decision, activeFindingCount, incomplete) {
+  if (incomplete) {
+    return "incomplete";
+  }
   if (decision === "block") {
-    return "Agent Gate: blocked";
+    return "blocked";
   }
   if (decision === "warn") {
-    return "Agent Gate: warnings found";
+    return "needs-review";
   }
-  return "Agent Gate: passed";
+  return input.config.mode === "observe" && activeFindingCount > 0 ? "observed" : "passed";
+}
+function titleForStatus(status) {
+  const label = {
+    passed: "passed",
+    observed: "observed findings",
+    "needs-review": "needs review",
+    blocked: "blocked",
+    incomplete: "analysis incomplete"
+  };
+  return `Agent Gate: ${label[status]}`;
 }
 async function analyze(input) {
   const ctx = createRuleContext(input);
   const rawFindings = [];
-  for (const rule of builtInRules) {
-    rawFindings.push(...await rule.run(ctx));
+  const analysisGaps = [...input.analysis?.gaps ?? []];
+  if (input.analysis && input.analysis.expectedFileCount !== input.analysis.analyzedFileCount && !analysisGaps.some((gap) => gap.ruleId === "analysis/file-list-incomplete")) {
+    analysisGaps.push({
+      ruleId: "analysis/file-list-incomplete",
+      message: `Expected ${input.analysis.expectedFileCount} changed files but analyzed ${input.analysis.analyzedFileCount}.`,
+      evidence: [
+        { label: "expected_files", value: String(input.analysis.expectedFileCount) },
+        { label: "analyzed_files", value: String(input.analysis.analyzedFileCount) },
+        { label: "reason_code", value: "file-count-mismatch" }
+      ]
+    });
   }
-  const findings = attachFindingIds(rawFindings);
-  const errorCount = findings.filter((finding) => finding.severity === "error").length;
-  const warnCount = findings.filter((finding) => finding.severity === "warn").length;
-  const infoCount = findings.filter((finding) => finding.severity === "info").length;
-  const decision = decide(input.config.mode, { errorCount, warnCount });
+  if (input.analysis && !input.analysis.complete && analysisGaps.length === 0) {
+    analysisGaps.push({
+      ruleId: "analysis/content-unavailable",
+      message: "The collector marked this analysis incomplete without complete content evidence.",
+      evidence: [{ label: "reason_code", value: "collector-marked-incomplete" }]
+    });
+  }
+  const fileListIncomplete = analysisGaps.some(
+    (gap) => gap.ruleId === "analysis/file-list-incomplete"
+  );
+  if (!fileListIncomplete) {
+    for (const rule of builtInRules) {
+      rawFindings.push(...await rule.run(ctx));
+    }
+  }
+  rawFindings.push(
+    ...analysisGaps.filter((gap) => !fileListIncomplete || gap.ruleId === "analysis/file-list-incomplete").map(rawFindingForGap)
+  );
+  const initialFindings = dedupeFindings(attachFindingIds(rawFindings));
+  const policyFindings = attachFindingIds(waiverPolicyFindings(input, initialFindings));
+  const partitioned = partitionWaivers(
+    input,
+    dedupeFindings([...initialFindings, ...policyFindings])
+  );
+  const fullActiveFindings = partitioned.active;
+  const fullWaivedFindings = partitioned.waived;
+  const totalFindingCount = fullActiveFindings.length + fullWaivedFindings.length;
+  const overLimit = totalFindingCount > MAX_RESULT_FINDINGS;
+  let findings = fullActiveFindings;
+  let waivedFindings = fullWaivedFindings;
+  let omittedFindingCount = 0;
+  if (overLimit) {
+    const retained = [
+      ...fullActiveFindings.map((finding2) => ({ finding: finding2, waived: false })),
+      ...fullWaivedFindings.map((finding2) => ({ finding: finding2, waived: true }))
+    ].sort(
+      (left, right) => Number(left.waived) - Number(right.waived) || compareFindings(left.finding, right.finding)
+    ).slice(0, MAX_RESULT_FINDINGS - 1);
+    findings = retained.filter((item) => !item.waived).map((item) => item.finding);
+    waivedFindings = retained.filter((item) => item.waived).map((item) => item.finding);
+    findings.push(capFinding(totalFindingCount, retained.length));
+    omittedFindingCount = totalFindingCount - retained.length;
+  }
+  const errorCount = fullActiveFindings.filter((finding2) => finding2.severity === "error").length + (overLimit ? 1 : 0);
+  const warnCount = fullActiveFindings.filter((finding2) => finding2.severity === "warn").length;
+  const infoCount = fullActiveFindings.filter((finding2) => finding2.severity === "info").length;
+  const collectionComplete = input.analysis?.complete ?? true;
+  const hasIntegrityGap = fullActiveFindings.some(
+    (finding2) => finding2.ruleId === "analysis/file-list-incomplete" || finding2.ruleId === "analysis/content-unavailable" || finding2.ruleId === "analysis/finding-limit-exceeded"
+  );
+  const incomplete = !collectionComplete || hasIntegrityGap || overLimit;
+  const decision = incomplete ? "block" : decide(input.config.mode, { errorCount, warnCount });
+  const status = statusFor(input, decision, fullActiveFindings.length, incomplete);
+  const expectedFileCount = input.analysis?.expectedFileCount ?? input.changes.totals.filesChanged;
+  const analyzedFileCount = input.analysis?.analyzedFileCount ?? input.changes.files.length;
+  const contentFileCount = input.analysis?.contentFileCount ?? input.changes.files.filter(
+    (file2) => file2.baseContent !== void 0 || file2.headContent !== void 0
+  ).length;
   return {
     decision,
-    riskScore: calculateRiskScore(findings),
+    status,
+    riskScore: calculateRiskScore(fullActiveFindings),
     summary: {
-      title: titleForDecision(decision),
+      title: titleForStatus(status),
       agentDetected: ctx.helpers.getAgentOrigin().detected,
       contractPresent: input.contract.kind !== "missing",
       errorCount,
       warnCount,
-      infoCount
+      infoCount,
+      waivedCount: fullWaivedFindings.length
     },
     findings,
+    waivedFindings,
     metadata: {
       analyzedAt: input.now,
       baseSha: input.repo.baseSha,
       headSha: input.repo.headSha,
       configSource: input.configSource,
-      version: input.version
+      version: input.version,
+      analysisComplete: !incomplete,
+      expectedFileCount,
+      analyzedFileCount,
+      contentFileCount,
+      policyDigest: policyDigest(input),
+      engineVersion: input.version,
+      runtimeRef: input.analysis?.runtimeRef ?? input.version,
+      totalFindingCount,
+      omittedFindingCount
     }
   };
 }
@@ -48729,6 +49482,7 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
 var DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 var DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
 var SeveritySettingSchema = external_exports.enum(["warn", "error"]);
+var CheckSettingSchema = external_exports.enum(["off", "warn", "error"]);
 var AgentDetectionSchema = external_exports.object({
   authors: external_exports.array(NonEmptyStringSchema).default([]),
   labels: external_exports.array(NonEmptyStringSchema).default([]),
@@ -48748,12 +49502,113 @@ var AgentControlPlaneSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_CONTROL_PLANE_PATHS),
   severity: SeveritySettingSchema.default("error")
 }).strict();
-var GitHubActionsConfigSchema = external_exports.object({
+var DEFAULT_GITHUB_ACTION_CHECKS = {
+  permission_escalation: "error",
+  write_all: "error",
+  id_token_write: "warn",
+  pull_request_target_head: "error",
+  unpinned_action: "warn",
+  unpinned_reusable_workflow: "warn",
+  unpinned_container: "warn",
+  missing_permissions: "warn",
+  unknown_write_permission: "warn",
+  added_secret_reference: "warn",
+  workflow_deleted: "warn",
+  malformed_workflow: "error"
+};
+var GitHubActionsChecksSchema = external_exports.object({
+  permission_escalation: CheckSettingSchema.default(
+    DEFAULT_GITHUB_ACTION_CHECKS.permission_escalation
+  ),
+  write_all: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.write_all),
+  id_token_write: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.id_token_write),
+  pull_request_target_head: CheckSettingSchema.default(
+    DEFAULT_GITHUB_ACTION_CHECKS.pull_request_target_head
+  ),
+  unpinned_action: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.unpinned_action),
+  unpinned_reusable_workflow: CheckSettingSchema.default(
+    DEFAULT_GITHUB_ACTION_CHECKS.unpinned_reusable_workflow
+  ),
+  unpinned_container: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.unpinned_container),
+  missing_permissions: CheckSettingSchema.default(
+    DEFAULT_GITHUB_ACTION_CHECKS.missing_permissions
+  ),
+  unknown_write_permission: CheckSettingSchema.default(
+    DEFAULT_GITHUB_ACTION_CHECKS.unknown_write_permission
+  ),
+  added_secret_reference: CheckSettingSchema.default(
+    DEFAULT_GITHUB_ACTION_CHECKS.added_secret_reference
+  ),
+  workflow_deleted: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.workflow_deleted),
+  malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow)
+}).strict();
+function legacyChecks(config2) {
+  return GitHubActionsChecksSchema.parse({
+    ...DEFAULT_GITHUB_ACTION_CHECKS,
+    permission_escalation: config2.block_permission_escalation ? config2.severity : "off",
+    write_all: config2.severity,
+    id_token_write: config2.severity,
+    pull_request_target_head: config2.block_pull_request_target_checkout ? config2.severity : "off",
+    unpinned_action: config2.require_pinned_actions,
+    unpinned_reusable_workflow: config2.require_pinned_actions,
+    unpinned_container: config2.require_pinned_actions,
+    malformed_workflow: config2.severity
+  });
+}
+function hasLegacyAndGranularChecks(value) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const record3 = value;
+  return Object.hasOwn(record3, "checks") && [
+    "block_permission_escalation",
+    "block_pull_request_target_checkout",
+    "require_pinned_actions",
+    "severity"
+  ].some((key) => Object.hasOwn(record3, key));
+}
+var GitHubActionsConfigObjectSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).default([".github/workflows/*.yml", ".github/workflows/*.yaml"]),
   block_permission_escalation: external_exports.boolean().default(true),
   block_pull_request_target_checkout: external_exports.boolean().default(true),
   require_pinned_actions: external_exports.enum(["off", "warn", "error"]).default("warn"),
-  severity: SeveritySettingSchema.default("error")
+  severity: SeveritySettingSchema.default("error"),
+  checks: GitHubActionsChecksSchema.optional()
+}).strict().transform((value) => ({
+  ...value,
+  checks: value.checks ?? legacyChecks(value)
+}));
+var GitHubActionsConfigSchema = external_exports.preprocess((value) => {
+  if (!hasLegacyAndGranularChecks(value)) {
+    return value;
+  }
+  return {
+    ...value,
+    __legacy_checks_mixing_is_not_allowed: true
+  };
+}, GitHubActionsConfigObjectSchema);
+var WaiverSchema = external_exports.object({
+  finding_id: external_exports.string().regex(/^agf_[0-9a-f]{16}$/),
+  reason: external_exports.string().trim().min(1).max(200).refine(
+    (value) => [...value].every((character) => {
+      const codePoint = character.codePointAt(0) ?? 0;
+      return codePoint > 31 && !(codePoint >= 127 && codePoint <= 159) && !(codePoint >= 8234 && codePoint <= 8238) && !(codePoint >= 8294 && codePoint <= 8297);
+    }),
+    {
+      message: "waiver reason must not contain control characters"
+    }
+  ),
+  expires_at: external_exports.iso.datetime({ offset: true })
+}).strict();
+var AgenticActionSchema = external_exports.object({
+  uses: NonEmptyStringSchema,
+  prompt_inputs: external_exports.array(NonEmptyStringSchema).min(1)
+}).strict();
+var AgenticWorkflowsSchema = external_exports.object({
+  enabled: external_exports.boolean().default(true),
+  severity: SeveritySettingSchema.default("warn"),
+  privileged_severity: SeveritySettingSchema.default("error"),
+  additional_actions: external_exports.array(AgenticActionSchema).default([])
 }).strict();
 var PackageScriptsConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
@@ -48784,15 +49639,35 @@ var AgentGateConfigSchema = external_exports.object({
     block_permission_escalation: true,
     block_pull_request_target_checkout: true,
     require_pinned_actions: "warn",
-    severity: "error"
+    severity: "error",
+    checks: { ...DEFAULT_GITHUB_ACTION_CHECKS }
   }),
+  agentic_workflows: AgenticWorkflowsSchema.default({
+    enabled: true,
+    severity: "warn",
+    privileged_severity: "error",
+    additional_actions: []
+  }),
+  waivers: external_exports.array(WaiverSchema).default([]),
   package_scripts: PackageScriptsConfigSchema.default({
     enabled: true,
     paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
     lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
     severity: "warn"
   })
-}).strict();
+}).strict().superRefine((value, ctx) => {
+  const seen = /* @__PURE__ */ new Set();
+  for (const [index, waiver] of value.waivers.entries()) {
+    if (seen.has(waiver.finding_id)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["waivers", index, "finding_id"],
+        message: `duplicate waiver for ${waiver.finding_id}`
+      });
+    }
+    seen.add(waiver.finding_id);
+  }
+});
 var DEFAULT_CONFIG = AgentGateConfigSchema.parse({ version: 1 });
 function formatPath(path) {
   return path.length > 0 ? path.map(String).join(".") : "<root>";
@@ -48809,6 +49684,26 @@ function formatZodIssues(issues) {
 function formatYamlErrors(errors) {
   return errors.map((error52) => error52.message).join("; ");
 }
+function isRecord6(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function assertNoGitHubActionsConfigMixing(value) {
+  if (!isRecord6(value) || !isRecord6(value.github_actions)) {
+    return;
+  }
+  const githubActions = value.github_actions;
+  const legacyKeys = [
+    "block_permission_escalation",
+    "block_pull_request_target_checkout",
+    "require_pinned_actions",
+    "severity"
+  ];
+  if (Object.hasOwn(githubActions, "checks") && legacyKeys.some((key) => Object.hasOwn(githubActions, key))) {
+    throw new Error(
+      `Invalid ${CONFIG_FILE_NAME}: github_actions.checks cannot be mixed with legacy github_actions fields`
+    );
+  }
+}
 function parseConfig(yamlText) {
   const document = (0, import_yaml2.parseDocument)(yamlText);
   if (document.errors.length > 0) {
@@ -48816,7 +49711,9 @@ function parseConfig(yamlText) {
       `Invalid ${CONFIG_FILE_NAME}: YAML parse error: ${formatYamlErrors(document.errors)}`
     );
   }
-  const parsed = AgentGateConfigSchema.safeParse(document.toJS());
+  const rawValue = document.toJS();
+  assertNoGitHubActionsConfigMixing(rawValue);
+  const parsed = AgentGateConfigSchema.safeParse(rawValue);
   if (!parsed.success) {
     throw new Error(`Invalid ${CONFIG_FILE_NAME}: ${formatZodIssues(parsed.error.issues)}`);
   }
@@ -48828,8 +49725,7 @@ var AgentContractSchema = external_exports.object({
   task: NonEmptyStringSchema.optional(),
   issue: external_exports.union([external_exports.number().int(), external_exports.string()]).optional(),
   allowed_paths: external_exports.array(NonEmptyStringSchema).min(1),
-  blocked_paths: external_exports.array(NonEmptyStringSchema).optional(),
-  required_evidence: external_exports.array(NonEmptyStringSchema).optional()
+  blocked_paths: external_exports.array(NonEmptyStringSchema).optional()
 }).strict();
 var CONTRACT_BLOCK_PATTERN = /<!--\s*agent-gate-contract\b([\s\S]*?)-->/g;
 function formatYamlErrors2(errors) {
@@ -48868,82 +49764,152 @@ function parseContractFromPrBody(body) {
   const contractYaml = matches[0]?.[1]?.trim() ?? "";
   return parseContractYaml(contractYaml);
 }
-function renderJsonReport(result) {
+var DEFAULT_MAX_JSON_BYTES = 2e6;
+function visibleResult(result, visibleCount) {
+  const activeCount = Math.min(result.findings.length, visibleCount);
+  const waivedCount = Math.max(
+    0,
+    Math.min(result.waivedFindings.length, visibleCount - activeCount)
+  );
+  const omitted = result.findings.length + result.waivedFindings.length - activeCount - waivedCount;
+  return {
+    ...result,
+    findings: result.findings.slice(0, activeCount),
+    waivedFindings: result.waivedFindings.slice(0, waivedCount),
+    metadata: {
+      ...result.metadata,
+      omittedFindingCount: result.metadata.omittedFindingCount + omitted
+    }
+  };
+}
+function serialize(result) {
   return `${JSON.stringify(result, null, 2)}
 `;
 }
-function humanDecisionLabel(decision) {
-  if (decision === "block") {
-    return "BLOCKED";
+function renderJsonReport(result, options = {}) {
+  const maxBytes = options.maxBytes ?? DEFAULT_MAX_JSON_BYTES;
+  if (!Number.isInteger(maxBytes) || maxBytes < 1) {
+    throw new Error("JSON report maxBytes must be a positive integer.");
   }
-  if (decision === "warn") {
-    return "NEEDS HUMAN DECISION";
+  const full = serialize(result);
+  if (Buffer.byteLength(full, "utf8") <= maxBytes) {
+    return full;
   }
-  return "PASSED";
+  const totalVisible = result.findings.length + result.waivedFindings.length;
+  let low = 0;
+  let high = totalVisible;
+  let best;
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const candidate = serialize(visibleResult(result, middle));
+    if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
+      best = candidate;
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+  if (best === void 0) {
+    throw new Error(`JSON report metadata exceeds the ${maxBytes}-byte surface limit.`);
+  }
+  return best;
 }
-function safeReportValue(value, maxLength = 500) {
-  const normalized = value.replace(/\r?\n/g, "\\n").replace(/<!--/g, "&lt;!--").replace(/-->/g, "--&gt;").replace(/\s+/g, " ").trim();
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-  return `${normalized.slice(0, maxLength - 1)}\u2026`;
+var MAX_DYNAMIC_VALUE_LENGTH = 2150;
+function isSafeReportCharacter(codePoint) {
+  return codePoint === 10 || codePoint > 31 && !(codePoint >= 127 && codePoint <= 159) && !(codePoint >= 8234 && codePoint <= 8238) && !(codePoint >= 8294 && codePoint <= 8297);
 }
-var severityRank = {
+function humanDecisionLabel(result) {
+  const labels = {
+    passed: "PASSED",
+    observed: "OBSERVED FINDINGS",
+    "needs-review": "NEEDS REVIEW",
+    blocked: "BLOCKED",
+    incomplete: "ANALYSIS INCOMPLETE"
+  };
+  return labels[result.status];
+}
+function escapeMarkdown(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/([`*[\]#|])/g, "\\$1").replace(/^([+-])\s/, "\\$1 ").replace(/^(\d+)\.\s/, "$1\\. ").replace(/@/g, "@\u200B");
+}
+function safeReportValue(value, maxLength = MAX_DYNAMIC_VALUE_LENGTH) {
+  const normalized = value.normalize("NFC").replace(/\r\n?/g, "\n").split("").filter((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return isSafeReportCharacter(codePoint);
+  }).join("").replace(/\\/g, "&#92;").replace(/\n/g, "\\n").replace(/\s+/g, " ").trim();
+  const digest = (0, import_crypto3.createHash)("sha256").update(normalized).digest("hex");
+  const preview = normalized.length <= maxLength ? normalized : `${normalized.slice(0, Math.max(0, maxLength - 1))}\u2026 [sha256:${digest}]`;
+  return escapeMarkdown(preview);
+}
+var severityRank2 = {
   info: 0,
   warn: 1,
   error: 2
 };
 function highestSignalFinding(findings) {
-  return findings.reduce((highest, finding) => {
-    if (!highest || severityRank[finding.severity] > severityRank[highest.severity]) {
-      return finding;
+  return findings.reduce((highest, finding2) => {
+    if (!highest || severityRank2[finding2.severity] > severityRank2[highest.severity]) {
+      return finding2;
     }
     return highest;
   }, void 0);
 }
 function highestActionableFinding(findings) {
-  return highestSignalFinding(findings.filter((finding) => finding.severity !== "info"));
+  return highestSignalFinding(findings.filter((finding2) => finding2.severity !== "info"));
 }
 function recommendedNextStep(result) {
-  const finding = highestActionableFinding(result.findings);
-  if (!finding) {
+  if (result.status === "incomplete") {
+    return "Restore complete analysis evidence and rerun Agent Gate before merging.";
+  }
+  const finding2 = highestActionableFinding(result.findings);
+  if (!finding2) {
     return "No action needed beyond normal review.";
   }
-  if (finding.ruleId === "workflow/dangerous-pattern" || finding.ruleId === "workflow/permission-escalation") {
+  if (finding2.ruleId === "workflow/dangerous-pattern" || finding2.ruleId === "workflow/permission-escalation" || finding2.ruleId === "workflow/agentic-untrusted-input") {
     return "Review the workflow change before merging.";
   }
-  if (finding.ruleId === "contract/out-of-scope") {
+  if (finding2.ruleId === "contract/out-of-scope") {
     return "Review or split the out-of-scope file changes before merging.";
   }
-  if (finding.ruleId === "contract/blocked-path") {
+  if (finding2.ruleId === "contract/blocked-path") {
     return "Review or remove the blocked path changes before merging.";
   }
-  if (finding.ruleId === "agent-control-plane/drift") {
+  if (finding2.ruleId === "agent-control-plane/drift") {
     return "Review the agent instruction/tooling change before merging.";
   }
-  if (finding.ruleId === "evidence/missing-test-change") {
+  if (finding2.ruleId === "evidence/missing-test-change") {
     return "Add or review matching test evidence before merging.";
   }
-  if (finding.ruleId === "risk/high-risk-path") {
+  if (finding2.ruleId === "risk/high-risk-path") {
     return "Review the high-risk file change before merging.";
   }
-  if (finding.ruleId === "contract/invalid") {
+  if (finding2.ruleId === "contract/invalid") {
     return "Fix the PR contract before merging.";
   }
-  if (finding.ruleId === "contract/missing") {
+  if (finding2.ruleId === "contract/missing") {
     return "Add a PR contract before relying on scope checks.";
   }
   return "Review the findings before merging.";
 }
 function policyStatus(result) {
-  if (result.decision === "block") {
+  if (result.status === "incomplete") {
+    return "Policy status: analysis incomplete; merge gating is fail-closed.";
+  }
+  if (result.status === "blocked") {
     return "Policy status: blocking.";
   }
-  if (result.decision === "warn") {
+  if (result.status === "needs-review") {
     return "Policy status: warning today; eligible to become a merge gate after tuning.";
   }
-  return "Policy status: no blocking or warning findings.";
+  if (result.status === "observed") {
+    return "Policy status: findings observed; observe mode does not block this pull request.";
+  }
+  return "Policy status: no active blocking or warning findings.";
 }
+var severityRank3 = {
+  error: 2,
+  warn: 1,
+  info: 0
+};
 function yesNo(value) {
   return value ? "yes" : "no";
 }
@@ -48957,43 +49923,81 @@ function policySource(source) {
   return "local fixture";
 }
 function whyLines(result) {
-  const finding = highestActionableFinding(result.findings);
-  if (!finding) {
-    return ["No warning or blocking findings were detected."];
+  const finding2 = highestActionableFinding(result.findings);
+  if (!finding2) {
+    return result.waivedFindings.length > 0 ? ["All detected findings are covered by active base-policy waivers."] : ["No active warning or blocking findings were detected."];
   }
-  const lines = [finding.message];
-  if (finding.path) {
-    lines.push("", `Path: \`${safeReportValue(finding.path)}\``);
+  const lines = [safeReportValue(finding2.message)];
+  if (finding2.path) {
+    lines.push("", `Path: ${safeReportValue(finding2.path)}`);
   }
   return lines;
 }
-function pushEvidenceSnapshot(lines, result) {
+function pushEvidenceSnapshot(lines, finding2) {
   lines.push(
     "Evidence Snapshot:",
-    `- ruleId: ${safeReportValue(result.evidenceSnapshot.ruleId)}`,
-    `- severity: ${safeReportValue(result.evidenceSnapshot.severity)}`
+    "",
+    `- ruleId: ${safeReportValue(finding2.evidenceSnapshot.ruleId)}`,
+    `- severity: ${safeReportValue(finding2.evidenceSnapshot.severity)}`
   );
-  if (result.evidenceSnapshot.path) {
-    lines.push(`- path: ${safeReportValue(result.evidenceSnapshot.path)}`);
+  if (finding2.evidenceSnapshot.path) {
+    lines.push(`- path: ${safeReportValue(finding2.evidenceSnapshot.path)}`);
   }
-  if (result.evidenceSnapshot.line !== void 0) {
-    lines.push(`- line: ${result.evidenceSnapshot.line}`);
+  if (finding2.evidenceSnapshot.line !== void 0) {
+    lines.push(`- line: ${finding2.evidenceSnapshot.line}`);
   }
-  if (result.evidenceSnapshot.evidence.length > 0) {
-    for (const evidence of result.evidenceSnapshot.evidence) {
-      lines.push(
-        `- evidence.${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`
-      );
-    }
+  for (const evidence of finding2.evidenceSnapshot.evidence) {
+    lines.push(`- evidence.${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`);
   }
   lines.push("");
 }
-function renderMarkdownReport(result) {
+function pushFinding(lines, finding2) {
+  lines.push(
+    `### ${finding2.severity.toUpperCase()} ${safeReportValue(finding2.ruleId)}`,
+    "",
+    safeReportValue(finding2.message),
+    "",
+    `Finding ID: ${safeReportValue(finding2.findingId)}`,
+    `Disposition: ${finding2.disposition}`,
+    ""
+  );
+  if (finding2.path) {
+    lines.push(`Path: ${safeReportValue(finding2.path)}`, "");
+  }
+  pushEvidenceSnapshot(lines, finding2);
+  if (finding2.evidence.length > 0) {
+    lines.push("Evidence:", "");
+    for (const evidence of finding2.evidence) {
+      lines.push(`- ${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`);
+    }
+    lines.push("");
+  }
+  if (finding2.remediation.length > 0) {
+    lines.push("Remediation:", "");
+    for (const remediation of finding2.remediation) {
+      lines.push(`- ${safeReportValue(remediation)}`);
+    }
+    lines.push("");
+  }
+}
+function pushWaivedFinding(lines, finding2) {
+  pushFinding(lines, finding2);
+  lines.push(
+    "Waiver:",
+    "",
+    `- reason: ${safeReportValue(finding2.waiver.reason)}`,
+    `- expires_at: ${safeReportValue(finding2.waiver.expiresAt)}`,
+    ""
+  );
+}
+function buildMarkdownReport(result, combined, visibleCount, fullReportPath) {
+  const visible = combined.slice(0, visibleCount);
+  const surfaceOmitted = combined.length - visible.length;
   const lines = [
-    `# Agent Gate: ${humanDecisionLabel(result.decision)}`,
+    `# Agent Gate: ${humanDecisionLabel(result)}`,
     "",
     `Decision: ${result.decision}`,
-    `Risk score: ${result.riskScore} / 100`,
+    `Status: ${result.status}`,
     "",
     "## Why",
     "",
@@ -49010,67 +50014,94 @@ function renderMarkdownReport(result) {
     "## Summary",
     "",
     `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
-    `- Contract present: ${yesNo(result.summary.contractPresent)}`,
+    `- PR-declared contract present: ${yesNo(result.summary.contractPresent)}`,
     `- Policy source: ${policySource(result.metadata.configSource)}`,
+    `- Analysis complete: ${yesNo(result.metadata.analysisComplete)}`,
+    `- Files analyzed: ${result.metadata.analyzedFileCount} / ${result.metadata.expectedFileCount}`,
     `- Errors: ${result.summary.errorCount}`,
     `- Warnings: ${result.summary.warnCount}`,
     `- Info: ${result.summary.infoCount}`,
+    `- Waived: ${result.summary.waivedCount}`,
+    `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
     "",
     "## Detailed Findings",
     ""
   ];
-  if (result.findings.length === 0) {
-    lines.push("No findings.");
+  const activeVisible = visible.filter((item) => !item.waived);
+  if (activeVisible.length === 0) {
+    lines.push(
+      result.findings.length === 0 ? "No active findings." : "Active findings omitted.",
+      ""
+    );
   } else {
-    for (const finding of result.findings) {
-      lines.push(
-        `### ${finding.severity.toUpperCase()} ${finding.ruleId}`,
-        "",
-        finding.message,
-        "",
-        `Finding ID: \`${safeReportValue(finding.findingId)}\``,
-        ""
-      );
-      if (finding.path) {
-        lines.push(`Path: \`${safeReportValue(finding.path)}\``, "");
-      }
-      pushEvidenceSnapshot(lines, finding);
-      if (finding.evidence.length > 0) {
-        lines.push("Evidence:");
-        for (const evidence of finding.evidence) {
-          lines.push(`- ${safeReportValue(evidence.label)}: ${safeReportValue(evidence.value)}`);
-        }
-        lines.push("");
-      }
-      if (finding.remediation.length > 0) {
-        lines.push("Remediation:");
-        for (const remediation of finding.remediation) {
-          lines.push(`- ${safeReportValue(remediation)}`);
-        }
-        lines.push("");
-      }
+    for (const item of activeVisible) {
+      pushFinding(lines, item.finding);
     }
+  }
+  const waivedVisible = visible.filter((item) => item.waived);
+  if (waivedVisible.length > 0) {
+    lines.push("## Waived Findings", "");
+    for (const item of waivedVisible) {
+      pushWaivedFinding(lines, item.finding);
+    }
+  }
+  const omitted = result.metadata.omittedFindingCount + surfaceOmitted;
+  if (omitted > 0) {
+    lines.push(
+      `_${omitted} finding${omitted === 1 ? "" : "s"} omitted from this surface._`,
+      ...fullReportPath ? [`Full report: ${safeReportValue(fullReportPath)}`] : [],
+      ""
+    );
   }
   return `${lines.join("\n")}
 `;
 }
+function renderMarkdownReport(result, options = {}) {
+  const maxFindings = Math.max(0, Math.floor(options.maxFindings ?? 250));
+  const maxBytes = Math.max(1, Math.floor(options.maxBytes ?? 2e6));
+  const combined = [
+    ...result.findings.map((finding2) => ({ finding: finding2, waived: false })),
+    ...result.waivedFindings.map((finding2) => ({ finding: finding2, waived: true }))
+  ].sort(
+    (left, right) => Number(left.waived) - Number(right.waived) || severityRank3[right.finding.severity] - severityRank3[left.finding.severity] || left.finding.ruleId.localeCompare(right.finding.ruleId) || (left.finding.path ?? "").localeCompare(right.finding.path ?? "") || left.finding.findingId.localeCompare(right.finding.findingId)
+  );
+  let low = 0;
+  let high = Math.min(maxFindings, combined.length);
+  let best;
+  while (low <= high) {
+    const visibleCount = Math.floor((low + high) / 2);
+    const candidate = buildMarkdownReport(result, combined, visibleCount, options.fullReportPath);
+    if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
+      best = candidate;
+      low = visibleCount + 1;
+    } else {
+      high = visibleCount - 1;
+    }
+  }
+  if (best === void 0) {
+    throw new Error(
+      `Markdown report metadata exceeds the ${maxBytes}-byte surface limit; increase maxBytes.`
+    );
+  }
+  return best;
+}
 var MAX_LOG_FINDINGS = 10;
 function whyText(result) {
-  const finding = highestActionableFinding(result.findings);
-  if (!finding) {
+  const finding2 = highestActionableFinding(result.findings);
+  if (!finding2) {
     return "No warning or blocking findings were detected.";
   }
-  return safeReportValue(finding.message);
+  return safeReportValue(finding2.message);
 }
-function findingLine(finding) {
+function findingLine(finding2) {
   const parts = [
     "-",
-    safeReportValue(finding.severity),
-    safeReportValue(finding.findingId),
-    safeReportValue(finding.ruleId)
+    safeReportValue(finding2.severity),
+    safeReportValue(finding2.findingId),
+    safeReportValue(finding2.ruleId)
   ];
-  if (finding.path) {
-    parts.push(safeReportValue(finding.path));
+  if (finding2.path) {
+    parts.push(safeReportValue(finding2.path));
   }
   return parts.join(" ");
 }
@@ -49079,9 +50110,9 @@ function renderPlainTextReportSummary(result) {
   const findings = result.findings.slice(0, MAX_LOG_FINDINGS);
   const omittedFindings = result.findings.length - findings.length;
   const lines = [
-    `Agent Gate: ${humanDecisionLabel(result.decision)}`,
+    `Agent Gate: ${humanDecisionLabel(result)}`,
     `Decision: ${result.decision}`,
-    `Risk score: ${result.riskScore} / 100`,
+    `Status: ${result.status}`,
     `Why: ${whyText(result)}`
   ];
   if (actionableFinding?.path) {
@@ -49095,15 +50126,560 @@ function renderPlainTextReportSummary(result) {
   if (findings.length === 0) {
     lines.push("- none");
   } else {
-    for (const finding of findings) {
-      lines.push(findingLine(finding));
+    for (const finding2 of findings) {
+      lines.push(findingLine(finding2));
     }
   }
   if (omittedFindings > 0) {
     lines.push(`... ${omittedFindings} more findings omitted`);
   }
+  if (result.waivedFindings.length > 0) {
+    lines.push(`Waived findings: ${result.waivedFindings.length}`);
+  }
   return `${lines.join("\n")}
 `;
+}
+
+// ../github/dist/index.js
+var GitHubApiError = class extends Error {
+  status;
+  requestId;
+  retryAfterMs;
+  rateLimitResetAt;
+  retryable;
+  constructor(message, options = {}) {
+    super(message, options.cause === void 0 ? void 0 : { cause: options.cause });
+    this.name = "GitHubApiError";
+    this.status = options.status;
+    this.requestId = options.requestId;
+    this.retryAfterMs = options.retryAfterMs;
+    this.rateLimitResetAt = options.rateLimitResetAt;
+    this.retryable = options.retryable;
+  }
+};
+function record2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? value : void 0;
+}
+function header(headers, name) {
+  const values = record2(headers);
+  if (!values) {
+    return void 0;
+  }
+  const matchingKey = Object.keys(values).find((key) => key.toLowerCase() === name.toLowerCase());
+  const value = matchingKey ? values[matchingKey] : void 0;
+  return typeof value === "string" || typeof value === "number" ? String(value) : void 0;
+}
+function positiveNumber(value) {
+  if (value === void 0) {
+    return void 0;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : void 0;
+}
+function toGitHubApiError(error52, operation) {
+  if (error52 instanceof GitHubApiError) {
+    return error52;
+  }
+  const candidate = record2(error52) ?? {};
+  const response = record2(candidate.response);
+  const statusValue = candidate.status ?? response?.status;
+  const status = typeof statusValue === "number" ? statusValue : void 0;
+  const headers = response?.headers;
+  const requestId = (typeof candidate.requestId === "string" ? candidate.requestId : void 0) ?? header(headers, "x-github-request-id");
+  const retryAfterSeconds = positiveNumber(header(headers, "retry-after"));
+  const resetSeconds = positiveNumber(header(headers, "x-ratelimit-reset"));
+  const responseMessage = response?.data?.message;
+  const originalMessage = typeof candidate.message === "string" ? candidate.message : typeof responseMessage === "string" ? responseMessage : String(error52);
+  return new GitHubApiError(`${operation}: ${originalMessage}`, {
+    status,
+    requestId,
+    retryAfterMs: retryAfterSeconds === void 0 ? void 0 : retryAfterSeconds * 1e3,
+    rateLimitResetAt: resetSeconds === void 0 ? void 0 : resetSeconds * 1e3,
+    cause: error52
+  });
+}
+function describeGitHubApiError(error52) {
+  const apiError = error52 instanceof GitHubApiError ? error52 : toGitHubApiError(error52, "GitHub API");
+  const details = [apiError.message];
+  if (apiError.status !== void 0) {
+    details.push(`status=${apiError.status}`);
+  }
+  if (apiError.requestId) {
+    details.push(`request_id=${apiError.requestId}`);
+  }
+  if (apiError.retryAfterMs !== void 0) {
+    details.push(`retry_after_ms=${apiError.retryAfterMs}`);
+  }
+  if (apiError.rateLimitResetAt !== void 0) {
+    details.push(`rate_limit_reset_at=${apiError.rateLimitResetAt}`);
+  }
+  if (apiError.retryable !== void 0) {
+    details.push(`retryable=${apiError.retryable}`);
+  }
+  return details.join("; ");
+}
+var REQUEST_TIMEOUT_MS = 3e4;
+function requestOptions() {
+  return { request: { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) } };
+}
+function isRecord7(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function decodeTextFile(data, path) {
+  if (!isRecord7(data) || data.type !== "file" || data.encoding !== "base64" || typeof data.content !== "string") {
+    throw new GitHubApiError(`Read ${path}: response was not base64 file content.`, {
+      retryable: false
+    });
+  }
+  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
+}
+function pullFile(file2) {
+  return {
+    filename: file2.filename,
+    status: file2.status,
+    additions: file2.additions,
+    deletions: file2.deletions,
+    ...typeof file2.patch === "string" && file2.patch.length > 0 ? { patch: file2.patch } : {},
+    ...typeof file2.previous_filename === "string" && file2.previous_filename.length > 0 ? { previousFilename: file2.previous_filename } : {}
+  };
+}
+function createOctokitGitHubApi(octokit, getPullRequest) {
+  return {
+    async getPullRequest(target) {
+      try {
+        return await getPullRequest(target);
+      } catch (error52) {
+        throw toGitHubApiError(
+          error52,
+          `Load pull request ${target.owner}/${target.repo}#${target.number}`
+        );
+      }
+    },
+    async listPullRequestFilesPage(target, page, perPage) {
+      try {
+        const response = await octokit.rest.pulls.listFiles({
+          owner: target.owner,
+          repo: target.repo,
+          pull_number: target.number,
+          page,
+          per_page: perPage,
+          ...requestOptions()
+        });
+        return response.data.map(pullFile);
+      } catch (error52) {
+        throw toGitHubApiError(
+          error52,
+          `List files for ${target.owner}/${target.repo}#${target.number} page ${page}`
+        );
+      }
+    },
+    async getTextFile(repository, path, sha) {
+      try {
+        const response = await octokit.rest.repos.getContent({
+          owner: repository.owner,
+          repo: repository.repo,
+          path,
+          ref: sha,
+          ...requestOptions()
+        });
+        return { kind: "found", text: decodeTextFile(response.data, path) };
+      } catch (error52) {
+        const apiError = toGitHubApiError(
+          error52,
+          `Read ${repository.owner}/${repository.repo}:${path}@${sha}`
+        );
+        if (apiError.status === 404) {
+          return { kind: "not-found" };
+        }
+        throw apiError;
+      }
+    }
+  };
+}
+var DEFAULT_MAX_ATTEMPTS = 3;
+var DEFAULT_MAX_TOTAL_DELAY_MS = 6e4;
+var DEFAULT_DELAYS_MS = [250, 1e3];
+function defaultSleep(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+function createRetryBudget(options) {
+  const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const maxTotalDelayMs = options?.maxTotalDelayMs ?? DEFAULT_MAX_TOTAL_DELAY_MS;
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new Error("retry.maxAttempts must be a positive integer.");
+  }
+  if (!Number.isFinite(maxTotalDelayMs) || maxTotalDelayMs < 0) {
+    throw new Error("retry.maxTotalDelayMs must be a non-negative number.");
+  }
+  return {
+    maxAttempts,
+    maxTotalDelayMs,
+    sleep: options?.sleep ?? defaultSleep,
+    now: options?.now ?? Date.now,
+    spentDelayMs: 0
+  };
+}
+function isRateLimitError(error52) {
+  if (error52.status === 429) {
+    return true;
+  }
+  if (error52.status !== 403) {
+    return false;
+  }
+  return error52.retryAfterMs !== void 0 || /rate.?limit|secondary rate|abuse/i.test(error52.message);
+}
+function shouldRetry(error52) {
+  if (error52.retryable !== void 0) {
+    return error52.retryable;
+  }
+  if (error52.status === void 0) {
+    return true;
+  }
+  return isRateLimitError(error52) || [502, 503, 504].includes(error52.status);
+}
+function retryDelay(error52, failedAttempt, now) {
+  if (error52.retryAfterMs !== void 0) {
+    return error52.retryAfterMs;
+  }
+  if (error52.rateLimitResetAt !== void 0) {
+    return Math.max(0, error52.rateLimitResetAt - now);
+  }
+  return DEFAULT_DELAYS_MS[Math.min(failedAttempt - 1, DEFAULT_DELAYS_MS.length - 1)] ?? 1e3;
+}
+async function withGitHubRetry(operation, budget, callback) {
+  for (let attempt = 1; attempt <= budget.maxAttempts; attempt += 1) {
+    try {
+      return await callback();
+    } catch (error52) {
+      const apiError = toGitHubApiError(error52, operation);
+      if (!shouldRetry(apiError)) {
+        throw apiError;
+      }
+      if (attempt >= budget.maxAttempts) {
+        throw new GitHubApiError(
+          `${apiError.message}; retry attempts exhausted after ${attempt} attempts.`,
+          {
+            status: apiError.status,
+            requestId: apiError.requestId,
+            retryAfterMs: apiError.retryAfterMs,
+            rateLimitResetAt: apiError.rateLimitResetAt,
+            retryable: false,
+            cause: apiError
+          }
+        );
+      }
+      const delayMs = retryDelay(apiError, attempt, budget.now());
+      if (budget.spentDelayMs + delayMs > budget.maxTotalDelayMs) {
+        throw new GitHubApiError(
+          `${apiError.message}; retry delay ${delayMs}ms exceeds the ${budget.maxTotalDelayMs}ms total retry budget.`,
+          {
+            status: apiError.status,
+            requestId: apiError.requestId,
+            retryAfterMs: apiError.retryAfterMs,
+            rateLimitResetAt: apiError.rateLimitResetAt,
+            retryable: false,
+            cause: apiError
+          }
+        );
+      }
+      budget.spentDelayMs += delayMs;
+      await budget.sleep(delayMs);
+    }
+  }
+  throw new Error(`Unreachable retry state for ${operation}.`);
+}
+var FILES_PER_PAGE = 100;
+var MAX_FILE_PAGES = 30;
+var MAX_CHANGED_FILES = FILES_PER_PAGE * MAX_FILE_PAGES;
+var MAX_TEXT_BYTES = 1024 * 1024;
+var MAX_TOTAL_CONTENT_BYTES = 64 * 1024 * 1024;
+var CONTENT_CONCURRENCY = 8;
+function applyModeOverride(config2, modeOverride) {
+  return modeOverride ? { ...config2, mode: modeOverride } : config2;
+}
+function fileStatus(status) {
+  return status === "added" || status === "modified" || status === "removed" || status === "renamed" ? status : "modified";
+}
+function fileChange(file2) {
+  return {
+    path: file2.filename,
+    ...file2.previousFilename ? { previousPath: file2.previousFilename } : {},
+    status: fileStatus(file2.status),
+    additions: file2.additions,
+    deletions: file2.deletions,
+    ...file2.patch ? { patch: file2.patch } : {}
+  };
+}
+function compareText(left, right) {
+  return left < right ? -1 : left > right ? 1 : 0;
+}
+function relevantContentPath(path, config2) {
+  if (matchesAny(path, config2.github_actions.paths)) {
+    return true;
+  }
+  return config2.package_scripts.enabled && matchesAny(path, config2.package_scripts.paths);
+}
+function needsContent(file2, config2) {
+  return relevantContentPath(file2.path, config2) || file2.previousPath !== void 0 && relevantContentPath(file2.previousPath, config2);
+}
+function contentTasks(files, pullRequest, config2) {
+  const tasks = [];
+  for (const file2 of files) {
+    if (!needsContent(file2, config2) || file2.status === "removed") {
+      continue;
+    }
+    if (file2.status !== "added") {
+      file2.baseContent = null;
+      tasks.push({
+        file: file2,
+        displayPath: file2.path,
+        path: file2.previousPath ?? file2.path,
+        repository: pullRequest.base.repository,
+        sha: pullRequest.base.sha,
+        side: "base"
+      });
+    }
+    file2.headContent = null;
+    tasks.push({
+      file: file2,
+      displayPath: file2.path,
+      path: file2.path,
+      repository: pullRequest.head.repository,
+      sha: pullRequest.head.sha,
+      side: "head"
+    });
+  }
+  return tasks;
+}
+function contentGap(task, reason) {
+  return {
+    ruleId: "analysis/content-unavailable",
+    message: `Unable to read ${task.side} content for ${task.displayPath}; deterministic analysis is incomplete.`,
+    path: task.displayPath,
+    evidence: [
+      { label: "changed_file", value: task.displayPath },
+      { label: "content_ref", value: task.side },
+      { label: "content_path", value: task.path },
+      { label: "reason", value: reason }
+    ]
+  };
+}
+function aggregateContentGap(acceptedBytes, task, rejectedBytes) {
+  return {
+    ruleId: "analysis/content-unavailable",
+    message: "The aggregate decoded-content budget was exceeded; remaining content requests were not scheduled.",
+    evidence: [
+      { label: "reason_code", value: "aggregate-content-budget-exceeded" },
+      { label: "aggregate_content_limit_bytes", value: String(MAX_TOTAL_CONTENT_BYTES) },
+      { label: "accepted_content_bytes", value: String(acceptedBytes) },
+      { label: "rejected_content_bytes", value: String(rejectedBytes) },
+      { label: "next_content_path", value: task.path },
+      { label: "next_content_ref", value: task.side }
+    ]
+  };
+}
+async function fetchContentTask(api, task, retryBudget) {
+  try {
+    const result = await withGitHubRetry(
+      `Load ${task.side} content for ${task.displayPath}`,
+      retryBudget,
+      () => api.getTextFile(task.repository, task.path, task.sha)
+    );
+    if (result.kind === "not-found") {
+      return { kind: "gap", gap: contentGap(task, "GitHub returned 404 Not Found") };
+    }
+    const byteLength = Buffer.byteLength(result.text, "utf8");
+    if (byteLength > MAX_TEXT_BYTES) {
+      return {
+        kind: "gap",
+        gap: contentGap(
+          task,
+          `decoded content is ${byteLength} bytes; limit is ${MAX_TEXT_BYTES} bytes`
+        )
+      };
+    }
+    return { kind: "found", text: result.text, byteLength };
+  } catch (error52) {
+    return { kind: "gap", gap: contentGap(task, describeGitHubApiError(error52)) };
+  }
+}
+async function loadContentTasks(api, tasks, retryBudget) {
+  const gaps = [];
+  let acceptedBytes = 0;
+  let contentFileCount = 0;
+  for (let offset = 0; offset < tasks.length; offset += CONTENT_CONCURRENCY) {
+    const window = tasks.slice(offset, offset + CONTENT_CONCURRENCY);
+    const results = await Promise.all(
+      window.map((task) => fetchContentTask(api, task, retryBudget))
+    );
+    for (let index = 0; index < window.length; index += 1) {
+      const task = window[index];
+      const result = results[index];
+      if (!task || !result) {
+        continue;
+      }
+      if (result.kind === "gap") {
+        gaps.push(result.gap);
+        continue;
+      }
+      if (acceptedBytes + result.byteLength > MAX_TOTAL_CONTENT_BYTES) {
+        gaps.push(aggregateContentGap(acceptedBytes, task, result.byteLength));
+        return { contentFileCount, gaps };
+      }
+      if (task.side === "base") {
+        task.file.baseContent = result.text;
+      } else {
+        task.file.headContent = result.text;
+      }
+      acceptedBytes += result.byteLength;
+      contentFileCount += 1;
+    }
+  }
+  return { contentFileCount, gaps };
+}
+async function loadConfig(api, pullRequest, options, retryBudget) {
+  const result = await withGitHubRetry(
+    `Load ${options.configPath} from base SHA ${pullRequest.base.sha}`,
+    retryBudget,
+    () => api.getTextFile(pullRequest.base.repository, options.configPath, pullRequest.base.sha)
+  );
+  if (result.kind === "not-found") {
+    if (options.configPath !== CONFIG_FILE_NAME) {
+      throw new Error(
+        `Unable to load ${options.configPath} from base ref ${pullRequest.base.sha}: config file was not found.`
+      );
+    }
+    options.warning?.(
+      `Agent Gate could not load ${options.configPath} from the base branch; using built-in default policy.`
+    );
+    return {
+      config: applyModeOverride(DEFAULT_CONFIG, options.modeOverride),
+      source: "default"
+    };
+  }
+  const configByteLength = Buffer.byteLength(result.text, "utf8");
+  if (configByteLength > MAX_TEXT_BYTES) {
+    throw new Error(
+      `${options.configPath} is ${configByteLength} bytes; the maximum policy size is ${MAX_TEXT_BYTES} bytes.`
+    );
+  }
+  return {
+    config: applyModeOverride(parseConfig(result.text), options.modeOverride),
+    source: "base-branch"
+  };
+}
+function fileListGap(expected, collected, reason) {
+  return {
+    ruleId: "analysis/file-list-incomplete",
+    message: "GitHub did not provide the complete pull request file list; policy analysis was stopped.",
+    evidence: [
+      { label: "expected_file_count", value: String(expected) },
+      { label: "collected_file_count", value: String(collected) },
+      { label: "github_file_limit", value: String(MAX_CHANGED_FILES) },
+      { label: "reason", value: reason }
+    ]
+  };
+}
+async function listPullFiles(api, target, expected, retryBudget) {
+  const files = [];
+  for (let page = 1; page <= MAX_FILE_PAGES && files.length < expected; page += 1) {
+    const pageFiles = await withGitHubRetry(
+      `List pull request files page ${page}`,
+      retryBudget,
+      () => api.listPullRequestFilesPage(target, page, FILES_PER_PAGE)
+    );
+    files.push(...pageFiles);
+    if (pageFiles.length < FILES_PER_PAGE) {
+      break;
+    }
+  }
+  return files;
+}
+function pullRequestContext(pullRequest) {
+  return {
+    number: pullRequest.number,
+    title: pullRequest.title,
+    body: pullRequest.body,
+    author: pullRequest.author,
+    labels: pullRequest.labels,
+    branchName: pullRequest.head.ref,
+    isFork: pullRequest.head.fork,
+    draft: pullRequest.draft
+  };
+}
+async function loadGitHubAnalysis(api, target, options) {
+  const retryBudget = createRetryBudget(options.retry);
+  const pullRequest = await withGitHubRetry(
+    "Load pull request metadata",
+    retryBudget,
+    () => api.getPullRequest(target)
+  );
+  if (!Number.isInteger(pullRequest.changedFiles) || pullRequest.changedFiles < 0) {
+    throw new Error("GitHub pull request metadata did not include a valid changed_files count.");
+  }
+  const loadedConfig = await loadConfig(api, pullRequest, options, retryBudget);
+  const expected = pullRequest.changedFiles;
+  let files = [];
+  let contentFileCount = 0;
+  const gaps = [];
+  if (expected > MAX_CHANGED_FILES) {
+    gaps.push(
+      fileListGap(
+        expected,
+        0,
+        `changed_files exceeds GitHub's ${MAX_CHANGED_FILES}-file API response limit`
+      )
+    );
+  } else {
+    const remoteFiles = await listPullFiles(api, target, expected, retryBudget);
+    if (remoteFiles.length !== expected) {
+      gaps.push(fileListGap(expected, remoteFiles.length, "expected and collected counts differ"));
+    } else {
+      files = [...remoteFiles].sort(
+        (left, right) => compareText(left.filename, right.filename) || compareText(left.previousFilename ?? "", right.previousFilename ?? "") || compareText(left.status, right.status)
+      ).map(fileChange);
+      const tasks = contentTasks(files, pullRequest, loadedConfig.config);
+      const loadedContent = await loadContentTasks(api, tasks, retryBudget);
+      contentFileCount = loadedContent.contentFileCount;
+      gaps.push(...loadedContent.gaps);
+    }
+  }
+  const analysis = {
+    complete: gaps.length === 0,
+    expectedFileCount: expected,
+    analyzedFileCount: gaps.some((gap) => gap.ruleId === "analysis/file-list-incomplete") ? 0 : files.length,
+    contentFileCount,
+    runtimeRef: options.runtimeRef,
+    gaps
+  };
+  return {
+    repo: {
+      owner: pullRequest.base.repository.owner,
+      repo: pullRequest.base.repository.repo,
+      defaultBranch: pullRequest.base.repository.defaultBranch ?? pullRequest.base.ref,
+      baseRef: pullRequest.base.ref,
+      baseSha: pullRequest.base.sha,
+      headRef: pullRequest.head.ref,
+      headSha: pullRequest.head.sha
+    },
+    pr: pullRequestContext(pullRequest),
+    config: loadedConfig.config,
+    contract: parseContractFromPrBody(pullRequest.body),
+    changes: {
+      files,
+      totals: {
+        filesChanged: expected,
+        additions: files.reduce((sum, file2) => sum + file2.additions, 0),
+        deletions: files.reduce((sum, file2) => sum + file2.deletions, 0)
+      }
+    },
+    reviews: [],
+    checks: [],
+    now: options.now,
+    configSource: loadedConfig.source,
+    version: options.engineVersion,
+    analysis
+  };
 }
 
 // src/version.ts
@@ -49112,7 +50688,16 @@ var AGENT_GATE_VERSION = "0.2.6";
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
 var AGENT_GATE_MANAGED_COMMENT_NOTE = "<!-- This comment is managed by Agent Gate. Do not edit manually. -->";
+var COMMENT_MAX_BYTES = 6e4;
+var COMMENT_WRAPPER_RESERVE_BYTES = 512;
+var GITHUB_REQUEST_TIMEOUT_MS = 3e4;
+function githubRequestOptions() {
+  return { request: { signal: AbortSignal.timeout(GITHUB_REQUEST_TIMEOUT_MS) } };
+}
 function errorMessage(error52) {
+  if (error52 instanceof GitHubApiError) {
+    return describeGitHubApiError(error52);
+  }
   return error52 instanceof Error ? error52.message : String(error52);
 }
 function inputOrDefault(value, fallback) {
@@ -49142,169 +50727,73 @@ function parseModeOverride(value) {
   }
   throw new Error(`Invalid mode input: ${trimmed}. Expected observe, warn, or block.`);
 }
+function splitRepositoryFullName(fullName) {
+  if (!fullName?.includes("/")) {
+    return void 0;
+  }
+  const [owner, repo] = fullName.split("/", 2);
+  return owner && repo ? { owner, repo } : void 0;
+}
+function repositoryFromPayload(repository, fallback) {
+  return splitRepositoryFullName(repository?.full_name) ?? (repository?.owner?.login && repository.name ? { owner: repository.owner.login, repo: repository.name } : fallback);
+}
 function labelsFromPullRequest(pr) {
   return (pr.labels ?? []).map((label) => typeof label === "string" ? label : label.name).filter((label) => typeof label === "string" && label.trim().length > 0);
 }
-function pullRequestContext(pr) {
+function remotePullRequest(context3, pr) {
+  if (!Number.isInteger(pr.changed_files) || (pr.changed_files ?? -1) < 0) {
+    throw new GitHubApiError(
+      "GitHub pull request metadata did not include a valid changed_files count.",
+      { retryable: false }
+    );
+  }
+  const baseRepository = repositoryFromPayload(pr.base.repo, context3.repo);
+  const headRepository = repositoryFromPayload(pr.head.repo, context3.repo);
   return {
     number: pr.number,
     title: pr.title ?? "",
     body: pr.body ?? "",
     author: pr.user?.login ?? "",
     labels: labelsFromPullRequest(pr),
-    branchName: pr.head.ref,
-    isFork: Boolean(pr.head.repo?.fork),
-    draft: Boolean(pr.draft)
-  };
-}
-function fileStatus(status) {
-  if (status === "added" || status === "modified" || status === "removed" || status === "renamed") {
-    return status;
-  }
-  return "modified";
-}
-function stringOrUndefined(value) {
-  return typeof value === "string" && value.length > 0 ? value : void 0;
-}
-function changeSet(files) {
-  return {
-    files,
-    totals: {
-      filesChanged: files.length,
-      additions: files.reduce((total, file2) => total + file2.additions, 0),
-      deletions: files.reduce((total, file2) => total + file2.deletions, 0)
+    draft: Boolean(pr.draft),
+    changedFiles: pr.changed_files ?? 0,
+    head: {
+      ref: pr.head.ref,
+      sha: pr.head.sha,
+      repository: {
+        ...headRepository,
+        ...pr.head.repo?.default_branch ? { defaultBranch: pr.head.repo.default_branch } : {}
+      },
+      fork: Boolean(pr.head.repo?.fork)
+    },
+    base: {
+      ref: pr.base.ref,
+      sha: pr.base.sha,
+      repository: {
+        ...baseRepository,
+        defaultBranch: pr.base.repo?.default_branch ?? pr.base.ref
+      }
     }
   };
 }
-function splitRepositoryFullName(fullName) {
-  if (!fullName?.includes("/")) {
-    return void 0;
+async function loadRemotePullRequest(context3, pr, octokit, target) {
+  if (Number.isInteger(pr.changed_files) && (pr.changed_files ?? -1) >= 0) {
+    return remotePullRequest(context3, pr);
   }
-  const [owner, repo] = fullName.split("/", 2);
-  if (!owner || !repo) {
-    return void 0;
-  }
-  return { owner, repo };
-}
-function baseRepository(context3) {
-  return context3.repo;
-}
-function headRepository(context3, pr) {
-  const byFullName = splitRepositoryFullName(pr.head.repo?.full_name);
-  if (byFullName) {
-    return byFullName;
-  }
-  const owner = pr.head.repo?.owner?.login;
-  const repo = pr.head.repo?.name;
-  if (owner && repo) {
-    return { owner, repo };
-  }
-  return context3.repo;
-}
-function isFileContent(data) {
-  return typeof data === "object" && data !== null && !Array.isArray(data);
-}
-function githubStatus(error52) {
-  if (typeof error52 !== "object" || error52 === null) {
-    return void 0;
-  }
-  if ("status" in error52 && typeof error52.status === "number") {
-    return error52.status;
-  }
-  if ("response" in error52 && typeof error52.response === "object" && error52.response !== null && "status" in error52.response && typeof error52.response.status === "number") {
-    return error52.response.status;
-  }
-  return void 0;
-}
-function decodeRepositoryFileContent(data, path) {
-  if (!isFileContent(data)) {
-    throw new Error(`${path} content response was not a file.`);
-  }
-  if (data.type !== "file") {
-    throw new Error(`${path} content response was not a file.`);
-  }
-  if (data.encoding !== "base64" || typeof data.content !== "string") {
-    throw new Error(`${path} content response was not base64 file content.`);
-  }
-  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
-}
-async function fetchRepositoryTextContent(octokit, options) {
-  try {
-    const response = await octokit.rest.repos.getContent(options);
-    if (!isFileContent(response.data)) {
-      return null;
-    }
-    if (response.data.type !== "file") {
-      return null;
-    }
-    if (response.data.encoding !== "base64" || typeof response.data.content !== "string") {
-      return null;
-    }
-    return Buffer.from(response.data.content.replace(/\n/g, ""), "base64").toString("utf8");
-  } catch {
-    return null;
-  }
-}
-async function fetchConfigTextContent(octokit, options) {
-  try {
-    const response = await octokit.rest.repos.getContent(options);
-    return decodeRepositoryFileContent(response.data, options.path);
-  } catch (error52) {
-    if (githubStatus(error52) === 404) {
-      return null;
-    }
-    throw new Error(
-      `Unable to load ${options.path} from base ref ${options.ref}: ${errorMessage(error52)}`
+  const getPullRequest = octokit.rest.pulls.get;
+  if (!getPullRequest) {
+    throw new GitHubApiError(
+      "GitHub pull request payload omitted changed_files and the pull request GET API is unavailable.",
+      { retryable: false }
     );
   }
-}
-async function listPullFiles(octokit, repository, pullNumber) {
-  const args = {
-    owner: repository.owner,
-    repo: repository.repo,
-    pull_number: pullNumber,
-    per_page: 100
-  };
-  if (octokit.paginate) {
-    return octokit.paginate(octokit.rest.pulls.listFiles, args);
-  }
-  const response = await octokit.rest.pulls.listFiles(args);
-  return response.data;
-}
-async function fileChangeFromPullFile(octokit, baseRepo, headRepo, baseSha, headSha, file2) {
-  const status = fileStatus(file2.status);
-  const previousPath = stringOrUndefined(file2.previous_filename);
-  const basePath = previousPath ?? file2.filename;
-  const baseContent = await fetchRepositoryTextContent(octokit, {
-    owner: baseRepo.owner,
-    repo: baseRepo.repo,
-    path: basePath,
-    ref: baseSha
+  const response = await getPullRequest({
+    owner: target.owner,
+    repo: target.repo,
+    pull_number: target.number,
+    ...githubRequestOptions()
   });
-  const headContent = status === "removed" ? null : await fetchRepositoryTextContent(octokit, {
-    owner: headRepo.owner,
-    repo: headRepo.repo,
-    path: file2.filename,
-    ref: headSha
-  });
-  return {
-    path: file2.filename,
-    previousPath,
-    status,
-    additions: file2.additions,
-    deletions: file2.deletions,
-    patch: stringOrUndefined(file2.patch),
-    baseContent,
-    headContent
-  };
-}
-async function loadChangedFiles(octokit, baseRepo, headRepo, pr) {
-  const pullFiles = await listPullFiles(octokit, baseRepo, pr.number);
-  return Promise.all(
-    pullFiles.map(
-      (file2) => fileChangeFromPullFile(octokit, baseRepo, headRepo, pr.base.sha, pr.head.sha, file2)
-    )
-  );
+  return remotePullRequest(context3, { ...pr, changed_files: response.data.changed_files });
 }
 async function listIssueComments(octokit, repository, issueNumber) {
   const listComments = octokit.rest.issues?.listComments;
@@ -49315,13 +50804,13 @@ async function listIssueComments(octokit, repository, issueNumber) {
     owner: repository.owner,
     repo: repository.repo,
     issue_number: issueNumber,
-    per_page: 100
+    per_page: 100,
+    page: 1,
+    sort: "created",
+    direction: "desc",
+    ...githubRequestOptions()
   };
-  if (octokit.paginate) {
-    return octokit.paginate(listComments, args);
-  }
-  const response = await listComments(args);
-  return response.data;
+  return (await listComments(args)).data;
 }
 function markedCommentBody(markdownReport) {
   return `${AGENT_GATE_COMMENT_MARKER}
@@ -49333,7 +50822,10 @@ function isAgentGateManagedComment(comment) {
   if (!comment.body?.startsWith(AGENT_GATE_COMMENT_MARKER)) {
     return false;
   }
-  return comment.user?.type === "Bot" || comment.user?.login === "github-actions[bot]";
+  if (comment.user?.type !== "Bot" || comment.user.login !== "github-actions[bot]") {
+    return false;
+  }
+  return comment.performed_via_github_app == null || comment.performed_via_github_app.slug === "github-actions";
 }
 function latestMarkedComment(comments) {
   return comments.filter(isAgentGateManagedComment).sort((left, right) => right.id - left.id)[0];
@@ -49351,7 +50843,8 @@ async function upsertPullRequestComment(octokit, repository, issueNumber, markdo
       owner: repository.owner,
       repo: repository.repo,
       comment_id: existingComment.id,
-      body
+      body,
+      ...githubRequestOptions()
     });
     return;
   }
@@ -49363,58 +50856,23 @@ async function upsertPullRequestComment(octokit, repository, issueNumber, markdo
     owner: repository.owner,
     repo: repository.repo,
     issue_number: issueNumber,
-    body
+    body,
+    ...githubRequestOptions()
   });
 }
-async function loadConfig(runtime, owner, repo, baseSha, path) {
-  const configText = await fetchConfigTextContent(runtime.octokit, {
-    owner,
-    repo,
-    path,
-    ref: baseSha
-  });
-  const modeOverride = parseModeOverride(runtime.getInput("mode"));
-  if (configText === null) {
-    if (path !== CONFIG_FILE_NAME) {
-      throw new Error(
-        `Unable to load ${path} from base ref ${baseSha}: config file was not found.`
-      );
-    }
-    runtime.warning(
-      `Agent Gate could not load ${path} from the base branch; using built-in default policy.`
-    );
-    return {
-      config: modeOverride ? { ...DEFAULT_CONFIG, mode: modeOverride } : DEFAULT_CONFIG,
-      source: "default"
-    };
-  }
-  const config2 = parseConfig(configText);
-  return {
-    config: modeOverride ? { ...config2, mode: modeOverride } : config2,
-    source: "base-branch"
-  };
-}
-function analysisInput(context3, pr, config2, configSource, files, now) {
-  return {
-    repo: {
-      owner: context3.repo.owner,
-      repo: context3.repo.repo,
-      defaultBranch: pr.base.repo?.default_branch ?? pr.base.ref,
-      baseRef: pr.base.ref,
-      baseSha: pr.base.sha,
-      headRef: pr.head.ref,
-      headSha: pr.head.sha
-    },
-    pr: pullRequestContext(pr),
-    config: config2,
-    contract: parseContractFromPrBody(pr.body ?? ""),
-    changes: changeSet(files),
-    reviews: [],
-    checks: [],
-    now: now.toISOString(),
-    configSource,
-    version: AGENT_GATE_VERSION
-  };
+function setResultOutputs(runtime, result, reportJsonPath, reportMarkdownPath) {
+  runtime.setOutput("decision", result.decision);
+  runtime.setOutput("status", result.status);
+  runtime.setOutput("analysis-complete", result.metadata.analysisComplete);
+  runtime.setOutput("error-count", result.summary.errorCount);
+  runtime.setOutput("warning-count", result.summary.warnCount);
+  runtime.setOutput("info-count", result.summary.infoCount);
+  runtime.setOutput("waived-count", result.summary.waivedCount);
+  runtime.setOutput("expected-file-count", result.metadata.expectedFileCount);
+  runtime.setOutput("analyzed-file-count", result.metadata.analyzedFileCount);
+  runtime.setOutput("risk-score", result.riskScore);
+  runtime.setOutput("report-json", reportJsonPath);
+  runtime.setOutput("report-markdown", reportMarkdownPath);
 }
 async function runActionInner(runtime) {
   const { context: context3 } = runtime;
@@ -49430,38 +50888,53 @@ async function runActionInner(runtime) {
   );
   const comment = parseBooleanInput("comment", runtime.getInput("comment"), false);
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
-  const baseRepo = baseRepository(context3);
-  const headRepo = headRepository(context3, pr);
-  const loadedConfig = await loadConfig(
-    runtime,
-    baseRepo.owner,
-    baseRepo.repo,
-    pr.base.sha,
-    configPath
+  const modeOverride = parseModeOverride(runtime.getInput("mode"));
+  const target = {
+    owner: context3.repo.owner,
+    repo: context3.repo.repo,
+    number: pr.number
+  };
+  const api = createOctokitGitHubApi(
+    runtime.octokit,
+    () => loadRemotePullRequest(context3, pr, runtime.octokit, target)
   );
-  const files = await loadChangedFiles(runtime.octokit, baseRepo, headRepo, pr);
-  const result = await analyze(
-    analysisInput(context3, pr, loadedConfig.config, loadedConfig.source, files, runtime.now())
-  );
+  const input = await loadGitHubAnalysis(api, target, {
+    configPath,
+    modeOverride,
+    now: runtime.now().toISOString(),
+    engineVersion: AGENT_GATE_VERSION,
+    runtimeRef: `agent-gate-action@${AGENT_GATE_VERSION}`,
+    warning: (message) => runtime.warning(message)
+  });
+  const result = await analyze(input);
   const jsonReport = renderJsonReport(result);
   const markdownReport = renderMarkdownReport(result);
+  const summaryReport = renderMarkdownReport(result, {
+    maxFindings: 200,
+    maxBytes: 9e5,
+    fullReportPath: reportMarkdownPath
+  });
   const plainTextReportSummary = renderPlainTextReportSummary(result);
   await runtime.writeFile(reportJsonPath, jsonReport);
   await runtime.writeFile(reportMarkdownPath, markdownReport);
-  runtime.setOutput("decision", result.decision);
-  runtime.setOutput("risk-score", result.riskScore);
-  runtime.setOutput("report-json", reportJsonPath);
-  runtime.setOutput("report-markdown", reportMarkdownPath);
-  await runtime.summary.addRaw(markdownReport).write();
+  setResultOutputs(runtime, result, reportJsonPath, reportMarkdownPath);
+  await runtime.summary.addRaw(summaryReport).write();
   runtime.info(plainTextReportSummary);
   if (comment) {
     try {
-      await upsertPullRequestComment(runtime.octokit, baseRepo, pr.number, markdownReport);
+      const commentReport = renderMarkdownReport(result, {
+        maxFindings: 50,
+        maxBytes: COMMENT_MAX_BYTES - COMMENT_WRAPPER_RESERVE_BYTES,
+        fullReportPath: reportMarkdownPath
+      });
+      await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport);
     } catch (error52) {
       runtime.warning(`Agent Gate could not upsert PR comment: ${errorMessage(error52)}`);
     }
   }
-  if (result.decision === "block" && failOnBlock) {
+  if (!result.metadata.analysisComplete) {
+    runtime.setFailed("Agent Gate analysis is incomplete.");
+  } else if (result.decision === "block" && failOnBlock) {
     runtime.setFailed("Agent Gate blocked this pull request.");
   }
   return result;

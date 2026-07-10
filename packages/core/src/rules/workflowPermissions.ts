@@ -12,6 +12,10 @@ function isWorkflowFile(ctx: RuleContext, path: string): boolean {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
 }
 
+function wasWorkflowFile(ctx: RuleContext, file: { path: string; previousPath?: string }): boolean {
+  return isWorkflowFile(ctx, file.previousPath ?? file.path);
+}
+
 function permissionsForWorkflow(workflow: WorkflowDocument | undefined) {
   return normalizeWorkflowPermissions(workflow?.permissions);
 }
@@ -38,8 +42,11 @@ function hasExplicitPermissions(
   return value !== undefined && Object.prototype.hasOwnProperty.call(value, "permissions");
 }
 
-function needsBaseContent(file: { status: string; baseContent?: string | null }): boolean {
-  return file.status !== "added" && file.baseContent == null;
+function needsBaseContent(
+  file: { status: string; baseContent?: string | null },
+  treatAsAdded: boolean,
+): boolean {
+  return !treatAsAdded && file.baseContent == null;
 }
 
 function affectedArea(permission: WorkflowPermissionName): string {
@@ -130,7 +137,10 @@ function escalationFinding(
 
   return {
     ruleId: "workflow/permission-escalation",
-    severity: ctx.input.config.github_actions.severity,
+    severity:
+      ctx.input.config.github_actions.checks.permission_escalation === "off"
+        ? "warn"
+        : ctx.input.config.github_actions.checks.permission_escalation,
     title: "GitHub Actions permission escalation",
     message: `${escalation.permission} permission increased from ${escalation.before} to ${escalation.after} at ${scopeDescription(escalation)} scope; this can affect ${area}. Confirm whether this permission boundary change is expected.`,
     path: filePath,
@@ -159,11 +169,15 @@ function workflowPermissionEscalations(
   baseWorkflow: WorkflowDocument | undefined,
   headWorkflow: WorkflowDocument,
 ): ScopedPermissionEscalation[] {
-  const escalations = findScopedPermissionEscalations(
-    permissionsForWorkflow(baseWorkflow),
-    permissionsForWorkflow(headWorkflow),
-    { kind: "workflow" },
-  );
+  const baseIsAddedBaseline = baseWorkflow === undefined;
+  const escalations =
+    baseIsAddedBaseline || hasExplicitPermissions(baseWorkflow)
+      ? findScopedPermissionEscalations(
+          permissionsForWorkflow(baseWorkflow),
+          permissionsForWorkflow(headWorkflow),
+          { kind: "workflow" },
+        )
+      : [];
   const baseJobs = jobsForWorkflow(baseWorkflow);
   const headJobs = jobsForWorkflow(headWorkflow);
   const jobNames = new Set([...Object.keys(baseJobs), ...Object.keys(headJobs)]);
@@ -176,6 +190,16 @@ function workflowPermissionEscalations(
     }
 
     if (!hasExplicitPermissions(baseJobs[job]) && !hasExplicitPermissions(headJob)) {
+      continue;
+    }
+
+    if (
+      !baseIsAddedBaseline &&
+      !hasExplicitPermissions(baseJobs[job]) &&
+      !hasExplicitPermissions(baseWorkflow)
+    ) {
+      // Omitted base permissions inherit repository defaults that are not present in workflow
+      // YAML. Treating that unknown boundary as `none` creates false escalations.
       continue;
     }
 
@@ -195,18 +219,19 @@ export const workflowPermissionEscalationRule: Rule = {
   id: "workflow/permission-escalation",
   title: "GitHub Actions permission escalation",
   run(ctx) {
-    if (!ctx.input.config.github_actions.block_permission_escalation) {
+    if (ctx.input.config.github_actions.checks.permission_escalation === "off") {
       return [];
     }
 
     const findings: RawFinding[] = [];
 
     for (const file of ctx.helpers.changedFiles()) {
+      const treatAsAdded = file.status === "added" || !wasWorkflowFile(ctx, file);
       if (
         !isWorkflowFile(ctx, file.path) ||
         file.status === "removed" ||
         !file.headContent ||
-        needsBaseContent(file)
+        needsBaseContent(file, treatAsAdded)
       ) {
         continue;
       }
@@ -217,7 +242,10 @@ export const workflowPermissionEscalationRule: Rule = {
         continue;
       }
 
-      const base = file.baseContent ? parseWorkflow(file.baseContent) : undefined;
+      const base = !treatAsAdded && file.baseContent ? parseWorkflow(file.baseContent) : undefined;
+      if (base?.kind === "invalid") {
+        continue;
+      }
       const baseWorkflow = base?.kind === "valid" ? base.workflow : undefined;
       const escalations = workflowPermissionEscalations(baseWorkflow, head.workflow);
 

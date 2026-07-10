@@ -1,9 +1,24 @@
-import { normalizeWorkflowPermissions } from "./permissions.js";
+import { KNOWN_WORKFLOW_PERMISSIONS, normalizeWorkflowPermissions } from "./permissions.js";
 import type { WorkflowDocument } from "./parseWorkflow.js";
+import { canonicalizeExpressionReferences, extractGitHubExpressionBodies } from "./expressions.js";
 
 interface CheckoutStep {
   uses: string;
   ref?: string;
+  repository?: string;
+}
+
+export interface WorkflowUse {
+  kind: "action" | "reusable-workflow" | "container";
+  uses: string;
+  job?: string;
+  service?: string;
+}
+
+export interface UnknownWritePermission {
+  permission: string;
+  scope: "workflow" | "job";
+  job?: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -46,7 +61,7 @@ export function hasOwnWorkflowPermissions(workflow: WorkflowDocument): boolean {
   return Object.hasOwn(workflow, "permissions");
 }
 
-function workflowJobs(workflow: WorkflowDocument): Record<string, unknown> {
+export function workflowJobs(workflow: WorkflowDocument): Record<string, unknown> {
   return isRecord(workflow.jobs) ? workflow.jobs : {};
 }
 
@@ -85,16 +100,65 @@ function jobSteps(job: unknown): unknown[] {
 }
 
 export function findWorkflowActionUses(workflow: WorkflowDocument): string[] {
-  return Object.values(workflowJobs(workflow)).flatMap((job) =>
-    jobSteps(job).flatMap((step) => {
+  return findWorkflowUses(workflow)
+    .filter((item) => item.kind === "action")
+    .map((item) => item.uses);
+}
+
+function containerImage(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return isRecord(value) ? asString(value.image) : undefined;
+}
+
+export function findWorkflowUses(workflow: WorkflowDocument): WorkflowUse[] {
+  const uses: WorkflowUse[] = [];
+
+  for (const [jobId, job] of Object.entries(workflowJobs(workflow))) {
+    if (!isRecord(job)) {
+      continue;
+    }
+
+    const reusable = asString(job.uses);
+    if (reusable) {
+      uses.push({ kind: "reusable-workflow", uses: reusable, job: jobId });
+    }
+
+    const container = containerImage(job.container);
+    if (container) {
+      uses.push({ kind: "container", uses: container, job: jobId });
+    }
+
+    if (isRecord(job.services)) {
+      for (const [service, definition] of Object.entries(job.services)) {
+        const image = containerImage(definition);
+        if (image) {
+          uses.push({ kind: "container", uses: image, job: jobId, service });
+        }
+      }
+    }
+
+    for (const step of jobSteps(job)) {
       if (!isRecord(step)) {
-        return [];
+        continue;
       }
 
-      const uses = asString(step.uses);
-      return uses ? [uses] : [];
-    }),
-  );
+      const stepUses = asString(step.uses);
+      if (!stepUses) {
+        continue;
+      }
+
+      if (stepUses.startsWith("docker://")) {
+        uses.push({ kind: "container", uses: stepUses.slice("docker://".length), job: jobId });
+      } else {
+        uses.push({ kind: "action", uses: stepUses, job: jobId });
+      }
+    }
+  }
+
+  return uses;
 }
 
 function findCheckoutSteps(workflow: WorkflowDocument): CheckoutStep[] {
@@ -106,69 +170,167 @@ function findCheckoutSteps(workflow: WorkflowDocument): CheckoutStep[] {
 
       const uses = asString(step.uses);
 
-      if (!uses?.startsWith("actions/checkout@")) {
+      if (!uses?.toLowerCase().startsWith("actions/checkout@")) {
         return [];
       }
 
-      const ref = isRecord(step.with) ? asString(step.with.ref) : undefined;
-      return [{ uses, ref }];
+      const withConfig = isRecord(step.with) ? step.with : {};
+      return [
+        {
+          uses,
+          ref: asString(withConfig.ref),
+          repository: asString(withConfig.repository),
+        },
+      ];
     }),
   );
 }
 
-export function hasPullRequestTargetCheckoutOfHead(workflow: WorkflowDocument): boolean {
+const PR_HEAD_CONTEXT =
+  /github\.(?:event\.pull_request\.head(?:\.(?:sha|ref|label)|\.repo\.full_name)?|head_ref)/i;
+
+export function findPullRequestTargetHeadPatterns(workflow: WorkflowDocument): string[] {
   if (!hasWorkflowEvent(workflow, "pull_request_target")) {
-    return false;
+    return [];
   }
 
-  return findCheckoutSteps(workflow).some((step) =>
-    step.ref?.includes("github.event.pull_request.head"),
-  );
+  const patterns: string[] = [];
+
+  for (const step of findCheckoutSteps(workflow)) {
+    const ref = canonicalizeExpressionReferences(step.ref ?? "");
+    const repository = canonicalizeExpressionReferences(step.repository ?? "");
+    const hasHeadExpression = [step.ref ?? "", step.repository ?? ""].some((value) =>
+      extractGitHubExpressionBodies(value).some((expression) => PR_HEAD_CONTEXT.test(expression)),
+    );
+    if (hasHeadExpression) {
+      patterns.push(`checkout:${ref}:${repository}`);
+    }
+  }
+
+  for (const [jobId, job] of Object.entries(workflowJobs(workflow))) {
+    for (const [stepIndex, step] of jobSteps(job).entries()) {
+      if (!isRecord(step) || typeof step.run !== "string") {
+        continue;
+      }
+
+      for (const [lineIndex, line] of step.run.split(/\r?\n/).entries()) {
+        const canonicalLine = canonicalizeExpressionReferences(line);
+        const hasHeadExpression = extractGitHubExpressionBodies(line).some((expression) =>
+          PR_HEAD_CONTEXT.test(expression),
+        );
+        if (/\bgit\s+(?:fetch|checkout)\b/i.test(line) && hasHeadExpression) {
+          patterns.push(`shell:${jobId}:${stepIndex}:${lineIndex}:${canonicalLine.trim()}`);
+        }
+      }
+    }
+  }
+
+  return patterns;
 }
 
-function isThirdPartyAction(uses: string): boolean {
-  return (
-    !uses.startsWith("actions/") &&
-    !uses.startsWith("./") &&
-    !uses.startsWith("../") &&
-    !uses.startsWith(".github/") &&
-    !uses.startsWith("docker://")
-  );
+export function hasPullRequestTargetCheckoutOfHead(workflow: WorkflowDocument): boolean {
+  return findPullRequestTargetHeadPatterns(workflow).length > 0;
+}
+
+function isLocalUse(uses: string): boolean {
+  return uses.startsWith("./") || uses.startsWith("../");
 }
 
 function isShaPinnedAction(uses: string): boolean {
   const atIndex = uses.lastIndexOf("@");
-
-  if (atIndex < 0) {
-    return false;
-  }
-
-  return /^[a-f0-9]{40}$/i.test(uses.slice(atIndex + 1));
+  return atIndex >= 0 && /^[a-f0-9]{40}$/i.test(uses.slice(atIndex + 1));
 }
 
+function isDigestPinnedContainer(image: string): boolean {
+  return /@sha256:[a-f0-9]{64}$/i.test(image);
+}
+
+export function findUnpinnedWorkflowUses(workflow: WorkflowDocument): WorkflowUse[] {
+  return findWorkflowUses(workflow).filter((item) => {
+    if (isLocalUse(item.uses)) {
+      return false;
+    }
+
+    return item.kind === "container"
+      ? !isDigestPinnedContainer(item.uses)
+      : !isShaPinnedAction(item.uses);
+  });
+}
+
+/** @deprecated Use findUnpinnedWorkflowUses. This now includes official actions. */
 export function findUnpinnedThirdPartyActions(workflow: WorkflowDocument): string[] {
-  return findWorkflowActionUses(workflow).filter(
-    (uses) => isThirdPartyAction(uses) && !isShaPinnedAction(uses),
-  );
+  return findUnpinnedWorkflowUses(workflow)
+    .filter((item) => item.kind === "action")
+    .map((item) => item.uses);
 }
 
-export function hasAddedSecretsReference(patch: string | undefined): boolean {
-  if (!patch) {
-    return false;
+export function findSecretReferences(content: string | null | undefined): string[] {
+  if (!content) {
+    return [];
   }
 
-  const secretPatterns = [
-    /secrets\.[A-Za-z0-9_]+/,
-    /secrets\[['"][A-Za-z0-9_]+['"]\]/,
-    /toJson\(\s*secrets\s*\)/,
-  ];
+  const references = new Set<string>();
+  const expressionBodies = extractGitHubExpressionBodies(content);
+  const canonicalContent = expressionBodies.join("\n");
+  const patterns = [/secrets\.([A-Za-z0-9_]+)/gi];
 
+  for (const pattern of patterns) {
+    for (const match of canonicalContent.matchAll(pattern)) {
+      if (match[1]) {
+        references.add(match[1]);
+      }
+    }
+  }
+
+  if (/toJson\s*\(\s*secrets\s*\)/i.test(canonicalContent)) {
+    references.add("*");
+  }
+
+  if (expressionBodies.some((expression) => /\bsecrets\s*\[/.test(expression))) {
+    references.add("*dynamic*");
+  }
+
+  return [...references].sort();
+}
+
+/** @deprecated Patch-based secret detection cannot prove a base/head delta. */
+export function hasAddedSecretsReference(patch: string | undefined): boolean {
   return patch
-    .split("\n")
-    .some(
-      (line) =>
-        line.startsWith("+") &&
-        !line.startsWith("+++") &&
-        secretPatterns.some((pattern) => pattern.test(line)),
-    );
+    ? patch
+        .split("\n")
+        .some(
+          (line) =>
+            line.startsWith("+") &&
+            !line.startsWith("+++") &&
+            findSecretReferences(line).length > 0,
+        )
+    : false;
+}
+
+function unknownWritePermissions(
+  permissions: unknown,
+  scope: "workflow" | "job",
+  job?: string,
+): UnknownWritePermission[] {
+  if (!isRecord(permissions)) {
+    return [];
+  }
+
+  const known = new Set<string>(KNOWN_WORKFLOW_PERMISSIONS);
+  return Object.entries(permissions).flatMap(([permission, value]) => {
+    if (known.has(permission) || typeof value !== "string" || value.toLowerCase() !== "write") {
+      return [];
+    }
+
+    return [{ permission, scope, ...(job ? { job } : {}) }];
+  });
+}
+
+export function findUnknownWritePermissions(workflow: WorkflowDocument): UnknownWritePermission[] {
+  return [
+    ...unknownWritePermissions(workflow.permissions, "workflow"),
+    ...findJobPermissions(workflow).flatMap(({ jobId, permissions }) =>
+      unknownWritePermissions(permissions, "job", jobId),
+    ),
+  ];
 }

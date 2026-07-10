@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  fetchRepositoryTextContent,
   runAction,
   type ActionContext,
   type ActionRuntime,
@@ -60,6 +59,7 @@ function prContext(
         number: 5,
         title: "Tighten workflow permissions",
         body: validContractBody(),
+        changed_files: 1,
         user: {
           login: "codex",
         },
@@ -103,6 +103,13 @@ interface IssueComment {
     login?: string | null;
     type?: string | null;
   } | null;
+  performed_via_github_app?: {
+    slug?: string | null;
+  } | null;
+}
+
+interface TestOctokit extends OctokitLike {
+  readonly changedFileCount: number;
 }
 
 function createOctokit(options: {
@@ -116,7 +123,7 @@ function createOctokit(options: {
     create?: Error;
     update?: Error;
   };
-}): OctokitLike {
+}): TestOctokit {
   const files = options.files ?? [];
   const contents = options.contents ?? {};
   const rawContents = options.rawContents ?? {};
@@ -125,6 +132,7 @@ function createOctokit(options: {
   const commentErrors = options.commentErrors ?? {};
 
   const listFiles = vi.fn(async () => ({ data: files }));
+  const getPullRequest = vi.fn(async () => ({ data: { changed_files: files.length } }));
   const getContent = vi.fn(async ({ path, ref }: { path: string; ref: string }) => {
     const key = `${ref}:${path}`;
 
@@ -168,12 +176,14 @@ function createOctokit(options: {
   });
 
   return {
+    changedFileCount: files.length,
     paginate: vi.fn(async (method, args) => {
       const response = await method(args);
       return response.data;
     }),
     rest: {
       pulls: {
+        get: getPullRequest,
         listFiles,
       },
       repos: {
@@ -212,12 +222,17 @@ function createHarness(
   const warnings: string[] = [];
   const writtenFiles = new Map<string, string>();
   let summaryText = "";
+  const octokit = options.octokit ?? createOctokit({});
+  const changedFileCount =
+    "changedFileCount" in octokit && typeof octokit.changedFileCount === "number"
+      ? octokit.changedFileCount
+      : 0;
 
   const runtime = {
-    context: options.context ?? prContext(),
-    octokit: options.octokit ?? createOctokit({}),
+    context: options.context ?? prContext({ changed_files: changedFileCount }),
+    octokit,
     getInput: vi.fn((name: string) => inputs[name] ?? ""),
-    setOutput: vi.fn((name: string, value: string | number) => {
+    setOutput: vi.fn((name: string, value: string | number | boolean) => {
       outputs.set(name, String(value));
     }),
     setFailed: vi.fn((message: string | Error) => {
@@ -301,6 +316,14 @@ describe("runAction", () => {
     expect(result?.findings.map((finding) => finding.ruleId)).not.toContain("contract/missing");
     expect(result?.findings.map((finding) => finding.ruleId)).not.toContain("contract/invalid");
     expect(harness.outputs.get("decision")).toBe("block");
+    expect(harness.outputs.get("status")).toBe("blocked");
+    expect(harness.outputs.get("analysis-complete")).toBe("true");
+    expect(harness.outputs.get("error-count")).toBe(String(result?.summary.errorCount));
+    expect(harness.outputs.get("warning-count")).toBe(String(result?.summary.warnCount));
+    expect(harness.outputs.get("info-count")).toBe(String(result?.summary.infoCount));
+    expect(harness.outputs.get("waived-count")).toBe("0");
+    expect(harness.outputs.get("expected-file-count")).toBe("1");
+    expect(harness.outputs.get("analyzed-file-count")).toBe("1");
     expect(harness.outputs.get("risk-score")).toBe(String(result?.riskScore));
     expect(harness.outputs.get("report-json")).toBe("agent-gate-report.json");
     expect(harness.outputs.get("report-markdown")).toBe("agent-gate-report.md");
@@ -320,7 +343,7 @@ describe("runAction", () => {
     expect(harness.summaryText()).toContain("# Agent Gate: BLOCKED");
     expect(harness.infos.join("\n")).toContain("Agent Gate: BLOCKED");
     expect(harness.infos.join("\n")).toContain("Decision: block");
-    expect(harness.infos.join("\n")).toContain("Risk score:");
+    expect(harness.infos.join("\n")).not.toContain("Risk score:");
     expect(harness.infos.join("\n")).toContain("Findings:");
     expect(harness.infos.join("\n")).toMatch(
       /- error agf_[0-9a-f]{16} workflow\/permission-escalation \.github\/workflows\/release\.yml/,
@@ -359,7 +382,7 @@ describe("runAction", () => {
     );
     expect(jsonReport.metadata.configSource).toBe("default");
     expect(harness.outputs.get("decision")).toBe("warn");
-    expect(harness.summaryText()).toContain("# Agent Gate: NEEDS HUMAN DECISION");
+    expect(harness.summaryText()).toContain("# Agent Gate: NEEDS REVIEW");
     expect(harness.summaryText()).toContain("- Policy source: built-in default");
     expect(harness.failures).toEqual([]);
     expect(harness.warnings).toEqual([
@@ -414,9 +437,7 @@ describe("runAction", () => {
 
     await runAction(harness.runtime);
 
-    expect(harness.failures).toEqual([
-      `Unable to load agent-gate.yml from base ref ${BASE_SHA}: ${message}`,
-    ]);
+    expect(harness.failures[0]).toContain(message);
     expect(harness.outputs.size).toBe(0);
     expect(harness.warnings).toEqual([]);
   });
@@ -432,9 +453,7 @@ describe("runAction", () => {
 
     await runAction(harness.runtime);
 
-    expect(harness.failures).toEqual([
-      `Unable to load agent-gate.yml from base ref ${BASE_SHA}: network unavailable`,
-    ]);
+    expect(harness.failures[0]).toContain("network unavailable");
     expect(harness.outputs.size).toBe(0);
     expect(harness.warnings).toEqual([]);
   });
@@ -477,9 +496,7 @@ describe("runAction", () => {
 
     await runAction(harness.runtime);
 
-    expect(harness.failures[0]).toMatch(
-      new RegExp(`Unable to load agent-gate\\.yml from base ref ${BASE_SHA}:`),
-    );
+    expect(harness.failures[0]).toContain("response was not base64 file content");
     expect(harness.outputs.size).toBe(0);
     expect(harness.warnings).toEqual([]);
   });
@@ -500,7 +517,7 @@ describe("runAction", () => {
     expect(harness.warnings).toEqual([]);
   });
 
-  it("fetches renamed file base content from previousPath and head content from current path", async () => {
+  it("does not fetch content for renamed files outside configured analysis paths", async () => {
     const octokit = createOctokit({
       files: [
         workflowFile({
@@ -519,7 +536,7 @@ describe("runAction", () => {
 
     await runAction(harness.runtime);
 
-    expect(octokit.rest.repos.getContent).toHaveBeenCalledWith(
+    expect(octokit.rest.repos.getContent).not.toHaveBeenCalledWith(
       expect.objectContaining({
         owner: "sjh9714",
         repo: "Agent-Gate",
@@ -527,7 +544,7 @@ describe("runAction", () => {
         ref: BASE_SHA,
       }),
     );
-    expect(octokit.rest.repos.getContent).toHaveBeenCalledWith(
+    expect(octokit.rest.repos.getContent).not.toHaveBeenCalledWith(
       expect.objectContaining({
         owner: "sjh9714",
         repo: "Agent-Gate",
@@ -619,7 +636,10 @@ describe("runAction", () => {
         [`${HEAD_SHA}:src/added.ts`]: "export const after = true;\n",
       },
     });
-    const harness = createHarness({ context: prContext({ body: "" }), octokit });
+    const harness = createHarness({
+      context: prContext({ body: "", changed_files: 2 }),
+      octokit,
+    });
 
     await runAction(harness.runtime);
 
@@ -657,7 +677,7 @@ describe("runAction", () => {
         [`${HEAD_SHA}:.github/workflows/release.yml`]: "permissions:\n  contents: write\n",
       },
       errors: {
-        [`${BASE_SHA}:.github/workflows/release.yml`]: new Error("not found"),
+        [`${BASE_SHA}:.github/workflows/release.yml`]: githubApiError(404, "Not Found"),
       },
     });
     const harness = createHarness({ octokit });
@@ -671,6 +691,55 @@ describe("runAction", () => {
       "workflow/permission-escalation",
     );
     expect(harness.outputs.get("decision")).toBe("block");
+    expect(harness.outputs.get("status")).toBe("incomplete");
+    expect(harness.outputs.get("analysis-complete")).toBe("false");
+    expect(harness.failures).toEqual(["Agent Gate analysis is incomplete."]);
+  });
+
+  it("loads changed_files with one pull GET when the webhook payload omits it", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+    });
+    const harness = createHarness({ context: prContext({ changed_files: undefined }), octokit });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.pulls.get).toHaveBeenCalledOnce();
+    expect(octokit.rest.pulls.get).toHaveBeenCalledWith(
+      expect.objectContaining({ request: { signal: expect.any(AbortSignal) } }),
+    );
+    expect(harness.outputs.get("analysis-complete")).toBe("true");
+    expect(harness.failures).toEqual([]);
+  });
+
+  it("fails incomplete file-list analysis even when fail-on-block is false", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: observe\n",
+      },
+    });
+    const harness = createHarness({
+      context: prContext({ changed_files: 3_001 }),
+      octokit,
+      inputs: { "fail-on-block": "false" },
+    });
+
+    const result = await runAction(harness.runtime);
+
+    expect(result?.findings.map((finding) => finding.ruleId)).toEqual([
+      "analysis/file-list-incomplete",
+    ]);
+    expect(result?.decision).toBe("block");
+    expect(result?.status).toBe("incomplete");
+    expect(octokit.rest.pulls.listFiles).not.toHaveBeenCalled();
+    expect(harness.outputs.get("analysis-complete")).toBe("false");
+    expect(harness.outputs.get("expected-file-count")).toBe("3001");
+    expect(harness.outputs.get("analyzed-file-count")).toBe("0");
+    expect(harness.failures).toEqual(["Agent Gate analysis is incomplete."]);
   });
 
   it("does not fail block decisions when fail-on-block is false", async () => {
@@ -803,6 +872,41 @@ describe("runAction", () => {
       }),
     );
     expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+    expect(octokit.paginate).not.toHaveBeenCalled();
+    expect(octokit.rest.issues?.listComments).toHaveBeenCalledWith(
+      expect.objectContaining({
+        per_page: 100,
+        page: 1,
+        sort: "created",
+        direction: "desc",
+        request: { signal: expect.any(AbortSignal) },
+      }),
+    );
+    expect(octokit.rest.issues?.updateComment).toHaveBeenCalledWith(
+      expect.objectContaining({ request: { signal: expect.any(AbortSignal) } }),
+    );
+  });
+
+  it("bounds managed-comment discovery to the newest 100 comments", async () => {
+    const comments = Array.from({ length: 100 }, (_, index) => ({
+      id: 1_000 - index,
+      body: `unrelated comment ${index}`,
+      user: { login: "octocat", type: "User" },
+    }));
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+      comments,
+    });
+    const harness = createHarness({ octokit, inputs: { comment: "true" } });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.issues?.listComments).toHaveBeenCalledOnce();
+    expect(octokit.paginate).not.toHaveBeenCalled();
+    expect(octokit.rest.issues?.createComment).toHaveBeenCalledOnce();
   });
 
   it("ignores human-owned marker comments and creates a managed comment", async () => {
@@ -833,6 +937,7 @@ describe("runAction", () => {
         body: expect.stringContaining(
           "<!-- This comment is managed by Agent Gate. Do not edit manually. -->",
         ),
+        request: { signal: expect.any(AbortSignal) },
       }),
     );
     expect(octokit.rest.issues?.updateComment).not.toHaveBeenCalled();
@@ -869,7 +974,7 @@ describe("runAction", () => {
     expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
   });
 
-  it("updates the newest bot-owned marker when human and bot markers both exist", async () => {
+  it("ignores marker comments from bots other than github-actions[bot]", async () => {
     const octokit = createOctokit({
       files: [],
       contents: {
@@ -904,10 +1009,33 @@ describe("runAction", () => {
 
     expect(octokit.rest.issues?.updateComment).toHaveBeenCalledWith(
       expect.objectContaining({
-        comment_id: 61,
+        comment_id: 12,
       }),
     );
     expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+  });
+
+  it("ignores github-actions markers performed through another GitHub App", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+      comments: [
+        {
+          id: 44,
+          body: "<!-- agent-gate-report -->\nforeign app",
+          user: { login: "github-actions[bot]", type: "Bot" },
+          performed_via_github_app: { slug: "foreign-app" },
+        },
+      ],
+    });
+    const harness = createHarness({ octokit, inputs: { comment: "true" } });
+
+    await runAction(harness.runtime);
+
+    expect(octokit.rest.issues?.updateComment).not.toHaveBeenCalled();
+    expect(octokit.rest.issues?.createComment).toHaveBeenCalledOnce();
   });
 
   it("warns without failing when PR comment upsert fails", async () => {
@@ -983,44 +1111,6 @@ describe("runAction", () => {
     expect(harness.failures).toEqual([
       "Invalid boolean input comment: nope. Expected true or false.",
     ]);
-  });
-});
-
-describe("fetchRepositoryTextContent", () => {
-  it("returns null for API failures and non-file content", async () => {
-    const throwingOctokit = createOctokit({
-      files: [],
-      errors: {
-        "main:agent-gate.yml": new Error("not found"),
-      },
-    });
-    const directoryOctokit: OctokitLike = {
-      rest: {
-        repos: {
-          getContent: vi.fn(async () => ({ data: [] })),
-        },
-        pulls: {
-          listFiles: vi.fn(async () => ({ data: [] })),
-        },
-      },
-    };
-
-    await expect(
-      fetchRepositoryTextContent(throwingOctokit, {
-        owner: "sjh9714",
-        repo: "Agent-Gate",
-        path: "agent-gate.yml",
-        ref: "main",
-      }),
-    ).resolves.toBeNull();
-    await expect(
-      fetchRepositoryTextContent(directoryOctokit, {
-        owner: "sjh9714",
-        repo: "Agent-Gate",
-        path: ".github",
-        ref: "main",
-      }),
-    ).resolves.toBeNull();
   });
 });
 

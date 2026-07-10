@@ -263,6 +263,25 @@ describe("workflow/permission-escalation", () => {
     );
   });
 
+  it("does not treat omitted base permissions as none for modified workflows", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [
+          workflowChange({
+            baseContent: "jobs:\n  test:\n    steps:\n      - run: echo test\n",
+            headContent:
+              "permissions:\n  contents: read\njobs:\n  test:\n    steps:\n      - run: echo test\n",
+          }),
+        ],
+      }),
+    );
+
+    expect(result.findings.map((finding) => finding.ruleId)).not.toContain(
+      "workflow/permission-escalation",
+    );
+  });
+
   it("does not emit for removed workflows", async () => {
     const result = await analyze(
       createAnalysisInput({

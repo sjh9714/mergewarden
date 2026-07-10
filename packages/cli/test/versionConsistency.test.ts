@@ -34,6 +34,7 @@ describe("version consistency", () => {
     const versions = await Promise.all([
       readPackageVersion("package.json"),
       readPackageVersion("packages/core/package.json"),
+      readPackageVersion("packages/github/package.json"),
       readPackageVersion("packages/action/package.json"),
       readPackageVersion("packages/cli/package.json"),
       readVersionConstant("packages/core/src/version.ts"),

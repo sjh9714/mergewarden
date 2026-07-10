@@ -38,6 +38,7 @@ describe("finding IDs", () => {
     const [finding] = attachFindingIds([rawWorkflowFinding]);
 
     expect(finding?.findingId).toMatch(/^agf_[0-9a-f]{16}$/);
+    expect(finding?.disposition).toBe("active");
     expect(finding?.evidenceSnapshot).toEqual({
       ruleId: "workflow/permission-escalation",
       severity: "error",
@@ -154,5 +155,62 @@ describe("finding IDs", () => {
     const later = await analyze(laterInput);
 
     expect(first.findings[0]?.findingId).toBe(later.findings[0]?.findingId);
+  });
+
+  it("keeps finding IDs stable when only policy severity changes", () => {
+    expect(createFindingId(rawWorkflowFinding)).toBe(
+      createFindingId({
+        ...rawWorkflowFinding,
+        severity: "warn",
+      }),
+    );
+  });
+
+  it("normalizes and bounds dynamic finding fields before JSON exposure", () => {
+    const longEvidence = `unsafe\u0000\u0085\u202e\u2066\r\n${"x".repeat(3_000)}`;
+    const [finding] = attachFindingIds([
+      {
+        ...rawWorkflowFinding,
+        path: "src/unsafe\u0007.ts",
+        message: longEvidence,
+        evidence: [{ label: "payload\u0001", value: longEvidence }],
+        remediation: [longEvidence],
+      },
+    ]);
+
+    expect(finding).toBeDefined();
+    expect(finding?.path).toBe("src/unsafe.ts");
+    expect(
+      [...(finding?.message ?? "")].every((character) => {
+        const codePoint = character.codePointAt(0) ?? 0;
+        return codePoint === 10 || (codePoint > 31 && codePoint !== 127);
+      }),
+    ).toBe(true);
+    expect(finding?.message).toContain("\n");
+    expect(finding?.message).not.toContain("\u0085");
+    expect(finding?.message).not.toContain("\u202e");
+    expect(finding?.message).not.toContain("\u2066");
+    expect(finding?.message).toContain("[sha256:");
+    expect(finding?.message.length).toBeLessThan(2_150);
+    expect(finding?.evidence[0]?.label).toBe("payload");
+    expect(JSON.stringify(finding)).not.toContain("\\u0000");
+  });
+
+  it("uses a byte-aware preview without splitting Unicode code points", () => {
+    const [finding] = attachFindingIds([
+      {
+        ...rawWorkflowFinding,
+        evidence: [{ label: "unicode", value: "한😀".repeat(1_000) }],
+      },
+    ]);
+    const value = finding?.evidence[0]?.value;
+    if (!value) {
+      throw new Error("Expected bounded Unicode evidence");
+    }
+
+    const [preview] = value.split("…");
+    expect(Buffer.byteLength(preview ?? "", "utf8")).toBeLessThanOrEqual(2_048);
+    expect(value).toContain("[sha256:");
+    expect(value).not.toContain("�");
   });
 });

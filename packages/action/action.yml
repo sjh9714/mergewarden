@@ -1,5 +1,5 @@
 name: "Agent Gate for AI PRs"
-description: "Deterministic CI firewall for AI-generated pull requests"
+description: "Checkout-free policy gate for AI-generated pull requests"
 author: "Agent Gate contributors"
 
 inputs:
@@ -19,7 +19,7 @@ inputs:
     required: false
     default: "false"
   fail-on-block:
-    description: "Exit with code 1 when decision is block"
+    description: "Exit with code 1 for complete block decisions; incomplete analysis always fails"
     required: false
     default: "true"
   report-json:
@@ -34,8 +34,24 @@ inputs:
 outputs:
   decision:
     description: "pass, warn, or block"
+  status:
+    description: "passed, observed, needs-review, blocked, or incomplete"
+  analysis-complete:
+    description: "Whether Agent Gate received all evidence required for deterministic analysis"
+  error-count:
+    description: "Number of active error findings"
+  warning-count:
+    description: "Number of active warning findings"
+  info-count:
+    description: "Number of active informational findings"
+  waived-count:
+    description: "Number of findings covered by active base-policy waivers"
+  expected-file-count:
+    description: "Authoritative pull request changed_files count"
+  analyzed-file-count:
+    description: "Number of changed files included in deterministic analysis"
   risk-score:
-    description: "Risk score from 0 to 100"
+    description: "Deprecated compatibility score; use status and finding counts"
   report-json:
     description: "Path to JSON report"
   report-markdown:

@@ -3,6 +3,7 @@ import type { ParseContractResult } from "./contract/schema.js";
 
 export type Severity = "info" | "warn" | "error";
 export type Decision = "pass" | "warn" | "block";
+export type AnalysisStatus = "passed" | "observed" | "needs-review" | "blocked" | "incomplete";
 export type ConfigSource = "base-branch" | "default" | "local";
 
 export interface Evidence {
@@ -34,6 +35,7 @@ export interface EvidenceSnapshot {
 export interface Finding extends RawFinding {
   findingId: string;
   evidenceSnapshot: EvidenceSnapshot;
+  disposition: "active" | "waived";
 }
 
 export interface RepoContext {
@@ -110,10 +112,42 @@ export interface AnalysisInput {
   now: string;
   configSource: ConfigSource;
   version: string;
+  /**
+   * Completeness information supplied by an API or fixture collector. It is optional so that
+   * callers which already possess a complete in-memory change set remain source compatible.
+   */
+  analysis?: {
+    complete: boolean;
+    expectedFileCount: number;
+    analyzedFileCount: number;
+    contentFileCount: number;
+    runtimeRef: string;
+    gaps?: AnalysisGap[];
+  };
+}
+
+export interface AnalysisGap {
+  ruleId: "analysis/file-list-incomplete" | "analysis/content-unavailable";
+  message: string;
+  path?: string;
+  evidence: Evidence[];
+}
+
+export interface AppliedWaiver {
+  findingId: string;
+  reason: string;
+  expiresAt: string;
+}
+
+export interface WaivedFinding extends Finding {
+  disposition: "waived";
+  waiver: AppliedWaiver;
 }
 
 export interface AnalysisResult {
   decision: Decision;
+  status: AnalysisStatus;
+  /** @deprecated Use status and the explicit finding counts. Scheduled for removal in v1. */
   riskScore: number;
   summary: {
     title: string;
@@ -122,13 +156,24 @@ export interface AnalysisResult {
     errorCount: number;
     warnCount: number;
     infoCount: number;
+    waivedCount: number;
   };
   findings: Finding[];
+  waivedFindings: WaivedFinding[];
   metadata: {
     analyzedAt: string;
     baseSha: string;
     headSha: string;
     configSource: ConfigSource;
     version: string;
+    analysisComplete: boolean;
+    expectedFileCount: number;
+    analyzedFileCount: number;
+    contentFileCount: number;
+    policyDigest: string;
+    engineVersion: string;
+    runtimeRef: string;
+    totalFindingCount: number;
+    omittedFindingCount: number;
   };
 }

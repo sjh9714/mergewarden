@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_CONFIG, parseConfig } from "../../src/index.js";
+import {
+  AgentGateConfigSchema,
+  DEFAULT_CONFIG,
+  DEFAULT_GITHUB_ACTION_CHECKS,
+  parseConfig,
+} from "../../src/index.js";
 
 describe("parseConfig", () => {
   it("parses a minimal valid config and applies defaults", () => {
@@ -115,6 +120,122 @@ package_scripts:
 
   it("exposes defaults with the same values as a minimal config parse", () => {
     expect(DEFAULT_CONFIG).toEqual(parseConfig("version: 1\n"));
+    expect(DEFAULT_CONFIG.github_actions.checks).toEqual(DEFAULT_GITHUB_ACTION_CHECKS);
+  });
+
+  it("parses granular workflow checks and fills individual defaults", () => {
+    const config = parseConfig(`
+version: 1
+github_actions:
+  checks:
+    permission_escalation: warn
+    unpinned_action: off
+`);
+
+    expect(config.github_actions.checks).toEqual({
+      ...DEFAULT_GITHUB_ACTION_CHECKS,
+      permission_escalation: "warn",
+      unpinned_action: "off",
+    });
+  });
+
+  it("maps legacy workflow settings onto granular checks", () => {
+    const config = parseConfig(`
+version: 1
+github_actions:
+  block_permission_escalation: false
+  block_pull_request_target_checkout: false
+  require_pinned_actions: error
+  severity: warn
+`);
+
+    expect(config.github_actions.checks).toMatchObject({
+      permission_escalation: "off",
+      write_all: "warn",
+      id_token_write: "warn",
+      pull_request_target_head: "off",
+      unpinned_action: "error",
+      unpinned_reusable_workflow: "error",
+      unpinned_container: "error",
+      malformed_workflow: "warn",
+    });
+  });
+
+  it("rejects any raw mixing of granular and legacy workflow settings", () => {
+    const yaml = `
+version: 1
+github_actions:
+  severity: error
+  checks:
+    write_all: error
+`;
+
+    expect(() => parseConfig(yaml)).toThrow(/cannot be mixed with legacy/);
+    expect(
+      AgentGateConfigSchema.safeParse({
+        version: 1,
+        github_actions: {
+          severity: "error",
+          checks: { write_all: "error" },
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("validates waivers and agentic workflow extensions", () => {
+    const config = parseConfig(`
+version: 1
+waivers:
+  - finding_id: agf_0123456789abcdef
+    reason: Approved exception
+    expires_at: 2026-09-30T00:00:00Z
+agentic_workflows:
+  enabled: true
+  severity: warn
+  privileged_severity: error
+  additional_actions:
+    - uses: owner/custom-agent-action
+      prompt_inputs: [prompt, instructions]
+`);
+
+    expect(config.waivers).toEqual([
+      {
+        finding_id: "agf_0123456789abcdef",
+        reason: "Approved exception",
+        expires_at: "2026-09-30T00:00:00Z",
+      },
+    ]);
+    expect(config.agentic_workflows.additional_actions).toEqual([
+      {
+        uses: "owner/custom-agent-action",
+        prompt_inputs: ["prompt", "instructions"],
+      },
+    ]);
+  });
+
+  it("rejects duplicate, malformed, and non-RFC3339 waivers", () => {
+    expect(() =>
+      parseConfig(`
+version: 1
+waivers:
+  - finding_id: agf_0123456789abcdef
+    reason: first
+    expires_at: 2026-09-30T00:00:00Z
+  - finding_id: agf_0123456789abcdef
+    reason: second
+    expires_at: 2026-10-30T00:00:00Z
+`),
+    ).toThrow(/duplicate waiver/);
+
+    expect(() =>
+      parseConfig(`
+version: 1
+waivers:
+  - finding_id: not-a-finding
+    reason: invalid id
+    expires_at: tomorrow
+`),
+    ).toThrow(/waivers\.0\.finding_id|waivers\.0\.expires_at/);
   });
 
   it("rejects an invalid mode with a config-prefixed message and issue path", () => {

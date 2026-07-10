@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -48,6 +49,7 @@ class CliError extends Error {
 }
 
 const FILE_STATUSES = new Set<FileChange["status"]>(["added", "modified", "removed", "renamed"]);
+const TERMINAL_PREVIEW_BYTES = 2_048;
 
 const DEFAULT_REPO: RepoContext = {
   owner: "agent-gate",
@@ -225,38 +227,157 @@ export async function loadReplayFixture(fixtureDir: string): Promise<AnalysisInp
   };
 }
 
-function decisionLabel(decision: AnalysisResult["decision"]): string {
-  if (decision === "block") {
-    return "BLOCKED";
+function statusLabel(result: AnalysisResult): string {
+  switch (result.status) {
+    case "incomplete":
+      return "ANALYSIS INCOMPLETE";
+    case "blocked":
+      return "BLOCKED";
+    case "needs-review":
+      return "NEEDS REVIEW";
+    case "observed":
+      return "OBSERVED FINDINGS";
+    case "passed":
+      return "PASSED";
+  }
+}
+
+function stripTerminalControls(value: string): string {
+  let output = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+
+    if (code === 0x1b) {
+      const introducer = value.charCodeAt(index + 1);
+
+      if (introducer === 0x5b) {
+        index += 2;
+        while (index < value.length) {
+          const sequenceCode = value.charCodeAt(index);
+          if (sequenceCode >= 0x40 && sequenceCode <= 0x7e) {
+            break;
+          }
+          index += 1;
+        }
+      } else if (introducer === 0x5d) {
+        index += 2;
+        while (index < value.length) {
+          const sequenceCode = value.charCodeAt(index);
+          if (sequenceCode === 0x07) {
+            break;
+          }
+          if (sequenceCode === 0x1b && value.charCodeAt(index + 1) === 0x5c) {
+            index += 1;
+            break;
+          }
+          index += 1;
+        }
+      } else if (index + 1 < value.length) {
+        index += 1;
+      }
+      continue;
+    }
+
+    if (code === 0x0a) {
+      output += "\\n";
+      continue;
+    }
+    if (code === 0x0d) {
+      output += "\\r";
+      continue;
+    }
+    if (code === 0x09) {
+      output += "\\t";
+      continue;
+    }
+    if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) {
+      continue;
+    }
+
+    output += value[index];
   }
 
-  if (decision === "warn") {
-    return "WARN";
+  return output;
+}
+
+function byteLimitedPrefix(value: string, maxBytes: number): string {
+  let output = "";
+  let bytes = 0;
+
+  for (const character of value) {
+    const characterBytes = Buffer.byteLength(character, "utf8");
+    if (bytes + characterBytes > maxBytes) {
+      break;
+    }
+    output += character;
+    bytes += characterBytes;
   }
 
-  return "PASSED";
+  return output;
+}
+
+export function safeTerminalValue(value: string): string {
+  const normalized = stripTerminalControls(value.normalize("NFC")).replaceAll("@", "@\u200b");
+
+  if (Buffer.byteLength(normalized, "utf8") <= TERMINAL_PREVIEW_BYTES) {
+    return normalized;
+  }
+
+  const digest = createHash("sha256").update(normalized).digest("hex");
+  return `${byteLimitedPrefix(normalized, TERMINAL_PREVIEW_BYTES)}… [sha256:${digest}]`;
 }
 
 export function renderHumanReport(result: AnalysisResult): string {
-  const lines = [`Agent Gate: ${decisionLabel(result.decision)}`, ""];
+  const lines = [
+    `Agent Gate: ${statusLabel(result)}`,
+    "",
+    `Decision: ${result.decision}`,
+    `Findings: ${result.summary.errorCount} error, ${result.summary.warnCount} warning, ${result.summary.infoCount} info`,
+  ];
 
-  if (result.findings.length === 0) {
-    lines.push("No findings.");
-    return `${lines.join("\n")}\n`;
+  if (result.summary.waivedCount > 0) {
+    lines.push(`Waived: ${result.summary.waivedCount}`);
   }
 
-  for (const finding of result.findings) {
-    lines.push(`${finding.severity.toUpperCase()} ${finding.ruleId}`, finding.message);
+  lines.push(
+    `Analysis: ${result.metadata.analysisComplete ? "complete" : "incomplete"}`,
+    `Files analyzed: ${result.metadata.analyzedFileCount} of ${result.metadata.expectedFileCount}`,
+  );
+
+  lines.push("");
+
+  const visibleFindings = result.findings.slice(0, 10);
+
+  if (visibleFindings.length === 0) {
+    lines.push("No retained findings.");
+  }
+
+  for (const finding of visibleFindings) {
+    lines.push(
+      `${finding.severity.toUpperCase()} ${safeTerminalValue(finding.ruleId)}`,
+      `Message: ${safeTerminalValue(finding.message)}`,
+    );
 
     if (finding.path) {
-      lines.push(`Path: ${finding.path}`);
+      lines.push(`Path: ${safeTerminalValue(finding.path)}`);
     }
 
     for (const evidence of finding.evidence) {
-      lines.push(`- ${evidence.label}: ${evidence.value}`);
+      lines.push(`- ${safeTerminalValue(evidence.label)}: ${safeTerminalValue(evidence.value)}`);
     }
 
     lines.push("");
+  }
+
+  const omitted =
+    result.metadata.omittedFindingCount + result.findings.length - visibleFindings.length;
+
+  if (omitted > 0) {
+    lines.push(
+      `${omitted} additional finding(s) omitted from this surface. Full retained report: rerun with --format json or --format markdown.`,
+      "",
+    );
   }
 
   return `${lines.join("\n")}\n`;
@@ -286,7 +407,11 @@ function parseReplayOptions(argv: string[]): { fixtureDir: string; options: Repl
   return { fixtureDir, options: { format } };
 }
 
-function exitCodeForResult(result: AnalysisResult): 0 | 1 {
+export function exitCodeForResult(result: AnalysisResult): 0 | 1 | 2 {
+  if (!result.metadata.analysisComplete || result.status === "incomplete") {
+    return 2;
+  }
+
   return result.decision === "block" ? 1 : 0;
 }
 
@@ -305,7 +430,7 @@ export async function runCli(
     return exitCodeForResult(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown error";
-    io.stderr(`Agent Gate CLI error: ${message}\n`);
+    io.stderr(`Agent Gate CLI error: ${safeTerminalValue(message)}\n`);
     return 2;
   }
 }

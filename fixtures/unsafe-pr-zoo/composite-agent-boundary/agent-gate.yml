@@ -1,0 +1,30 @@
+version: 1
+mode: block
+
+agent_detection:
+  authors:
+    - codex
+
+contract:
+  required_for:
+    - agent
+
+github_actions:
+  checks:
+    permission_escalation: error
+    write_all: error
+    id_token_write: error
+    pull_request_target_head: error
+    unpinned_action: error
+    unpinned_reusable_workflow: warn
+    unpinned_container: warn
+    missing_permissions: warn
+    unknown_write_permission: warn
+    added_secret_reference: error
+    workflow_deleted: warn
+    malformed_workflow: error
+
+agentic_workflows:
+  enabled: true
+  severity: warn
+  privileged_severity: error

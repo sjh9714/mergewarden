@@ -10,7 +10,6 @@ export const AgentContractSchema = z
     issue: z.union([z.number().int(), z.string()]).optional(),
     allowed_paths: z.array(NonEmptyStringSchema).min(1),
     blocked_paths: z.array(NonEmptyStringSchema).optional(),
-    required_evidence: z.array(NonEmptyStringSchema).optional(),
   })
   .strict();
 

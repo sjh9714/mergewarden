@@ -51,6 +51,9 @@ importers:
       '@agent-gate/core':
         specifier: workspace:*
         version: link:../core
+      '@agent-gate/github':
+        specifier: workspace:*
+        version: link:../github
 
   packages/cli:
     dependencies:
@@ -73,6 +76,12 @@ importers:
       '@types/picomatch':
         specifier: ^4.0.3
         version: 4.0.3
+
+  packages/github:
+    dependencies:
+      '@agent-gate/core':
+        specifier: workspace:*
+        version: link:../core
 
 packages:
 

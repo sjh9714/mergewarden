@@ -12,12 +12,25 @@ function isPackageManifest(ctx: RuleContext, path: string): boolean {
   );
 }
 
-function missingBaseContent(file: FileChange): boolean {
-  return file.status !== "added" && file.baseContent == null;
+function missingBaseContent(file: FileChange, baseRequired = true): boolean {
+  return (
+    baseRequired &&
+    (file.status === "modified" || file.status === "renamed") &&
+    file.baseContent == null
+  );
 }
 
 function missingHeadContent(file: FileChange): boolean {
   return file.status !== "removed" && file.headContent == null;
+}
+
+function hasExplicitGap(ctx: RuleContext, file: FileChange, ref: "base" | "head"): boolean {
+  return (ctx.input.analysis?.gaps ?? []).some(
+    (gap) =>
+      gap.ruleId === "analysis/content-unavailable" &&
+      gap.path === file.path &&
+      gap.evidence.some((evidence) => evidence.label === "content_ref" && evidence.value === ref),
+  );
 }
 
 function contentUnavailableFinding(
@@ -52,10 +65,30 @@ export const contentUnavailableRule: Rule = {
   id: "analysis/content-unavailable",
   title: "Changed file content unavailable",
   run(ctx) {
+    const aggregateBudgetGap = (ctx.input.analysis?.gaps ?? []).some(
+      (gap) =>
+        gap.ruleId === "analysis/content-unavailable" &&
+        gap.evidence.some(
+          (evidence) =>
+            evidence.label === "reason_code" &&
+            evidence.value === "aggregate-content-budget-exceeded",
+        ),
+    );
+
+    if (aggregateBudgetGap) {
+      return [];
+    }
+
     const findings: RawFinding[] = [];
 
     for (const file of ctx.helpers.changedFiles()) {
       const workflowFile = isWorkflowFile(ctx, file.path);
+      const previousWorkflowFile = isWorkflowFile(ctx, file.previousPath ?? file.path);
+      const workflowRenamedOut = file.status === "renamed" && previousWorkflowFile && !workflowFile;
+      if (workflowRenamedOut) {
+        continue;
+      }
+
       const packageManifest = !workflowFile && isPackageManifest(ctx, file.path);
 
       if (!workflowFile && !packageManifest) {
@@ -74,11 +107,13 @@ export const contentUnavailableRule: Rule = {
             tags: ["analysis", "content-unavailable", "dependency", "package-script"],
           };
 
-      if (missingBaseContent(file)) {
+      const baseRequired = !workflowFile || previousWorkflowFile;
+
+      if (missingBaseContent(file, baseRequired) && !hasExplicitGap(ctx, file, "base")) {
         findings.push(contentUnavailableFinding(file, "base", findingOptions));
       }
 
-      if (missingHeadContent(file)) {
+      if (missingHeadContent(file) && !hasExplicitGap(ctx, file, "head")) {
         findings.push(contentUnavailableFinding(file, "head", findingOptions));
       }
     }
