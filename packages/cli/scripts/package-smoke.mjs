@@ -32,6 +32,8 @@ function assert(condition, message) {
 async function run(command, args, options = {}) {
   return execFileAsync(command, args, {
     ...options,
+    // Windows command shims are .cmd files and require the command shell.
+    shell: process.platform === "win32" && command === npmCommand,
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,
   });
