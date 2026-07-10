@@ -3,18 +3,50 @@
   "version": "0.2.6",
   "private": true,
   "type": "module",
+  "description": "Checkout-free policy scanning for AI-generated GitHub pull requests",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjh9714/Agent-Gate.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/sjh9714/Agent-Gate#readme",
+  "bugs": {
+    "url": "https://github.com/sjh9714/Agent-Gate/issues"
+  },
+  "keywords": [
+    "coding-agents",
+    "ai-code-review",
+    "github-actions",
+    "devsecops",
+    "supply-chain-security",
+    "ci-cd"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "agent-gate": "./dist/main.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
-    "build": "tsup src/main.ts --format esm --dts --sourcemap",
+    "build": "tsup --config tsup.config.ts",
     "test": "vitest run",
+    "test:pack": "pnpm build && node scripts/package-smoke.mjs",
+    "test:packed": "node scripts/package-smoke.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "dependencies": {
-    "@agent-gate/core": "workspace:*"
+  "devDependencies": {
+    "@agent-gate/core": "workspace:*",
+    "@agent-gate/github": "workspace:*"
   }
 }
