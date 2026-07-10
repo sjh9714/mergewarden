@@ -71,8 +71,14 @@ jobs:
           fail-on-block: false
 ```
 
-No checkout step is needed. For maximum supply-chain assurance, replace the
-version tag with the full 40-character commit SHA shown on the v0.3.1 release.
+For an immutable, commit-addressed install, pin the exact v0.3.1 release
+commit:
+
+```yaml
+- uses: sjh9714/Agent-Gate@5fc4a3a5087620ff23c6cb5b0351c3969339fc01
+```
+
+No checkout step is needed.
 Agent Gate does not publish or recommend a mutable `v0` tag.
 
 The first run works without `agent-gate.yml`: a confirmed 404 on the PR base
