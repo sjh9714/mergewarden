@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-unpinned-containers",
+    "headSha": "head-unpinned-containers"
+  },
+  "pr": {
+    "number": 107,
+    "title": "Add workflow with unpinned container images",
+    "branchName": "codex/workflow-unpinned-containers",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/container-ci.yml",
+      "status": "added",
+      "additions": 14,
+      "deletions": 0,
+      "baseContent": null,
+      "headContent": "on: [push]\npermissions: {}\njobs:\n  test:\n    runs-on: ubuntu-latest\n    container: node:22\n    services:\n      database:\n        image: postgres:17\n    steps:\n      - run: node --version\n"
+    }
+  ],
+  "now": "2026-07-10T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

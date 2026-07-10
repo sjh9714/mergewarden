@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { analyze } from "@agent-gate/core";
+import { analyze, renderMarkdownReport } from "@agent-gate/core";
 import { loadReplayFixture, renderHumanReport, runCli, safeTerminalValue } from "../src/replay.js";
 import { AGENT_GATE_VERSION } from "../src/version.js";
 
@@ -100,6 +100,13 @@ const unsafePrZooFixtures = [
     expectedDecision: "warn",
   },
   {
+    name: "workflow-unpinned-containers",
+    expectedRuleIds: ["workflow/dangerous-pattern", "workflow/dangerous-pattern"],
+    expectedSeverities: ["warn", "warn"],
+    expectedPath: ".github/workflows/container-ci.yml",
+    expectedDecision: "warn",
+  },
+  {
     name: "composite-agent-boundary",
     expectedRuleIds: [
       "agent/origin-detected",
@@ -142,6 +149,10 @@ const unsafePrZooFixtures = [
 
 function unsafePrZooFixturePath(name: string): string {
   return join(repoRoot, "fixtures", "unsafe-pr-zoo", name);
+}
+
+function safePrZooFixturePath(name: string): string {
+  return join(repoRoot, "fixtures", "safe-pr-zoo", name);
 }
 
 describe("CLI replay", () => {
@@ -272,6 +283,45 @@ describe("CLI replay", () => {
       expect(output).toContain(`Path: ${expectedPath}`);
     },
   );
+
+  it("replays unpinned container fixtures with distinct evidence and markdown snapshot", async () => {
+    const fixturePath = unsafePrZooFixturePath("workflow-unpinned-containers");
+    const result = await analyze(await loadReplayFixture(fixturePath));
+    const markdown = renderMarkdownReport(result);
+    const expectedMarkdown = await readFile(join(fixturePath, "report.md"), "utf8");
+
+    expect(result.decision).toBe("warn");
+    expect(result.findings).toHaveLength(2);
+    expect(result.findings).toEqual([
+      expect.objectContaining({
+        ruleId: "workflow/dangerous-pattern",
+        severity: "warn",
+        evidence: expect.arrayContaining([
+          { label: "pattern", value: "unpinned container" },
+          { label: "uses", value: "node:22" },
+        ]),
+      }),
+      expect.objectContaining({
+        ruleId: "workflow/dangerous-pattern",
+        severity: "warn",
+        evidence: expect.arrayContaining([
+          { label: "pattern", value: "unpinned container" },
+          { label: "uses", value: "postgres:17" },
+        ]),
+      }),
+    ]);
+    expect(markdown.trimEnd()).toBe(expectedMarkdown.trimEnd());
+  });
+
+  it("replays a safe pinned-container workflow without findings", async () => {
+    const result = await analyze(
+      await loadReplayFixture(safePrZooFixturePath("workflow-pinned-containers")),
+    );
+
+    expect(result.decision).toBe("pass");
+    expect(result.status).toBe("passed");
+    expect(result.findings).toEqual([]);
+  });
 
   it("replays a safe registered-agent workflow without AWI findings", async () => {
     const fixturePath = join(repoRoot, "fixtures", "safe-pr-zoo", "agentic-reviewed-prompt");

@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-pinned-containers",
+    "headSha": "head-pinned-containers"
+  },
+  "pr": {
+    "number": 108,
+    "title": "Add workflow with pinned container images",
+    "branchName": "codex/workflow-pinned-containers",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/container-ci.yml",
+      "status": "added",
+      "additions": 14,
+      "deletions": 0,
+      "baseContent": null,
+      "headContent": "on: [push]\npermissions: {}\njobs:\n  test:\n    runs-on: ubuntu-latest\n    container: node@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n    services:\n      database:\n        image: postgres@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n    steps:\n      - run: node --version\n"
+    }
+  ],
+  "now": "2026-07-10T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}
