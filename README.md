@@ -1,59 +1,64 @@
-# Agent Gate
+# Agent Gate for AI PRs
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?include_prereleases&label=release)](https://github.com/sjh9714/Agent-Gate/releases/tag/v0.2.6)
+[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?label=release)](https://github.com/sjh9714/Agent-Gate/releases)
 [![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
 [![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
 [![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
 
-> Catch risky AI-generated PRs before merge — without checking out PR code.
+> **AI agents can open PRs. Agent Gate shows when they cross the line.**
 
-Agent Gate is a checkout-free GitHub Action that gives maintainers
-deterministic evidence when AI-generated PRs cross risky policy boundaries.
+Agent Gate is a checkout-free policy gate that surfaces scope escapes, GitHub
+Actions privilege escalation, agent-control-plane drift, and risky package
+script changes before merge.
 
-It checks workflow permissions, PR scope contracts, agent-control-plane drift,
-MCP config drift, missing test evidence, and package lifecycle script drift.
+It does not execute pull-request code, load policy from the PR head, or call an
+LLM at runtime. Every decision includes deterministic evidence that can be
+replayed locally.
 
-The Action uses no checkout of PR code, no runtime LLM calls, no repository script execution, and no policy loaded from an untrusted PR head. The same analyzer also powers local replay fixtures for deterministic demos.
+[Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 
-[30-second install](#30-second-install) · [Example report](#real-report-example) · [Tune policy](#after-the-first-run-tune-policy) · [Action reference](#action-reference) · [Evidence model](docs/evidence-model.md)
+## Try It in 60 Seconds
 
-Policy boundaries for AI PRs, backed by repeatable evidence.
-
-## 30-Second Install
-
-Download the observe-mode workflow template into your repository:
-
-macOS/Linux:
+Scan any public GitHub pull request without installing the Action:
 
 ```bash
-mkdir -p .github/workflows \
-  && curl -fsSL https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.6/templates/agent-gate-observe.yml \
-  -o .github/workflows/agent-gate.yml
+npx --yes agent-gate@0.3.0 scan owner/repository#123
 ```
 
-Windows PowerShell:
+A full pull-request URL works too:
 
-```powershell
-New-Item -ItemType Directory -Force .github/workflows | Out-Null
-Invoke-WebRequest `
-  -Uri https://raw.githubusercontent.com/sjh9714/Agent-Gate/v0.2.6/templates/agent-gate-observe.yml `
-  -OutFile .github/workflows/agent-gate.yml
+```bash
+npx --yes agent-gate@0.3.0 scan https://github.com/owner/repository/pull/123
 ```
 
-This downloads a tag-pinned workflow YAML file. It does not execute a remote
-script. Commit the file and open a pull request; Agent Gate will run in warn
-mode without requiring `agent-gate.yml` for the first run.
+Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
+limits. Agent Gate intentionally has no token command-line flag.
 
-Next:
+Example human output:
 
-1. Commit `.github/workflows/agent-gate.yml`.
-2. Open a pull request.
-3. Read the Agent Gate job summary.
+```text
+Agent Gate: NEEDS REVIEW
+Decision: warn
+Analysis: complete
+Findings: 0 error, 2 warning, 1 info
 
-### Manual Copy-Paste Install
+WARN workflow/permission-escalation
+contents increased from read to write at workflow scope
+Path: .github/workflows/release.yml
 
-Prefer to inspect the workflow before adding it? Create
-`.github/workflows/agent-gate.yml` with:
+WARN agent-control-plane/drift
+an instruction file that affects future agents changed
+Path: AGENTS.md
+```
+
+The default output is concise. Use `--format json` or `--format markdown` for
+the complete machine-readable report. See the [CLI reference](docs/cli.md).
+The final v0.3.0 CLI recording will be added only after the published package is
+verified; no simulated `npx` recording is used.
+
+## Install in 30 Seconds
+
+Create `.github/workflows/agent-gate.yml`:
 
 ```yaml
 name: Agent Gate
@@ -70,376 +75,173 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.2.6
+      - uses: sjh9714/Agent-Gate@v0.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
 ```
 
-For stricter supply-chain pinning, replace `@v0.2.6` with the verified
-release commit SHA.
+No checkout step is needed. For maximum supply-chain assurance, replace the
+version tag with the full 40-character commit SHA shown on the v0.3.0 release.
+Agent Gate does not publish or recommend a mutable `v0` tag.
 
-## Real Report Example
+The first run works without `agent-gate.yml`: a confirmed 404 on the PR base
+branch selects the built-in warn policy. Authentication, rate-limit, and server
+errors never fall back silently.
 
-On a first run without `agent-gate.yml`, Agent Gate can still surface built-in
-default-policy warnings. For example, workflow permission escalation:
-
-```text
-Agent Gate: NEEDS HUMAN DECISION
-Decision: warn
-Why: contents permission increased from read to write.
-Path: .github/workflows/demo-release.yml
-Recommended next step: review the workflow permission change before merging.
-Policy status: warning today; eligible to become a merge gate after tuning.
-
-Finding ID: agf_...
-Rule: workflow/permission-escalation
-Policy source: built-in default
-```
-
-New to the report? See `docs/first-report.md` for how to read decisions,
-finding IDs, evidence snapshots, and policy source.
-
-See a real `v0.2.6` first-run sandbox smoke PR:
+Verified checkout-free Action evidence is available in
 [sandbox PR #14](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14).
-That PR reports workflow-level and job-level `workflow/permission-escalation`
-evidence with `permission_scope`, `job`, and `affected_capability`, without
-checkout or `agent-gate.yml`.
-The earlier `v0.2.5` permission proof remains available in
-[sandbox PR #12](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/12),
-and the package lifecycle first-run proof remains available in
-[sandbox PR #11](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/11).
-More examples are listed in [docs/demo-prs.md](docs/demo-prs.md).
+It uses the earlier v0.2.6 release; the release checklist requires a fresh
+v0.3.0 SHA-pinned proof before launch.
 
-## What Runs Without `agent-gate.yml`?
+## What It Catches
 
-| Check                              | First run without config    | With `agent-gate.yml` |
-| ---------------------------------- | --------------------------- | --------------------- |
-| Workflow permission escalation     | yes                         | configurable          |
-| Dangerous workflow patterns        | yes                         | configurable          |
-| Agent control-plane drift          | yes                         | configurable          |
-| Package lifecycle script drift     | yes, warn by default        | configurable          |
-| Agent detection                    | no                          | yes                   |
-| PR-body contract required          | no                          | yes                   |
-| Out-of-contract edits              | only when a contract exists | yes                   |
-| High-risk paths and matching tests | no                          | yes                   |
+| Boundary                   | Deterministic evidence                                              |
+| -------------------------- | ------------------------------------------------------------------- |
+| Declared PR scope          | Files outside `allowed_paths` or inside `blocked_paths`             |
+| Workflow privilege         | Permission escalation, new write-all or OIDC access                 |
+| Workflow supply chain      | Unpinned actions, reusable workflows, and containers                |
+| Dangerous triggers         | `pull_request_target` use of attacker-controlled PR head refs       |
+| Agentic workflow injection | Untrusted GitHub text flowing into registered agent prompts         |
+| Agent control plane        | Changes to `AGENTS.md`, `.mcp.json`, `.codex/**`, and related files |
+| Test evidence              | High-risk source changes without matching test-file changes         |
+| Package execution          | Added or changed install/prepare lifecycle scripts                  |
+| Analysis integrity         | Missing content, incomplete file lists, or report limits            |
 
-## After The First Run: Tune Policy
+Agent Gate evaluates changes rather than re-reporting every pre-existing
+workflow condition. Findings show the rule, severity, path, canonical evidence,
+and a stable finding ID.
 
-The 30-second install is enough to start in warn mode. If the default
-`agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate uses its
-built-in default policy and records `configSource: default` in report metadata.
+## Minimal Policy
 
-After you see the first reports, tune repo-specific checks with a small
-`agent-gate.yml`:
+Add `agent-gate.yml` to the base branch when you are ready to tune behavior:
 
 ```yaml
 version: 1
 mode: warn
 
-contract:
-  required_for:
-    - agent
-  allow_missing_in_observe_mode: true
-
 agent_detection:
-  labels:
-    - ai
-    - agent
-    - codex
-  branch_patterns:
-    - "codex/**"
-    - "ai/**"
+  labels: [ai, agent, codex, claude]
+  branch_patterns: ["codex/**", "claude/**", "ai/**"]
+
+github_actions:
+  checks:
+    permission_escalation: error
+    write_all: error
+    id_token_write: warn
+    pull_request_target_head: error
+    unpinned_action: warn
+    unpinned_reusable_workflow: warn
+    unpinned_container: warn
+    missing_permissions: warn
+    unknown_write_permission: warn
+    added_secret_reference: warn
+    workflow_deleted: warn
+    malformed_workflow: error
 
 high_risk_paths:
-  workflows:
-    paths:
-      - ".github/workflows/**"
+  authentication:
+    paths: ["src/auth/**"]
+    require_tests: ["test/auth/**"]
     severity: error
 ```
 
-For an AI-generated PR, add a small contract to the PR body:
+For an agent-authored PR, the body can declare its intended scope:
 
 ```md
 <!-- agent-gate-contract
 version: 1
 agent: codex
-task: update auth session handling
+task: update session expiry handling
 allowed_paths:
   - src/auth/**
-  - tests/auth/**
-required_evidence:
-  - matching auth tests changed
+  - test/auth/**
 -->
 ```
 
-Once tuned, Agent Gate can report contract-scope evidence too:
+The contract is an untrusted PR declaration, not proof that the task or author
+is legitimate. The base-branch policy remains authoritative.
 
-```text
-Agent Gate: NEEDS HUMAN DECISION
-Decision: warn
-Why: .github/workflows/release.yml changed outside the allowed contract scope.
-Recommended next step: review the workflow change before merging.
-Policy status: warning today; eligible to become a merge gate after tuning.
+### Time-Bounded Waivers
 
-Finding ID: agf_...
-```
-
-Read the first runs as observation, not proof of semantic correctness:
-
-- `PASSED`: safe to observe
-- `WARN`: needs human decision
-- `BLOCKED`: must block once policy is enforced
-
-## What It Catches
-
-- Out-of-contract edits: agent PRs changing files outside their declared scope.
-- Workflow permission escalation: Actions workflows gaining broader write access.
-- Agent control-plane drift (`agent-control-plane/drift`): instruction or tool config changes that affect future agents.
-- Missing test evidence: high-risk source changes without matching test file changes.
-- MCP config drift: `.mcp.json` changes that alter which tools agents can call.
-- Package lifecycle script drift: risky `package.json` lifecycle scripts added
-  or changed ([rule guide](docs/rules/package-lifecycle-scripts.md)).
-
-## What Agent Gate Does Not Do
-
-Agent Gate does not:
-
-- prove that a PR is semantically correct
-- replace human code review
-- run an LLM reviewer at CI time
-- execute PR-controlled code
-- prove that matching tests are meaningful
-
-## When To Use Agent Gate
-
-Use Agent Gate when:
-
-- AI agents open pull requests in your repository
-- you want policy-boundary evidence before merge
-- you want CI checks that do not execute PR-controlled code
-- you want to start in warn mode before enforcing gates
-
-Recommended rollout:
-
-1. Start with `mode: warn` and `fail-on-block: false`.
-2. Review reports for false positives and noisy rules.
-3. Tune `agent-gate.yml`.
-4. Promote stable findings to `mode: block`.
-5. Set `fail-on-block: true` when the check should block merges.
-
-## Agent Gate vs LLM Reviewers
-
-LLM reviewers help with judgment. Agent Gate verifies deterministic merge evidence.
-
-Agent Gate does not try to find every semantic bug or replace code review. It checks policy boundaries that should be explainable and repeatable in CI:
-
-- did the PR stay inside its declared scope?
-- did workflow permissions escalate?
-- did agent control-plane files drift?
-- did high-risk code change without matching test-file evidence?
-- did MCP config changes get surfaced?
-- did package lifecycle scripts change?
-
-Use your LLM reviewer for judgment. Use Agent Gate for deterministic merge evidence.
-
-## Why Deterministic?
-
-AI agents can produce useful pull requests, but tests and LLM review do not always surface policy-boundary changes:
-
-- a workflow quietly gains write permissions
-- an agent edits files outside the declared task scope
-- `.mcp.json` changes which tools future agents can call
-- `AGENTS.md` changes future agent behavior
-- risky source changes land without matching test-file evidence
-- `package.json` adds a `preinstall`, `install`, `postinstall`, or `prepare` script
-
-Agent Gate focuses on these repeatable boundary checks.
-
-## Replay Demo
-
-Human-readable output for demos:
-
-```bash
-pnpm --filter agent-gate build
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
-```
-
-Example output:
-
-```text
-Agent Gate: BLOCKED
-
-ERROR workflow/permission-escalation
-contents permission increased from read to write.
-Path: .github/workflows/release.yml
-
-ERROR workflow/dangerous-pattern
-.github/workflows/release.yml contains a dangerous GitHub Actions workflow pattern.
-Path: .github/workflows/release.yml
-```
-
-Machine-readable JSON report:
-
-```bash
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation --format json
-```
-
-Expected result: Agent Gate reports a blocked PR with `workflow/permission-escalation` and `workflow/dangerous-pattern` findings.
-
-Additional unsafe-pr-zoo demos:
-
-- `agent-control-plane-drift`: blocks `AGENTS.md` changes because they can change future agent behavior.
-- `out-of-scope-agent-edit`: blocks a payment webhook edit outside the PR contract's `allowed_paths`.
-- `missing-test-evidence`: blocks an auth logic change without matching auth test changes.
-- `mcp-config-drift`: blocks `.mcp.json` changes because MCP config can change which tools an agent can call.
-- `package-lifecycle-script-added`: warns on a new risky package lifecycle
-  script.
-
-```bash
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/agent-control-plane-drift
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/missing-test-evidence
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/mcp-config-drift
-node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/package-lifecycle-script-added
-```
-
-## Action Reference
-
-Use the root action with `sjh9714/Agent-Gate@v0.2.6`. No checkout step is required.
-
-### Inputs
-
-| Input             | Default                  | Description                                                                                                                             |
-| ----------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `config`          | `agent-gate.yml`         | Optional policy config path on the PR base branch. In `v0.2.3+`, built-in defaults are used when the default path is confirmed missing. |
-| `github-token`    | `${{ github.token }}`    | Token used for API-only pull request reads.                                                                                             |
-| `mode`            | config value             | Override policy mode: `observe`, `warn`, or `block`.                                                                                    |
-| `comment`         | `false`                  | Create or update a marked PR report comment.                                                                                            |
-| `fail-on-block`   | `true`                   | Exit with code 1 when the decision is `block`.                                                                                          |
-| `report-json`     | `agent-gate-report.json` | Path to write the JSON report.                                                                                                          |
-| `report-markdown` | `agent-gate-report.md`   | Path to write the Markdown report.                                                                                                      |
-
-### Outputs
-
-| Output            | Description                                 |
-| ----------------- | ------------------------------------------- |
-| `decision`        | Final decision: `pass`, `warn`, or `block`. |
-| `risk-score`      | Risk score from 0 to 100.                   |
-| `report-json`     | Path to the JSON report.                    |
-| `report-markdown` | Path to the Markdown report.                |
-
-`mode` controls rollout behavior. `decision` is the analyzer result. Start with `mode: warn` and `fail-on-block: false`, tune the findings, then move to `mode: block` when the rule signal is precise enough.
-
-### Permissions And Comments
-
-The minimal permissions are:
+After reviewing a finding, maintainers can waive that exact evidence from the
+trusted base policy:
 
 ```yaml
-permissions:
-  contents: read
-  pull-requests: read
+waivers:
+  - finding_id: agf_0123456789abcdef
+    reason: Approved OIDC release workflow
+    expires_at: "2026-09-30T00:00:00Z"
 ```
 
-To let Agent Gate create or update a PR report comment, add `issues: write` and set `comment: true`. On fork pull requests, GitHub may still provide a read-only token, so comment failures are reported as warnings instead of failing the action.
+Waived findings remain visible. Expired waivers reactivate the original finding
+and emit `policy/waiver-expired`. Analysis-integrity findings cannot be waived.
 
-```yaml
-permissions:
-  contents: read
-  pull-requests: read
-  issues: write
+See the complete [configuration reference](docs/configuration.md).
 
-with:
-  comment: true
-```
+## Adopt Safely
 
-### Policy Config
+1. Start with `mode: observe` or `mode: warn` and `fail-on-block: false`.
+2. Review findings and tune per-check severity.
+3. Add narrow, expiring waivers only after human review.
+4. Move stable policy to `mode: block`.
+5. Set `fail-on-block: true` and require the check in branch protection.
 
-Create `agent-gate.yml` in the repository root:
+Human report labels are deliberately distinct:
 
-```yaml
-version: 1
-mode: warn
+- `PASSED`: analysis completed with no active warning/error findings.
+- `OBSERVED FINDINGS`: observe mode found evidence without changing the pass decision.
+- `NEEDS REVIEW`: warn mode requires a human decision.
+- `BLOCKED`: block mode rejected active policy findings.
+- `ANALYSIS INCOMPLETE`: Agent Gate could not make a trustworthy decision and fails closed.
 
-contract:
-  required_for:
-    - agent
-  allow_missing_in_observe_mode: true
+## Trust Boundary
 
-agent_detection:
-  authors:
-    - github-copilot[bot]
-  labels:
-    - ai
-    - agent
-    - codex
-  branch_patterns:
-    - "codex/**"
-    - "ai/**"
+The GitHub Action:
 
-high_risk_paths:
-  workflows:
-    paths:
-      - ".github/workflows/**"
-    severity: error
-```
+- reads PR metadata and file contents through GitHub APIs only
+- loads configuration from the exact base commit
+- never checks out or executes PR-controlled code
+- never evaluates GitHub expressions from workflow YAML
+- never calls an LLM during analysis
+- limits API concurrency, content to 1 MiB per file side and 64 MiB per run,
+  findings, and rendered report size
+- records base/head SHAs, policy digest, analyzed file counts, and engine version
 
-Teams can add auth, payments, infra, and agent-control-plane paths as their policy matures.
+The pull-request files API has a 3,000-file maximum. Agent Gate compares the
+authoritative PR file count with the collected list and fails closed instead of
+presenting a partial pass.
 
-Current `agent-gate.yml` support is intentionally narrow: agent detection, PR-body contracts, high-risk paths with matching test-file evidence, agent-control-plane paths, GitHub Actions workflow rules, and package lifecycle script checks. File-based contracts, risk budgets, dependency additions, lockfile mismatch, claim-vs-CI evidence, reviewer requirements, and rollback-plan requirements are planned areas and are rejected today instead of being accepted as no-op settings.
+Read the full [security model](docs/security-model.md) and
+[evidence model](docs/evidence-model.md).
 
-Starting in `v0.2.4`, package lifecycle script checks are enabled by default in warning mode. They inspect configured `package.json` paths for added or changed `preinstall`, `install`, `postinstall`, and `prepare` scripts. See `docs/rules/package-lifecycle-scripts.md` for triage guidance. Dependency additions and lockfile mismatch checks remain future work.
+## Agent Gate Is Not a Workflow Linter
 
-```yaml
-package_scripts:
-  enabled: true
-  severity: warn
-```
+Workflow linters such as zizmor inspect workflow correctness and known
+misconfigurations. LLM reviewers apply semantic judgment. Agent Gate is the
+change-control layer between an AI-generated PR and merge: it asks whether the
+PR crossed repository-specific boundaries and records why.
 
-Starting in `v0.2.3`, if the default `agent-gate.yml` is confirmed absent on the PR base branch, Agent Gate can use its built-in default policy and record `configSource: default` in report metadata. That released default policy gives repository-agnostic first signals for GitHub Actions workflow checks, agent-control-plane drift, and pinned-action warnings.
+Use all three when appropriate; they solve different problems.
 
-Starting in `v0.2.4`, the built-in default policy also includes warning-mode
-package lifecycle script drift checks. Repository-specific checks such as agent
-detection, required PR contracts, high-risk source paths, and matching test-file
-evidence still require `agent-gate.yml`.
+## Action Outputs
 
-## Status And Roadmap
+| Output                                         | Meaning                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------- |
+| `decision`                                     | `pass`, `warn`, or `block`                                          |
+| `status`                                       | Human/machine status including `incomplete`                         |
+| `analysis-complete`                            | Whether all required evidence was available                         |
+| `error-count` / `warning-count` / `info-count` | Active finding counts                                               |
+| `waived-count`                                 | Findings retained but excluded from the decision                    |
+| `expected-file-count` / `analyzed-file-count`  | File-list completeness evidence                                     |
+| `report-json` / `report-markdown`              | Generated report paths                                              |
+| `risk-score`                                   | Deprecated v0.x compatibility output; not a calibrated risk measure |
 
-Agent Gate is pre-release. The latest prerelease is `v0.2.6`.
+Inputs and failure behavior are documented in the
+[Action reference](docs/action-reference.md).
 
-Use `sjh9714/Agent-Gate@v0.2.6` or a pinned commit SHA for installs. `@main` tracks active development and may change.
-
-Recommended installs should use `sjh9714/Agent-Gate@v0.2.6`. GitHub
-Marketplace currently may lag on prerelease display even when the release is
-published and Marketplace-enabled.
-
-See `CHANGELOG.md` for release history and `docs/evidence-model.md` for the
-current evidence model. Latest external install smoke evidence is recorded in
-`docs/external-install-smoke-v0.2.6.md`.
-
-See `docs/repository-governance.md` for recommended branch protection and release safety settings. Feedback on AI-generated PR safety policies is welcome in [#27](https://github.com/sjh9714/Agent-Gate/issues/27).
-
-## Packages
-
-- `packages/core`: pure analysis engine, built-in deterministic rules, and JSON/Markdown report renderers.
-- `packages/cli`: `agent-gate replay <fixture-dir>` for deterministic local fixture demos.
-- `packages/action`: Node 24 GitHub Action package that reads pull request data through GitHub APIs and calls the core analyzer.
-
-## Action Package
-
-External users should prefer the root action with `sjh9714/Agent-Gate@<ref>`. The package-local action remains at `packages/action/action.yml` for this repository's own development workflow. Both use REST APIs only: they load `agent-gate.yml` from the PR base ref when present, fall back to built-in defaults only when the default file is confirmed absent, read changed-file metadata and file contents from the API, run `@agent-gate/core`, write JSON/Markdown reports, set action outputs, write the job summary, and optionally upsert one marked PR report comment. They do not checkout the pull request or execute repository scripts.
-
-## Self-Dogfooding
-
-Agent Gate runs against this repository's pull requests through `.github/workflows/agent-gate.yml`. The workflow uses `sjh9714/Agent-Gate/packages/action@main`, so pull requests do not execute Action code from their own branches while the action itself is under development. It starts in non-blocking `warn` mode while the project tunes early policy.
-
-## Local Development
-
-Prerequisites:
-
-- Node.js 20+
-- pnpm 11.5.0
+## Development
 
 ```bash
 pnpm install
@@ -447,8 +249,26 @@ pnpm test
 pnpm typecheck
 pnpm lint
 pnpm build
+pnpm format:check
 ```
 
-## Principle
+Every rule requires passing and failing fixtures, exact rule/severity/decision
+assertions, and a Markdown snapshot for user-facing findings. Start with the
+[contribution guide](CONTRIBUTING.md).
 
-Agent Gate must not call LLMs at runtime, execute PR-controlled code, or load policy from an untrusted PR head. The core analysis package must remain independent from GitHub APIs.
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Getting started](docs/getting-started.md)
+- [CLI reference](docs/cli.md)
+- [Configuration](docs/configuration.md)
+- [First report](docs/first-report.md)
+- [Security model](docs/security-model.md)
+- [Roadmap](docs/roadmap.md)
+
+If Agent Gate catches a real boundary crossing in your repository, a GitHub
+Star is a simple way to tell us the project is useful.
+
+## License
+
+[MIT](LICENSE)

@@ -50,7 +50,7 @@ document.
 
 - [x] `README.md` install and replay sections are current.
 - [x] `CHANGELOG.md` has an accurate `Unreleased` section.
-- [x] `docs/v0.1.0-release-notes.md` is reviewed.
+- [x] `docs/history/releases/v0.1.0-release-notes.md` is reviewed.
 - [x] `docs/security-model.md` is reviewed.
 - [x] `docs/repository-governance.md` is reviewed.
 - [x] `docs/release-checklist.md` is reviewed.

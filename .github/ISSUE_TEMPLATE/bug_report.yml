@@ -37,8 +37,8 @@ body:
     id: version
     attributes:
       label: Agent Gate version or ref
-      description: For example, v0.1.2, a commit SHA, or a branch name.
-      placeholder: v0.1.2
+      description: For example, v0.3.0, a full commit SHA, or a branch name.
+      placeholder: v0.3.0
     validations:
       required: true
   - type: textarea

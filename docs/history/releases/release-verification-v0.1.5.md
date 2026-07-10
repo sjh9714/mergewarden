@@ -37,7 +37,7 @@ This document records post-release verification for Agent Gate `v0.1.5`.
 ## External Install Smoke
 
 - External install smoke for `sjh9714/Agent-Gate@v0.1.5` is recorded in
-  `docs/external-install-smoke-v0.1.5.md`.
+  `docs/history/smoke/external-install-smoke-v0.1.5.md`.
 - The external smoke loaded `sjh9714/Agent-Gate@v0.1.5` without an
   `actions/checkout` step.
 - The external smoke log showed the compact plain-text summary in

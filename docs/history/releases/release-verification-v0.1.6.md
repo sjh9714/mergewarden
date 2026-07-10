@@ -52,7 +52,7 @@ This document records post-release verification for Agent Gate `v0.1.6`.
 
 - A new external install smoke was not performed for `v0.1.6`.
 - The latest recorded external install smoke remains `v0.1.5` in
-  `docs/external-install-smoke-v0.1.5.md`.
+  `docs/history/smoke/external-install-smoke-v0.1.5.md`.
 
 ## Not Performed
 

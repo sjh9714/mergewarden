@@ -1,62 +1,32 @@
 # Repository Governance
 
-This document describes recommended repository settings for Agent Gate before a
-`v0.1.0` pre-release. It is guidance only: do not apply repository settings from
-code unless the user explicitly requests a GitHub settings task.
+These are recommended settings. Changes to GitHub repository settings require
+an explicit maintainer action outside the codebase.
 
-## Main Branch Protection
-
-Recommended `main` branch protection:
+## Main Protection
 
 - Require a pull request before merging.
-- Require status checks before merging.
-- Block force pushes.
-- Block branch deletion.
-- Optionally require branches to be up to date before merging.
-- Optionally require conversation resolution before merging.
+- Require `CI` and `Agent Gate` checks.
+- Block force pushes and branch deletion.
+- Require conversation resolution when practical.
+- Prefer squash merge and delete merged branches.
 
-## Required Checks
+Keep Agent Gate non-blocking during tuning. Move to `mode: block` and
+`fail-on-block: true` only after representative warn-mode results are reviewed.
 
-Recommended required checks:
+## Release Governance
 
-- `CI`
-- `Agent Gate`
+- Follow [the release checklist](release-checklist.md).
+- Use a signed annotated version tag and never move or delete it.
+- Do not create mutable major tags such as `v0`.
+- Publish the exact tested npm tarball with provenance.
+- Publish a normal GitHub release only after `npx` verification succeeds.
+- Keep Action install guidance aligned with the normal release and Marketplace.
+- Enable immutable releases when the repository setting is available.
 
-Before the `v0.1.0` pre-release, `main` branch protection was reviewed and
-applied with required checks for `CI` and `Agent Gate`.
+## Self-Dogfooding
 
-Agent Gate currently runs in non-blocking `warn` mode while policy is tuned. If
-Agent Gate becomes a required check during this phase, keep
-`fail-on-block: false` so the check surfaces findings without blocking merges.
-Move to `mode: block` and `fail-on-block: true` only after false positives are
-understood.
-
-## Merge Strategy
-
-- Prefer squash merge.
-- Delete merged branches.
-- Avoid direct pushes to `main`.
-- Keep feature branches small enough that Agent Gate findings are easy to
-  review.
-
-## Release Safety
-
-- Create tags and GitHub releases only when intentionally cutting a release.
-- Update `CHANGELOG.md` before tagging.
-- Use `docs/release-checklist.md` for pre-release verification.
-- Do not publish packages unless the release task explicitly includes
-  publishing.
-
-## Self-Dogfooding Policy
-
-- `.github/workflows/agent-gate.yml` must remain checkout-free and API-only.
-- `.github/workflows/ci.yml` may checkout this repository and run package
-  scripts because it is ordinary repository CI.
-- Root `action.yml` and `packages/action/action.yml` must stay in sync.
-- `packages/action/dist/index.cjs` must remain committed and fresh.
-
-## Recommended Manual Setup
-
-Apply branch protection through the GitHub UI, or through an explicit future
-`gh api` task with the desired repository settings reviewed first. This docs PR
-does not change repository settings.
+- `.github/workflows/agent-gate.yml` remains checkout-free and API-only.
+- `.github/workflows/ci.yml` may checkout and run this repository's scripts.
+- Root and package-local Action metadata remain structurally identical.
+- The committed Node 24 Action bundle must be fresh.

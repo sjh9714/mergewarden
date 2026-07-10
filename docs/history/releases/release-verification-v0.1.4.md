@@ -35,7 +35,7 @@ This document records post-release verification for Agent Gate `v0.1.4`.
 ## External Install Smoke
 
 - External install smoke for `sjh9714/Agent-Gate@v0.1.4` is recorded in
-  `docs/external-install-smoke-v0.1.4.md`.
+  `docs/history/smoke/external-install-smoke-v0.1.4.md`.
 - The external smoke loaded `sjh9714/Agent-Gate@v0.1.4` without an
   `actions/checkout` step.
 - The external smoke log did not show the previous Node.js 20 deprecation
