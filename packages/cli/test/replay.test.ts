@@ -273,6 +273,15 @@ describe("CLI replay", () => {
     },
   );
 
+  it("replays a safe registered-agent workflow without AWI findings", async () => {
+    const fixturePath = join(repoRoot, "fixtures", "safe-pr-zoo", "agentic-reviewed-prompt");
+    const result = await analyze(await loadReplayFixture(fixturePath));
+
+    expect(result.decision).toBe("pass");
+    expect(result.status).toBe("passed");
+    expect(result.findings).toEqual([]);
+  });
+
   it("returns exit code 0 for warn decisions", async () => {
     const fixtureDir = await createFixture(
       {

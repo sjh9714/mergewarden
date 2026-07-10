@@ -1,0 +1,23 @@
+{
+  "repo": {
+    "baseSha": "base-agentic-safe",
+    "headSha": "head-agentic-safe"
+  },
+  "pr": {
+    "number": 304,
+    "title": "Add fixed-prompt docs review",
+    "branchName": "automation/docs-review",
+    "author": "maintainer"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/docs-review.yml",
+      "status": "added",
+      "additions": 18,
+      "deletions": 0,
+      "headContent": "name: Docs review\n'on':\n  workflow_dispatch:\npermissions:\n  contents: read\njobs:\n  review:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@1111111111111111111111111111111111111111\n      - uses: openai/codex-action@2222222222222222222222222222222222222222\n        with:\n          openai-api-key: ${{ secrets.OPENAI_API_KEY }}\n          prompt: Review documentation links and wording only.\n"
+    }
+  ],
+  "now": "2026-07-10T00:00:00.000Z",
+  "version": "0.3.0-demo"
+}

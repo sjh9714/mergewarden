@@ -1,0 +1,22 @@
+version: 1
+mode: block
+
+github_actions:
+  checks:
+    permission_escalation: off
+    write_all: error
+    id_token_write: warn
+    pull_request_target_head: error
+    unpinned_action: warn
+    unpinned_reusable_workflow: warn
+    unpinned_container: warn
+    missing_permissions: warn
+    unknown_write_permission: warn
+    added_secret_reference: off
+    workflow_deleted: warn
+    malformed_workflow: error
+
+agentic_workflows:
+  enabled: true
+  severity: warn
+  privileged_severity: error
