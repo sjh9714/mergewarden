@@ -17,6 +17,10 @@ replayed locally.
 
 [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 
+![Real Agent Gate v0.3.1 report from a public composite PR](docs/assets/agent-gate-report-v0.3.1.png)
+
+_Real checkout-free report from [public composite PR #16](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29071622785)._
+
 ## Try It in 60 Seconds
 
 Scan any public GitHub pull request without installing the Action:
@@ -31,30 +35,15 @@ A full pull-request URL works too:
 npx --yes @jinhyuk9714/agent-gate@0.3.1 scan https://github.com/owner/repository/pull/123
 ```
 
+![Real npm CLI scan with Agent Gate v0.3.1](docs/assets/agent-gate-cli-v0.3.1.gif)
+
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
 limits. Agent Gate intentionally has no token command-line flag.
 
-Example human output:
-
-```text
-Agent Gate: NEEDS REVIEW
-Decision: warn
-Analysis: complete
-Findings: 0 error, 2 warning, 1 info
-
-WARN workflow/permission-escalation
-contents increased from read to write at workflow scope
-Path: .github/workflows/release.yml
-
-WARN agent-control-plane/drift
-an instruction file that affects future agents changed
-Path: AGENTS.md
-```
-
 The default output is concise. Use `--format json` or `--format markdown` for
 the complete machine-readable report. See the [CLI reference](docs/cli.md).
-The final v0.3.1 CLI recording will be added only after the published package is
-verified; no simulated `npx` recording is used.
+The recording above is an actual `npx` execution of the published package; no
+simulated CLI output is used.
 
 ## Install in 30 Seconds
 
@@ -91,9 +80,9 @@ branch selects the built-in warn policy. Authentication, rate-limit, and server
 errors never fall back silently.
 
 Verified checkout-free Action evidence is available in
-[sandbox PR #14](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14).
-It uses the earlier v0.2.6 release; the release checklist requires a fresh
-v0.3.1 SHA-pinned proof before launch.
+[sandbox PR #16](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16).
+Its public run downloads the exact v0.3.1 release commit and reports contract
+scope escapes, workflow permission escalation, and agent-control-plane drift.
 
 ## What It Catches
 

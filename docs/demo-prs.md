@@ -1,8 +1,27 @@
 # Demo PRs
 
-This page collects concrete Agent Gate examples. The first three examples are
-live sandbox pull requests. The tuned contract example is a local replay
-fixture, not a live external pull request.
+This page collects concrete Agent Gate examples. Live sandbox pull requests are
+separate from local replay fixtures and are not external adopter claims.
+
+## v0.3.1 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29071622785
+- Action ref: `sjh9714/Agent-Gate@5fc4a3a5087620ff23c6cb5b0351c3969339fc01`
+- Checkout step: not used
+- Base-branch policy: repository `agent-gate.yml`
+- Declared scope: `docs/**`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: two `contract/out-of-scope` findings
+- Finding: `risk/high-risk-path` for `.github/workflows/demo-release.yml`
+- Finding: `agent-control-plane/drift` for `AGENTS.md`
+- Findings: workflow- and job-scope `workflow/permission-escalation`
+
+The PR intentionally combines an allowed documentation change with a workflow
+permission increase and agent instruction drift. The successful public Action
+run downloads the exact v0.3.1 release commit, performs no checkout, and records
+stable finding IDs for every boundary crossing.
 
 ## Local Composite Boundary Fixture
 
@@ -14,9 +33,8 @@ pnpm --filter @jinhyuk9714/agent-gate build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/composite-agent-boundary
 ```
 
-This is reproducible fixture evidence, not an external adopter claim. The
-release checklist requires a separate public draft PR pinned to the exact
-release SHA before launch content is published.
+This is reproducible fixture evidence, not an external adopter claim. The live
+v0.3.1 proof above provides the corresponding public SHA-pinned Action run.
 
 ## First-Run Default Policy
 
