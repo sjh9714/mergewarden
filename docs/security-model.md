@@ -1,78 +1,75 @@
 # Security Model
 
-Agent Gate is a deterministic CI firewall for AI-generated pull requests. It is
-designed to inspect pull request metadata and changed-file content without
+Agent Gate inspects pull-request metadata and changed-file content without
 executing PR-controlled code.
 
 ## Trusted Inputs
 
-- Built-in default policy bundled with the pinned Agent Gate Action ref.
-- Base branch `agent-gate.yml`.
-- Action code from the workflow-pinned ref, such as `@main`, a release tag, or
-  a pinned commit SHA.
-- GitHub pull request metadata from REST APIs.
-- GitHub changed-file metadata from REST APIs.
+- Built-in policy bundled with the pinned Agent Gate ref.
+- `agent-gate.yml` from the exact base commit.
+- Action code from the selected release tag or commit SHA.
+- GitHub REST responses, subject to explicit completeness checks.
 
 ## Untrusted Inputs
 
-- Pull request title and body.
-- Pull request branch files.
-- Pull request branch `agent-gate.yml`.
-- PR body contract blocks.
-- Changed file contents.
-- Workflow YAML from the pull request branch.
-- Agent control-plane changes, including `AGENTS.md`, `CLAUDE.md`, MCP config,
-  and similar files.
+- PR title, body, author claims, labels, and branch name.
+- PR-body contract and all changed paths/content.
+- Head-branch policy files and workflow YAML.
+- Finding text derived from paths, jobs, expressions, or evidence.
+- Agent instructions, MCP configuration, and other control-plane files.
 
 ## Runtime Guarantees
 
-- The Agent Gate workflow does not checkout PR code.
-- The Action does not execute PR branch code.
-- The Action does not install packages from the target PR.
-- Runtime analysis does not call LLMs.
-- Runtime analysis does not execute MCP servers.
-- Analysis is API-only and uses deterministic core rules.
-- Unavailable workflow file content is surfaced as an
-  `analysis/content-unavailable` finding.
+- No checkout or execution of target PR code.
+- No dependency installation from the target repository.
+- No runtime LLM or MCP-server calls.
+- No evaluation of GitHub expressions found in workflow YAML.
+- API-only collection with bounded concurrency, retries, content, findings,
+  and report rendering.
+- Policy is never loaded from the PR head.
 
-## Base-Branch Policy
+## Collection Integrity
 
-The Action loads `agent-gate.yml` from the PR base ref when the configured
-policy file exists. This prevents a pull request from weakening its own policy
-by changing policy files on the PR branch. When the default `agent-gate.yml` is
-confirmed absent, Agent Gate may use the built-in default policy bundled with
-the trusted Action ref.
+Agent Gate fetches the authoritative PR file count and compares it with pages
+from GitHub's files endpoint. More than 3,000 files or any count mismatch fails
+closed as `analysis/file-list-incomplete` without running partial policy rules.
 
-Other policy retrieval failures are fatal. Permission failures, API failures,
-rate limits, malformed content responses, and missing custom config paths do not
-fall back to defaults. Agent Gate never falls back to policy from the PR head.
-Changes to policy and agent-control-plane files are still analyzed as ordinary
-pull request content.
+Only policy-relevant workflow and package files are fetched. Added files need
+head content; modified/renamed files use base and head; fork head content comes
+from the fork repository and exact head SHA. Decoded content is limited to 1
+MiB per file side and 64 MiB for the run. Confirmed 404 is distinct from
+authentication, rate-limit, and server errors.
 
-## Self-Dogfooding
+Required content failures, oversized text, and report-limit overflow are
+integrity failures, not ordinary warnings.
 
-This repository's Agent Gate workflow uses
-`sjh9714/Agent-Gate/packages/action@main`. That keeps self-dogfooding
-checkout-free and avoids running Action code from the pull request branch while
-the Action package itself is under development.
+## Reports and Comments
 
-## PR Comments
+All PR-derived values are normalized, escaped, mention-neutralized, bounded,
+and rendered as data rather than raw Markdown. PR comments are updated only
+when both the hidden managed marker and exact GitHub Actions bot ownership
+match. Managed-comment discovery reads only the newest 100 comments.
 
-When `comment: true`, Agent Gate upserts a marked PR report comment through
-GitHub issue comment APIs. Repositories should grant `issues: write` for that
-behavior. If the token is read-only, such as on some fork pull requests, comment
-failures are reported as warnings and do not fail the Action.
+Comments and summaries are bounded mirrors. JSON metadata and finding IDs are
+the deterministic audit material; mutable comments are not the sole record.
+
+## Base-Policy Waivers
+
+Waivers are exact finding-ID entries with reason and expiry in base policy.
+PR-head waivers are ignored. Analysis-integrity findings cannot be waived.
 
 ## Known Limitations
 
-- CODEOWNERS and reviewer evidence are not implemented yet.
-- Package and dependency drift rules are not implemented yet.
-- File-based PR contracts are not implemented yet; contracts are parsed from
-  PR body comment blocks.
-- Risk budgets, claim-vs-CI evidence, reviewer requirements, and rollback-plan
-  requirements are not implemented yet.
-- GitHub Actions job-level permission escalation comparison is limited.
-- Test evidence checks only detect matching test file changes; they do not prove
-  semantic coverage.
-- Comment upsert depends on GitHub token permissions.
-- Agent Gate is pre-release, so APIs and rule names may change before `v0.1.0`.
+- No semantic correctness proof or general vulnerability scan.
+- No CODEOWNERS/reviewer policy yet.
+- Test evidence checks changed paths, not test meaning or execution.
+- Agentic workflow injection follows registered prompt inputs and one `env`
+  hop only; it is not complete taint analysis.
+- Comment writes depend on token permissions and may be unavailable on forks.
+- GitHub API availability remains an external dependency; failures are exposed.
+
+## Self-Dogfooding
+
+This repository uses the package-local Action from `main` without checkout so a
+PR cannot execute its modified Action bundle. Ordinary CI may checkout this
+repository and run its own trusted package scripts.

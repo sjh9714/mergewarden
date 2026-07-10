@@ -34,7 +34,7 @@ This document records post-release verification for Agent Gate `v0.2.2`.
 ## External Smoke
 
 - No new external install smoke was performed for `v0.2.2`.
-- The latest external install smoke evidence remains `@v0.2.1` in `docs/external-install-smoke-v0.2.1.md`.
+- The latest external install smoke evidence remains `@v0.2.1` in `docs/history/smoke/external-install-smoke-v0.2.1.md`.
 
 ## Marketplace
 

@@ -48,7 +48,7 @@ This document records post-release verification for Agent Gate `v0.2.0`.
 ## External Smoke
 
 - External install smoke for `@v0.2.0` is recorded in
-  `docs/external-install-smoke-v0.2.0.md`.
+  `docs/history/smoke/external-install-smoke-v0.2.0.md`.
 - The smoke verified external loading, warning-mode behavior, compact log
   finding IDs, Markdown `Finding ID` output, and JSON `findings[].findingId`
   output.

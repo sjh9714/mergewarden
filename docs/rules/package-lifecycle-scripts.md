@@ -8,7 +8,7 @@ request adds or changes one of these `package.json` scripts:
 - `postinstall`
 - `prepare`
 
-These checks are warning-mode by default in `v0.2.4+`.
+These checks are warning-mode by default.
 
 ## What The Findings Mean
 

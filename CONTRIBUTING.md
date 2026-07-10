@@ -1,22 +1,11 @@
 # Contributing
 
-Thanks for your interest in Agent Gate.
+Thanks for helping improve Agent Gate for AI-generated pull requests.
 
-Agent Gate is a prerelease, deterministic-first CI firewall for AI-generated
-pull requests. It is designed to explain policy decisions with repeatable
-evidence, not runtime LLM judgment.
-
-## Before You Start
-
-For larger changes, please open an issue first so we can align on scope and
-expected behavior before implementation.
-
-Good first contribution areas include documentation clarity, replay fixtures,
-report wording, and focused rule tests.
-
-## Local Development
+## Five-Minute Setup
 
 ```bash
+corepack enable
 pnpm install
 pnpm test
 pnpm typecheck
@@ -25,26 +14,36 @@ pnpm build
 pnpm format:check
 ```
 
-## Rule Changes
+Good first contributions include clearer reports, focused fixtures, rule docs,
+and reproductions of noisy policy behavior. Open an issue before large changes
+so the trust boundary and compatibility impact can be agreed first.
 
-Every new rule should include fixture-based tests.
+## Fixture Recipe
 
-At minimum, assert the exact:
+Every new or changed rule needs:
 
-- `ruleId`
-- `severity`
-- `decision`
+1. One fixture that must pass.
+2. One fixture that must produce a finding.
+3. Exact `ruleId`, severity, and decision assertions.
+4. A stored Markdown snapshot for user-facing output.
+5. A short rule guide describing evidence, remediation, and false-positive
+   boundaries.
 
-If a finding is user-facing, include Markdown report coverage as well.
+Fixtures are data only. Tests must never execute fixture scripts or workflow
+expressions.
+
+## Pull Requests
+
+- Keep changes small and explain compatibility decisions.
+- Update `CHANGELOG.md` for user-visible behavior.
+- Update both Action manifests and rebuild the committed bundle when Action
+  contracts change.
+- Do not add production dependencies without updating `AGENTS.md` and
+  explaining why.
+- Include the commands you ran and any intentionally deferred validation.
 
 ## Safety Constraints
 
-Do not add:
-
-- runtime LLM calls by default
-- checkout or execution of PR-controlled code in the GitHub Action
-- repository script execution from untrusted PR content
-- production dependencies without clear justification
-
-Root `action.yml`, `packages/action/action.yml`, and the committed Action
-bundle should stay aligned when Action behavior changes.
+Do not add runtime LLM calls by default, checkout or execution of target PR
+code, head-branch policy loading, executable YAML extensions, target repository
+package execution, or hidden nondeterministic policy decisions.

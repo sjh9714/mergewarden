@@ -4,11 +4,25 @@ This page collects concrete Agent Gate examples. The first three examples are
 live sandbox pull requests. The tuned contract example is a local replay
 fixture, not a live external pull request.
 
+## Local Composite Boundary Fixture
+
+Replay the v0.3.0 composite fixture to see a docs-only contract alongside
+workflow privilege, agent-control-plane, MCP, and package lifecycle changes:
+
+```bash
+pnpm --filter agent-gate build
+node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/composite-agent-boundary
+```
+
+This is reproducible fixture evidence, not an external adopter claim. The
+release checklist requires a separate public draft PR pinned to the exact
+release SHA before launch content is published.
+
 ## First-Run Default Policy
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/11
 - Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/28232902050
-- Smoke record: `docs/external-install-smoke-v0.2.5.md`
+- Smoke record: `docs/history/smoke/external-install-smoke-v0.2.5.md`
 - Action ref: `sjh9714/Agent-Gate@v0.2.5`
 - Checkout step: not used
 - Base-branch `agent-gate.yml`: absent
@@ -25,7 +39,7 @@ or adding `agent-gate.yml` first.
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14
 - Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/28440045859
-- Smoke record: `docs/external-install-smoke-v0.2.6.md`
+- Smoke record: `docs/history/smoke/external-install-smoke-v0.2.6.md`
 - Action ref: `sjh9714/Agent-Gate@v0.2.6`
 - Checkout step: not used
 - Base-branch `agent-gate.yml`: absent

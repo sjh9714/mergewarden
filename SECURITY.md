@@ -1,27 +1,20 @@
 # Security Policy
 
-Agent Gate is a prerelease, security-adjacent developer tool for inspecting
-AI-generated pull requests with deterministic evidence.
+Agent Gate is a security-adjacent developer tool for deterministic policy
+evidence on AI-generated pull requests.
 
 ## Reporting a Vulnerability
 
-Please do not open a public issue for security vulnerabilities or sensitive
-security findings.
+Do not open a public issue for vulnerabilities or sensitive findings. Use
+GitHub private vulnerability reporting from this repository's Security tab. If
+it is unavailable, contact the maintainer privately before sharing details.
 
-Use GitHub private vulnerability reporting from the repository's Security tab
-if it is available. If it is not available, contact the maintainer privately
-before sharing reproduction details in public.
-
-## Scope
-
-Security issues may include:
-
-- Action runtime behavior that executes PR-controlled code.
-- Policy loading from an untrusted PR head instead of the PR base branch.
-- Unsafe handling of GitHub tokens, PR contents, comments, or reports.
-- Report rendering behavior that could mislead maintainers.
+Relevant reports include execution of PR-controlled code, head-branch policy
+loading, unsafe token/API handling, incomplete analysis presented as a pass,
+report injection, or unauthorized comment replacement.
 
 ## Non-Goals
 
-Agent Gate is not a semantic vulnerability scanner. It does not claim to find
-all security bugs, prove semantic correctness, or replace human review.
+Agent Gate is not a semantic vulnerability scanner and does not claim to find
+all security bugs, prove correctness, or replace human review. See the full
+[security model](docs/security-model.md).
