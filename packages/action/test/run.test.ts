@@ -909,6 +909,37 @@ describe("runAction", () => {
     expect(octokit.rest.issues?.createComment).toHaveBeenCalledOnce();
   });
 
+  it("bounds PR comments and reports the exact number of omitted findings", async () => {
+    const files = Array.from({ length: 75 }, (_, index) => ({
+      filename: `src/generated-${index}.ts`,
+      status: "modified",
+      additions: 1,
+      deletions: 0,
+      patch: "",
+    }));
+    const octokit = createOctokit({
+      files,
+      contents: {
+        [`${BASE_SHA}:agent-gate.yml`]: "version: 1\nmode: block\n",
+      },
+    });
+    const harness = createHarness({
+      context: prContext({ changed_files: files.length }),
+      octokit,
+      inputs: { comment: "true" },
+    });
+
+    const result = await runAction(harness.runtime);
+    const createArgs = vi.mocked(octokit.rest.issues!.createComment!).mock.calls[0]?.[0];
+
+    expect(result?.metadata.totalFindingCount).toBe(75);
+    expect(Buffer.byteLength(harness.summaryText(), "utf8")).toBeLessThanOrEqual(900_000);
+    expect(createArgs).toBeDefined();
+    expect(Buffer.byteLength(createArgs!.body, "utf8")).toBeLessThanOrEqual(60_000);
+    expect(createArgs!.body).toContain("_25 findings omitted from this surface._");
+    expect(createArgs!.body).toContain("Full report: agent-gate-report.md");
+  });
+
   it("ignores human-owned marker comments and creates a managed comment", async () => {
     const octokit = createOctokit({
       files: [],
