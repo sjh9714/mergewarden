@@ -50338,11 +50338,13 @@ function shouldRetry(error52) {
   return isRateLimitError(error52) || [502, 503, 504].includes(error52.status);
 }
 function retryDelay(error52, failedAttempt, now) {
-  if (error52.retryAfterMs !== void 0) {
-    return error52.retryAfterMs;
-  }
-  if (error52.rateLimitResetAt !== void 0) {
-    return Math.max(0, error52.rateLimitResetAt - now);
+  if (isRateLimitError(error52)) {
+    if (error52.retryAfterMs !== void 0) {
+      return error52.retryAfterMs;
+    }
+    if (error52.rateLimitResetAt !== void 0) {
+      return Math.max(0, error52.rateLimitResetAt - now);
+    }
   }
   return DEFAULT_DELAYS_MS[Math.min(failedAttempt - 1, DEFAULT_DELAYS_MS.length - 1)] ?? 1e3;
 }
