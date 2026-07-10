@@ -121,10 +121,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
-      - name: Set up Node.js
+      - name: Set up build Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: "22"
 
       - name: Activate pnpm
         shell: bash
@@ -138,7 +138,26 @@ jobs:
       - name: Build workspace
         run: pnpm build
 
-      - name: Pack and smoke-test public CLI
+      - name: Pack CLI artifact once
+        shell: bash
+        run: |
+          pack_dir="$PWD/.agent-gate-pack"
+          mkdir -p "$pack_dir"
+          pnpm --filter agent-gate pack --pack-destination "$pack_dir"
+          tarball="$(find "$pack_dir" -maxdepth 1 -name 'agent-gate-*.tgz' -print -quit)"
+          test -n "$tarball"
+          if command -v cygpath >/dev/null 2>&1; then
+            tarball="$(cygpath -w "$tarball")"
+          fi
+          echo "CLI_TARBALL=$tarball" >> "$GITHUB_ENV"
+
+      - name: Set up smoke-test Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Smoke-test exact CLI artifact
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm --filter agent-gate test:pack
+        run: node packages/cli/scripts/package-smoke.mjs "$CLI_TARBALL"
