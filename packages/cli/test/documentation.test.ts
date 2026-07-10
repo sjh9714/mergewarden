@@ -103,6 +103,9 @@ describe("documentation contracts", () => {
     expect(workflow).toContain("environment: npm-release");
     expect(workflow).toContain("contents: read");
     expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("npm install --global npm@11.18.0");
+    expect(workflow).not.toContain("NPM_TOKEN");
+    expect(workflow).not.toContain("NODE_AUTH_TOKEN");
     expect(workflow).toContain("git diff --exit-code -- packages/action/dist/index.cjs");
     expect(workflow).toContain('npm publish "$CLI_TARBALL" --provenance --access public');
     expect(actionUses.length).toBeGreaterThan(0);

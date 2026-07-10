@@ -32,7 +32,11 @@ not authorize a tag, npm publication, GitHub release, or Marketplace change.
 
 - [ ] Recheck that the exact `@jinhyuk9714/agent-gate` npm name is available and owned by
       the intended publisher; stop if it is not.
-- [ ] Confirm release environment approval and first-publish `NPM_TOKEN`.
+- [ ] Confirm the npm Trusted Publisher maps `sjh9714/Agent-Gate`,
+      `publish-npm.yml`, and the `npm-release` environment with only
+      `npm publish` permission.
+- [ ] Confirm npm publishing access disallows traditional tokens and the
+      workflow contains no `NPM_TOKEN` or `NODE_AUTH_TOKEN` reference.
 - [ ] Confirm publish workflow uses full-SHA third-party Actions, minimal
       permissions, and the exact version tag.
 - [ ] Create a signed annotated tag only after explicit approval.

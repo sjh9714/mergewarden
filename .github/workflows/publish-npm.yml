@@ -48,6 +48,11 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Activate npm with OIDC support
+        run: |
+          npm install --global npm@11.18.0
+          test "$(npm --version)" = "11.18.0"
+
       - name: Activate pnpm
         run: |
           corepack enable
@@ -82,6 +87,7 @@ jobs:
           pnpm typecheck
           pnpm lint
           pnpm format:check
+          pnpm audit
 
       - name: Pack release artifact once
         shell: bash
@@ -98,6 +104,4 @@ jobs:
         run: pnpm --filter @jinhyuk9714/agent-gate test:packed -- "$CLI_TARBALL"
 
       - name: Publish the exact tarball with provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish "$CLI_TARBALL" --provenance --access public
