@@ -331,21 +331,30 @@ describe("loadGitHubAnalysis", () => {
     expect(forbiddenWithResetHeader.listPullRequestFilesPage).toHaveBeenCalledOnce();
   });
 
-  it.each([502, 504])("retries GitHub status %s", async (status) => {
-    const github = api({
-      pull: pullRequest({ changedFiles: 1 }),
-      files: [changedFile("src/a.ts")],
-    });
-    vi.mocked(github.listPullRequestFilesPage)
-      .mockRejectedValueOnce(new GitHubApiError("Transient", { status }))
-      .mockResolvedValueOnce([changedFile("src/a.ts")]);
-    const sleep = vi.fn(async () => undefined);
+  it.each([502, 504])(
+    "retries GitHub status %s with transient backoff despite rate-limit headers",
+    async (status) => {
+      const github = api({
+        pull: pullRequest({ changedFiles: 1 }),
+        files: [changedFile("src/a.ts")],
+      });
+      vi.mocked(github.listPullRequestFilesPage)
+        .mockRejectedValueOnce(
+          new GitHubApiError("Transient", {
+            status,
+            retryAfterMs: 60_001,
+            rateLimitResetAt: 3_600_000,
+          }),
+        )
+        .mockResolvedValueOnce([changedFile("src/a.ts")]);
+      const sleep = vi.fn(async () => undefined);
 
-    await loadGitHubAnalysis(github, TARGET, options({ retry: { sleep, now: () => 0 } }));
+      await loadGitHubAnalysis(github, TARGET, options({ retry: { sleep, now: () => 0 } }));
 
-    expect(github.listPullRequestFilesPage).toHaveBeenCalledTimes(2);
-    expect(sleep).toHaveBeenCalledWith(250);
-  });
+      expect(github.listPullRequestFilesPage).toHaveBeenCalledTimes(2);
+      expect(sleep).toHaveBeenCalledWith(250);
+    },
+  );
 
   it("retries network failures and stops after three total attempts", async () => {
     const github = api({

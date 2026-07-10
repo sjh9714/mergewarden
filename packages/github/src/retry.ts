@@ -65,12 +65,14 @@ function shouldRetry(error: GitHubApiError): boolean {
 }
 
 function retryDelay(error: GitHubApiError, failedAttempt: number, now: number): number {
-  if (error.retryAfterMs !== undefined) {
-    return error.retryAfterMs;
-  }
+  if (isRateLimitError(error)) {
+    if (error.retryAfterMs !== undefined) {
+      return error.retryAfterMs;
+    }
 
-  if (error.rateLimitResetAt !== undefined) {
-    return Math.max(0, error.rateLimitResetAt - now);
+    if (error.rateLimitResetAt !== undefined) {
+      return Math.max(0, error.rateLimitResetAt - now);
+    }
   }
 
   return DEFAULT_DELAYS_MS[Math.min(failedAttempt - 1, DEFAULT_DELAYS_MS.length - 1)] ?? 1_000;
