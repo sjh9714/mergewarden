@@ -1,7 +1,7 @@
 {
   "name": "agent-gate",
-  "version": "0.2.6",
-  "private": true,
+  "version": "0.3.0",
+  "private": false,
   "type": "module",
   "description": "Checkout-free policy scanning for AI-generated GitHub pull requests",
   "license": "MIT",

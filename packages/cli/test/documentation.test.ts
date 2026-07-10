@@ -92,4 +92,20 @@ describe("documentation contracts", () => {
     expect(readme).toContain("exact base commit");
     expect(readme).toContain("does not publish or recommend a mutable `v0` tag");
   });
+
+  it("keeps npm publishing manual, approval-gated, pinned, and tied to fresh artifacts", async () => {
+    const workflow = await readFile(join(repoRoot, ".github/workflows/publish-npm.yml"), "utf8");
+    const actionUses = [...workflow.matchAll(/^\s*uses:\s*([^\s#]+)/gm)].map(
+      (match) => match[1] ?? "",
+    );
+
+    expect(workflow).toContain("workflow_dispatch:");
+    expect(workflow).toContain("environment: npm-release");
+    expect(workflow).toContain("contents: read");
+    expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("git diff --exit-code -- packages/action/dist/index.cjs");
+    expect(workflow).toContain('npm publish "$CLI_TARBALL" --provenance --access public');
+    expect(actionUses.length).toBeGreaterThan(0);
+    expect(actionUses.every((uses) => /@[0-9a-f]{40}$/.test(uses))).toBe(true);
+  });
 });

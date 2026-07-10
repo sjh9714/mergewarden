@@ -1,0 +1,104 @@
+name: Publish npm package
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Signed release tag to publish"
+        required: true
+        default: "v0.3.0"
+        type: string
+      confirmation:
+        description: "Type PUBLISH to confirm the external release action"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: inputs.confirmation == 'PUBLISH'
+    runs-on: ubuntu-latest
+    environment: npm-release
+
+    steps:
+      - name: Validate release ref
+        shell: bash
+        env:
+          RELEASE_REF: ${{ inputs.ref }}
+        run: |
+          if [[ ! "$RELEASE_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release ref must be an exact vMAJOR.MINOR.PATCH tag." >&2
+            exit 1
+          fi
+
+      - name: Checkout signed tag
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.5.0 --activate
+
+      - name: Verify annotated signed tag and package version
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REF: ${{ inputs.ref }}
+        run: |
+          test "$(git describe --tags --exact-match)" = "$RELEASE_REF"
+          tag_object="$(git rev-parse "$RELEASE_REF^{tag}")"
+          test "$(git cat-file -t "$tag_object")" = "tag"
+
+          if ! git verify-tag "$RELEASE_REF"; then
+            verified="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" --jq '.verification.verified')"
+            test "$verified" = "true"
+          fi
+
+          test "$(node -p "require('./packages/cli/package.json').version")" = "${RELEASE_REF#v}"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify release candidate
+        run: |
+          pnpm build
+          git diff --exit-code -- packages/action/dist/index.cjs
+          pnpm test
+          pnpm typecheck
+          pnpm lint
+          pnpm format:check
+
+      - name: Pack release artifact once
+        shell: bash
+        run: |
+          pnpm --filter agent-gate pack --pack-destination "$RUNNER_TEMP"
+          tarball="$(find "$RUNNER_TEMP" -maxdepth 1 -name 'agent-gate-*.tgz' -print -quit)"
+          test -n "$tarball"
+          echo "CLI_TARBALL=$tarball" >> "$GITHUB_ENV"
+          sha256sum "$tarball"
+
+      - name: Smoke-test the exact release artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: pnpm --filter agent-gate test:packed -- "$CLI_TARBALL"
+
+      - name: Publish the exact tarball with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish "$CLI_TARBALL" --provenance --access public

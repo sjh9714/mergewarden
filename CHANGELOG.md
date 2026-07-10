@@ -3,20 +3,60 @@
 All notable changes to Agent Gate will be documented in this file.
 
 This project follows the spirit of
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Agent Gate is
-pre-release, so APIs and rule names may change between versions.
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v0.3.0 - 2026-07-10
+
 ### Added
 
-- Record v0.2.6 release verification and external workflow permission context
-  smoke evidence.
+- Add public API-only PR scanning through `npx agent-gate scan`.
+- Add a shared private GitHub collection package for the Action and CLI.
+- Add file-list completeness, bounded content retrieval, retry, and rate-limit
+  evidence that fails closed when analysis cannot complete.
+- Add per-check GitHub Actions policy, exact expiring waivers, report
+  reproducibility metadata, and narrow agentic workflow injection detection.
+- Add public CLI packaging smoke tests, documentation navigation, community
+  support files, and an approval-gated npm provenance workflow.
 
 ### Changed
 
-- Align README primary live proof with the v0.2.6 workflow permission context
-  smoke.
+- Make workflow dangerous-pattern findings differential against the base
+  workflow instead of re-reporting unchanged conditions.
+- Sanitize and bound all human report surfaces and distinguish observed,
+  needs-review, blocked, and incomplete states.
+- Remove severity from finding-ID fingerprints so policy tuning does not change
+  the evidence identity.
+- Hide the uncalibrated risk score from primary reports while retaining the
+  deprecated v0.x API and Action output.
+- Reposition Agent Gate as a checkout-free change-control layer for AI PRs and
+  reorganize historical release documents under `docs/history/`.
+
+### Removed
+
+- Reject the no-op PR contract `required_evidence` field. Use deterministic
+  `high_risk_paths.require_tests` policy instead.
+
+### Security
+
+- Never present a partial GitHub file list or unavailable required content as a
+  successful analysis.
+- Load policy only from the exact base SHA and preserve structured GitHub API
+  errors instead of treating all failures as missing files.
+- Require exact GitHub Actions bot ownership before updating a marked PR
+  comment.
+
+### Compatibility
+
+- Existing GitHub Actions config remains accepted unless mixed with the new
+  `checks` map.
+- Finding IDs change once in v0.3.0 because severity is no longer part of the
+  fingerprint.
+- `riskScore` and `risk-score` remain deprecated through v0.x and are planned
+  for removal in v1.
 
 ## v0.2.6 - 2026-06-30
 

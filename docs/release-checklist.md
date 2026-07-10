@@ -1,69 +1,55 @@
 # Release Checklist
 
-This checklist prepares Agent Gate for a future `v0.1.0` pre-release. Do not
-create tags, GitHub releases, or package publishes from Codex unless the user
-explicitly asks for that release operation.
+Use this checklist for v0.3.0 and later releases. Repository preparation does
+not authorize a tag, npm publication, GitHub release, or Marketplace change.
 
-## Pre-Release Quality Gate
+## Code and Contracts
 
-- [ ] Record final verification in `docs/release-audit-v0.1.0.md`.
-- [ ] Update package versions and `AGENT_GATE_VERSION` for the release.
-- [ ] Run `pnpm test`.
-- [ ] Run `pnpm typecheck`.
-- [ ] Run `pnpm lint`.
-- [ ] Run `pnpm build`.
-- [ ] Run `pnpm format:check`.
-- [ ] Run `git diff --exit-code -- packages/action/dist/index.cjs`.
-- [ ] Run CLI replay for every fixture under `fixtures/unsafe-pr-zoo`.
+- [ ] Working tree is clean and the release branch is approved.
+- [ ] Package manifests, engine constants, Action metadata, changelog, and
+      release notes use the same version.
+- [ ] Every changed rule has passing/failing fixtures, exact assertions, and a
+      Markdown snapshot.
+- [ ] Base-policy, checkout-free, no-runtime-LLM guarantees still hold.
+- [ ] Root and package-local Action metadata deep equality passes.
+- [ ] Committed Action bundle is fresh and works on Node 24.
 
-## GitHub Checks
+## Verification
 
-- [ ] Confirm the Agent Gate check succeeds.
-- [ ] Confirm the CI check succeeds.
-- [ ] Confirm GitGuardian succeeds.
-- [ ] Confirm repository governance settings are reviewed before release.
-- [ ] Confirm Agent Gate findings, if any, are expected and non-blocking for the
-      release-prep PR.
+- [ ] `pnpm install --frozen-lockfile`
+- [ ] `pnpm build`
+- [ ] `pnpm test`
+- [ ] `pnpm typecheck`
+- [ ] `pnpm lint`
+- [ ] `pnpm format:check`
+- [ ] `pnpm audit`
+- [ ] Unsafe PR zoo replay succeeds.
+- [ ] Packed CLI installs in an empty directory on supported Node/OS matrix.
+- [ ] Tarball has no `workspace:*` or private runtime dependency.
+- [ ] Compressed/unpacked sizes are within 2MB/5MB.
 
-## Action Packaging
+## Before Publishing
 
-- [ ] Verify root `action.yml` points to `packages/action/dist/index.cjs`.
-- [ ] Verify `packages/action/action.yml` points to `dist/index.cjs`.
-- [ ] Verify root `action.yml` and `packages/action/action.yml` expose matching
-      inputs, outputs, branding, and Node runtime.
-- [ ] Verify `packages/action/dist/index.cjs` is committed.
-- [ ] Confirm the Node 24 Action bundle smoke test passes in CI.
-- [ ] Verify `.github/workflows/agent-gate.yml` does not use
-      `actions/checkout`.
+- [ ] Recheck that the exact `agent-gate` npm name is available and owned by
+      the intended publisher; stop if it is not.
+- [ ] Confirm release environment approval and first-publish `NPM_TOKEN`.
+- [ ] Confirm publish workflow uses full-SHA third-party Actions, minimal
+      permissions, and the exact version tag.
+- [ ] Create a signed annotated tag only after explicit approval.
 
-## README And Install Docs
+## Publish Order
 
-- [ ] Verify the install example uses `sjh9714/Agent-Gate@<ref>` and remains
-      checkout-free.
-- [ ] Verify comment examples document `issues: write`.
-- [ ] Verify README still describes Agent Gate as pre-release.
-- [ ] Verify docs do not claim marketplace availability or package publishing.
+- [ ] Publish the tested tarball with `--provenance --access public`.
+- [ ] Verify a cold `npx --yes agent-gate@VERSION --version` and public scan.
+- [ ] Publish a non-prerelease GitHub release.
+- [ ] Confirm Marketplace shows the same version and install ref.
+- [ ] Configure npm Trusted Publisher and remove the first-publish token.
+- [ ] Run the external checkout-free Action smoke with a full SHA pin.
+- [ ] Add real report/GIF proof in a post-release PR.
+- [ ] Publish launch content only after the proof PR is merged.
 
-## Security Model
+## Never
 
-- [ ] Review `docs/security-model.md`.
-- [ ] Confirm trusted and untrusted inputs are still accurate.
-- [ ] Confirm runtime guarantees still match the Action implementation.
-- [ ] Confirm known limitations are still accurate.
-
-## Tagging Plan
-
-- [ ] Choose the release ref, such as `v0.1.0`.
-- [ ] Confirm the release commit is on `main`.
-- [ ] Review `docs/v0.1.0-release-notes.md` before tagging.
-- [ ] Create a draft release note from `CHANGELOG.md`.
-- [ ] Do not push the tag until final verification is complete.
-
-## Post-Release Verification
-
-- [ ] Review `docs/release-verification-v0.1.0.md`.
-- [ ] Create a test PR using `sjh9714/Agent-Gate@<tag>` after tagging.
-- [ ] Confirm the root Action loads on GitHub runners.
-- [ ] Confirm the job summary and outputs are written.
-- [ ] Confirm optional PR comment upsert works when `issues: write` is granted.
-- [ ] Confirm fork PR comment failures remain warnings, not Action failures.
+- Do not rewrite tags or publish a mutable `v0` alias.
+- Do not publish a different tarball from the one tested.
+- Do not fabricate CLI screenshots or claim an external adopter without proof.

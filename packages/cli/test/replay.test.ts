@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -382,5 +382,24 @@ describe("CLI replay", () => {
     expect(exitCode).toBe(2);
     expect(stderr.join("")).toContain("Agent Gate CLI error:");
     expect(stderr.join("")).not.toContain("TypeError");
+  });
+
+  it("keeps the root documentation version, security, and relative-link contracts", async () => {
+    const readme = await readFile(join(repoRoot, "README.md"), "utf8");
+    const manifest = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8")) as {
+      version: string;
+    };
+
+    expect(readme).toContain(`@v${manifest.version}`);
+    expect(readme.toLowerCase()).toContain("no checkout");
+    for (const relativePath of [
+      "docs/getting-started.md",
+      "docs/security-model.md",
+      "docs/configuration.md",
+      "CONTRIBUTING.md",
+    ]) {
+      expect(readme).toContain(`](${relativePath})`);
+      await expect(access(join(repoRoot, relativePath))).resolves.toBeUndefined();
+    }
   });
 });
