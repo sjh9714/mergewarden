@@ -56,10 +56,13 @@ importers:
         version: link:../github
 
   packages/cli:
-    dependencies:
+    devDependencies:
       '@agent-gate/core':
         specifier: workspace:*
         version: link:../core
+      '@agent-gate/github':
+        specifier: workspace:*
+        version: link:../github
 
   packages/core:
     dependencies:
