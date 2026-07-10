@@ -6,7 +6,7 @@ on:
       ref:
         description: "Signed release tag to publish"
         required: true
-        default: "v0.3.0"
+        default: "v0.3.1"
         type: string
       confirmation:
         description: "Type PUBLISH to confirm the external release action"
@@ -68,6 +68,7 @@ jobs:
             test "$verified" = "true"
           fi
 
+          test "$(node -p "require('./packages/cli/package.json').name")" = "@jinhyuk9714/agent-gate"
           test "$(node -p "require('./packages/cli/package.json').version")" = "${RELEASE_REF#v}"
 
       - name: Install dependencies
@@ -85,8 +86,8 @@ jobs:
       - name: Pack release artifact once
         shell: bash
         run: |
-          pnpm --filter agent-gate pack --pack-destination "$RUNNER_TEMP"
-          tarball="$(find "$RUNNER_TEMP" -maxdepth 1 -name 'agent-gate-*.tgz' -print -quit)"
+          pnpm --filter @jinhyuk9714/agent-gate pack --pack-destination "$RUNNER_TEMP"
+          tarball="$(find "$RUNNER_TEMP" -maxdepth 1 -name 'jinhyuk9714-agent-gate-*.tgz' -print -quit)"
           test -n "$tarball"
           echo "CLI_TARBALL=$tarball" >> "$GITHUB_ENV"
           sha256sum "$tarball"
@@ -94,7 +95,7 @@ jobs:
       - name: Smoke-test the exact release artifact
         env:
           GH_TOKEN: ${{ github.token }}
-        run: pnpm --filter agent-gate test:packed -- "$CLI_TARBALL"
+        run: pnpm --filter @jinhyuk9714/agent-gate test:packed -- "$CLI_TARBALL"
 
       - name: Publish the exact tarball with provenance
         env:

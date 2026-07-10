@@ -4,7 +4,7 @@ The roadmap is ordered by evidence quality, not promised dates.
 
 ## Now
 
-- Ship v0.3.0 as a normal release with a public `npx` scan path.
+- Ship v0.3.1 as a normal release with a public `npx` scan path.
 - Fail closed on incomplete GitHub file/content collection.
 - Make workflow findings differential and independently tunable.
 - Add exact, expiring base-policy waivers.

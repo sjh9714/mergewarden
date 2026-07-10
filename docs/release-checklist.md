@@ -1,6 +1,6 @@
 # Release Checklist
 
-Use this checklist for v0.3.0 and later releases. Repository preparation does
+Use this checklist for v0.3.1 and later releases. Repository preparation does
 not authorize a tag, npm publication, GitHub release, or Marketplace change.
 
 ## Code and Contracts
@@ -30,7 +30,7 @@ not authorize a tag, npm publication, GitHub release, or Marketplace change.
 
 ## Before Publishing
 
-- [ ] Recheck that the exact `agent-gate` npm name is available and owned by
+- [ ] Recheck that the exact `@jinhyuk9714/agent-gate` npm name is available and owned by
       the intended publisher; stop if it is not.
 - [ ] Confirm release environment approval and first-publish `NPM_TOKEN`.
 - [ ] Confirm publish workflow uses full-SHA third-party Actions, minimal
@@ -40,7 +40,7 @@ not authorize a tag, npm publication, GitHub release, or Marketplace change.
 ## Publish Order
 
 - [ ] Publish the tested tarball with `--provenance --access public`.
-- [ ] Verify a cold `npx --yes agent-gate@VERSION --version` and public scan.
+- [ ] Verify a cold `npx --yes @jinhyuk9714/agent-gate@VERSION --version` and public scan.
 - [ ] Publish a non-prerelease GitHub release.
 - [ ] Confirm Marketplace shows the same version and install ref.
 - [ ] Configure npm Trusted Publisher and remove the first-publish token.

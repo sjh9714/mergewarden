@@ -12,7 +12,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.3.0
+      - uses: sjh9714/Agent-Gate@v0.3.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn

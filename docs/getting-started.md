@@ -3,7 +3,7 @@
 ## 1. Try a PR Without Installing
 
 ```bash
-npx --yes agent-gate@0.3.0 scan owner/repository#123
+npx --yes @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
 ```
 
 Public repositories work without a token. Set `GH_TOKEN`, or
@@ -28,7 +28,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.3.0
+      - uses: sjh9714/Agent-Gate@v0.3.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn

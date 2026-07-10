@@ -9,11 +9,22 @@ This project follows the spirit of
 
 No unreleased changes yet.
 
+## v0.3.1 - 2026-07-10
+
+### Changed
+
+- Publish the public CLI as `@jinhyuk9714/agent-gate` while preserving the
+  `agent-gate` executable name.
+- Update `npx`, packaging smoke, CI, and release documentation for the scoped
+  package after npm rejected the unscoped name as too similar to `agentgate`.
+- Keep the signed `v0.3.0` tag immutable and use a new patch release for the
+  source, tarball, and provenance identity change.
+
 ## v0.3.0 - 2026-07-10
 
 ### Added
 
-- Add public API-only PR scanning through `npx agent-gate scan`.
+- Add public API-only PR scanning through `npx @jinhyuk9714/agent-gate scan`.
 - Add a shared private GitHub collection package for the Action and CLI.
 - Add file-list completeness, bounded content retrieval, retry, and rate-limit
   evidence that fails closed when analysis cannot complete.

@@ -10,7 +10,7 @@ Replay the v0.3.0 composite fixture to see a docs-only contract alongside
 workflow privilege, agent-control-plane, MCP, and package lifecycle changes:
 
 ```bash
-pnpm --filter agent-gate build
+pnpm --filter @jinhyuk9714/agent-gate build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/composite-agent-boundary
 ```
 
@@ -70,7 +70,7 @@ fixtures/unsafe-pr-zoo/workflow-permission-escalation
 Replay:
 
 ```bash
-pnpm --filter agent-gate build
+pnpm --filter @jinhyuk9714/agent-gate build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
 ```
 
@@ -107,7 +107,7 @@ fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
 Replay:
 
 ```bash
-pnpm --filter agent-gate build
+pnpm --filter @jinhyuk9714/agent-gate build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
 ```
 

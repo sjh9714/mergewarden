@@ -2,12 +2,12 @@
 
 Agent Gate is a checkout-free policy gate for AI-generated GitHub pull requests. It reads pull request metadata and selected file contents through the GitHub API; it never clones the target repository or executes pull-request-controlled code.
 
-The package is prepared for the Agent Gate v0.3.0 release. Publishing remains a separately approved release operation.
+The npm package is `@jinhyuk9714/agent-gate`; the installed executable remains `agent-gate`.
 
 ## Try a public pull request
 
 ```console
-npx agent-gate scan owner/repository#123
+npx @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
 ```
 
 Full GitHub pull request URLs are also accepted. Authentication is optional for public repositories. For private repositories or higher API limits, set `GH_TOKEN` (preferred) or `GITHUB_TOKEN` in the environment.

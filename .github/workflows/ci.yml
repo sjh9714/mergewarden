@@ -143,8 +143,8 @@ jobs:
         run: |
           pack_dir="$PWD/.agent-gate-pack"
           mkdir -p "$pack_dir"
-          pnpm --filter agent-gate pack --pack-destination "$pack_dir"
-          tarball="$(find "$pack_dir" -maxdepth 1 -name 'agent-gate-*.tgz' -print -quit)"
+          pnpm --filter @jinhyuk9714/agent-gate pack --pack-destination "$pack_dir"
+          tarball="$(find "$pack_dir" -maxdepth 1 -name 'jinhyuk9714-agent-gate-*.tgz' -print -quit)"
           test -n "$tarball"
           if command -v cygpath >/dev/null 2>&1; then
             tarball="$(cygpath -w "$tarball")"

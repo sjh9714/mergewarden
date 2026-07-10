@@ -1,6 +1,6 @@
 {
-  "name": "agent-gate",
-  "version": "0.3.0",
+  "name": "@jinhyuk9714/agent-gate",
+  "version": "0.3.1",
   "private": false,
   "type": "module",
   "description": "Checkout-free policy scanning for AI-generated GitHub pull requests",

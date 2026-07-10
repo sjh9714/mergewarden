@@ -50683,7 +50683,7 @@ async function loadGitHubAnalysis(api, target, options) {
 }
 
 // src/version.ts
-var AGENT_GATE_VERSION = "0.3.0";
+var AGENT_GATE_VERSION = "0.3.1";
 
 // src/run.ts
 var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";

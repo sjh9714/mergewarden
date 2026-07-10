@@ -16,7 +16,7 @@ agent-gate --version
 Run without installing:
 
 ```bash
-npx --yes agent-gate@0.3.0 scan owner/repository#123
+npx --yes @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
 ```
 
 ## Scan Options

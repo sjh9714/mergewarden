@@ -22,13 +22,13 @@ replayed locally.
 Scan any public GitHub pull request without installing the Action:
 
 ```bash
-npx --yes agent-gate@0.3.0 scan owner/repository#123
+npx --yes @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
 ```
 
 A full pull-request URL works too:
 
 ```bash
-npx --yes agent-gate@0.3.0 scan https://github.com/owner/repository/pull/123
+npx --yes @jinhyuk9714/agent-gate@0.3.1 scan https://github.com/owner/repository/pull/123
 ```
 
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
@@ -53,7 +53,7 @@ Path: AGENTS.md
 
 The default output is concise. Use `--format json` or `--format markdown` for
 the complete machine-readable report. See the [CLI reference](docs/cli.md).
-The final v0.3.0 CLI recording will be added only after the published package is
+The final v0.3.1 CLI recording will be added only after the published package is
 verified; no simulated `npx` recording is used.
 
 ## Install in 30 Seconds
@@ -75,7 +75,7 @@ jobs:
   agent-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.3.0
+      - uses: sjh9714/Agent-Gate@v0.3.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -83,7 +83,7 @@ jobs:
 ```
 
 No checkout step is needed. For maximum supply-chain assurance, replace the
-version tag with the full 40-character commit SHA shown on the v0.3.0 release.
+version tag with the full 40-character commit SHA shown on the v0.3.1 release.
 Agent Gate does not publish or recommend a mutable `v0` tag.
 
 The first run works without `agent-gate.yml`: a confirmed 404 on the PR base
@@ -93,7 +93,7 @@ errors never fall back silently.
 Verified checkout-free Action evidence is available in
 [sandbox PR #14](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14).
 It uses the earlier v0.2.6 release; the release checklist requires a fresh
-v0.3.0 SHA-pinned proof before launch.
+v0.3.1 SHA-pinned proof before launch.
 
 ## What It Catches
 

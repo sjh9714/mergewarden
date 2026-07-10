@@ -12,6 +12,7 @@ const MAX_PACKED_BYTES = 2 * 1024 * 1024;
 const MAX_UNPACKED_BYTES = 5 * 1024 * 1024;
 const MAX_HELP_MILLISECONDS = 10_000;
 const MAX_SCAN_MILLISECONDS = 60_000;
+const PUBLISHED_PACKAGE = "@jinhyuk9714/agent-gate";
 const PUBLIC_SCAN_TARGET =
   process.env.AGENT_GATE_PACKAGE_SMOKE_SCAN_TARGET ??
   "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14";
@@ -92,7 +93,7 @@ async function validateTarball(tarball, tempRoot) {
     { cwd: installRoot },
   );
 
-  const installedPackagePath = join(installRoot, "node_modules", "agent-gate");
+  const installedPackagePath = join(installRoot, "node_modules", "@jinhyuk9714", "agent-gate");
   const installed = await installedFiles(installedPackagePath);
   assert(
     installed.byteLength < MAX_UNPACKED_BYTES,
@@ -105,6 +106,10 @@ async function validateTarball(tarball, tempRoot) {
 
   const installedManifest = JSON.parse(
     await readFile(join(installedPackagePath, "package.json"), "utf8"),
+  );
+  assert(
+    installedManifest.name === PUBLISHED_PACKAGE,
+    `published manifest name ${installedManifest.name} does not match ${PUBLISHED_PACKAGE}`,
   );
   for (const [name, dependency] of Object.entries(installedManifest.dependencies ?? {})) {
     assert(!name.startsWith("@agent-gate/"), `published manifest contains private package ${name}`);
