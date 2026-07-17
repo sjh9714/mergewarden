@@ -13,10 +13,10 @@
     {
       "path": ".github/workflows/reusable-call.yml",
       "status": "added",
-      "additions": 5,
+      "additions": 7,
       "deletions": 0,
       "baseContent": null,
-      "headContent": "on: [push]\npermissions: {}\njobs:\n  call:\n    uses: owner/repository/.github/workflows/reusable.yml@1111111111111111111111111111111111111111\n"
+      "headContent": "on: [push]\npermissions: {}\njobs:\n  call:\n    uses: owner/repository/.github/workflows/reusable.yml@1111111111111111111111111111111111111111\n  local:\n    uses: ./.github/workflows/local.yml\n"
     }
   ],
   "now": "2026-07-17T00:00:00.000Z",
