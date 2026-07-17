@@ -313,9 +313,37 @@ describe("CLI replay", () => {
     expect(markdown.trimEnd()).toBe(expectedMarkdown.trimEnd());
   });
 
+  it("replays an unpinned reusable workflow with exact evidence and markdown snapshot", async () => {
+    const fixturePath = unsafePrZooFixturePath("workflow-unpinned-reusable-workflow");
+    const result = await analyze(await loadReplayFixture(fixturePath));
+    const markdown = renderMarkdownReport(result);
+    const expectedMarkdown = await readFile(join(fixturePath, "report.md"), "utf8");
+
+    expect(result.decision).toBe("warn");
+    expect(result.findings.map((finding) => finding.ruleId)).toEqual([
+      "workflow/dangerous-pattern",
+    ]);
+    expect(result.findings.map((finding) => finding.severity)).toEqual(["warn"]);
+    expect(result.findings[0]?.evidence).toContainEqual({
+      label: "pattern",
+      value: "unpinned reusable workflow",
+    });
+    expect(markdown.trimEnd()).toBe(expectedMarkdown.trimEnd());
+  });
+
   it("replays a safe pinned-container workflow without findings", async () => {
     const result = await analyze(
       await loadReplayFixture(safePrZooFixturePath("workflow-pinned-containers")),
+    );
+
+    expect(result.decision).toBe("pass");
+    expect(result.status).toBe("passed");
+    expect(result.findings).toEqual([]);
+  });
+
+  it("replays a SHA-pinned reusable workflow without findings", async () => {
+    const result = await analyze(
+      await loadReplayFixture(safePrZooFixturePath("workflow-pinned-reusable-workflow")),
     );
 
     expect(result.decision).toBe("pass");

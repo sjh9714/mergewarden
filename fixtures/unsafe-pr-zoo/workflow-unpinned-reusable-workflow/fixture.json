@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-unpinned-reusable-workflow",
+    "headSha": "head-unpinned-reusable-workflow"
+  },
+  "pr": {
+    "number": 109,
+    "title": "Add workflow with an unpinned reusable workflow",
+    "branchName": "codex/workflow-unpinned-reusable-workflow",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/reusable-call.yml",
+      "status": "added",
+      "additions": 5,
+      "deletions": 0,
+      "baseContent": null,
+      "headContent": "on: [push]\npermissions: {}\njobs:\n  call:\n    uses: owner/repository/.github/workflows/reusable.yml@main\n"
+    }
+  ],
+  "now": "2026-07-17T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

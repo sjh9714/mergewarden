@@ -1,0 +1,24 @@
+{
+  "repo": {
+    "baseSha": "base-pinned-reusable-workflow",
+    "headSha": "head-pinned-reusable-workflow"
+  },
+  "pr": {
+    "number": 110,
+    "title": "Add workflow with a pinned reusable workflow",
+    "branchName": "codex/workflow-pinned-reusable-workflow",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": ".github/workflows/reusable-call.yml",
+      "status": "added",
+      "additions": 5,
+      "deletions": 0,
+      "baseContent": null,
+      "headContent": "on: [push]\npermissions: {}\njobs:\n  call:\n    uses: owner/repository/.github/workflows/reusable.yml@1111111111111111111111111111111111111111\n"
+    }
+  ],
+  "now": "2026-07-17T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}
