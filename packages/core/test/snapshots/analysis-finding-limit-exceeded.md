@@ -1,6 +1,6 @@
 ### ERROR analysis/finding-limit-exceeded
 
-Agent Gate produced 251 findings; only 249 are included in this result.
+MergeWarden produced 251 findings; only 249 are included in this result.
 
 Finding ID: agf_3a5d6a6fb59b92c8
 Disposition: active
@@ -21,6 +21,6 @@ Evidence:
 
 Remediation:
 
-- Split the pull request and rerun Agent Gate to obtain complete evidence.
+- Split the pull request and rerun MergeWarden to obtain complete evidence.
 
 _2 findings omitted from this surface._

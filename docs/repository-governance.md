@@ -6,12 +6,12 @@ an explicit maintainer action outside the codebase.
 ## Main Protection
 
 - Require a pull request before merging.
-- Require `CI` and `Agent Gate` checks.
+- Require `CI` and `MergeWarden` checks.
 - Block force pushes and branch deletion.
 - Require conversation resolution when practical.
 - Prefer squash merge and delete merged branches.
 
-Keep Agent Gate non-blocking during tuning. Move to `mode: block` and
+Keep MergeWarden non-blocking during tuning. Move to `mode: block` and
 `fail-on-block: true` only after representative warn-mode results are reviewed.
 
 ## Release Governance
@@ -26,7 +26,7 @@ Keep Agent Gate non-blocking during tuning. Move to `mode: block` and
 
 ## Self-Dogfooding
 
-- `.github/workflows/agent-gate.yml` remains checkout-free and API-only.
+- `.github/workflows/mergewarden.yml` remains checkout-free and API-only.
 - `.github/workflows/ci.yml` may checkout and run this repository's scripts.
 - Root and package-local Action metadata remain structurally identical.
 - The committed Node 24 Action bundle must be fresh.

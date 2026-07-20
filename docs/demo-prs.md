@@ -1,7 +1,11 @@
 # Demo PRs
 
-This page collects concrete Agent Gate examples. Live sandbox pull requests are
+This page collects concrete MergeWarden examples. Live sandbox pull requests are
 separate from local replay fixtures and are not external adopter claims.
+
+Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
+Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
+historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
 ## v0.3.1 Public Composite Proof
 
@@ -29,7 +33,7 @@ Replay the v0.3.0 composite fixture to see a docs-only contract alongside
 workflow privilege, agent-control-plane, MCP, and package lifecycle changes:
 
 ```bash
-pnpm --filter @jinhyuk9714/agent-gate build
+pnpm --filter mergewarden build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/composite-agent-boundary
 ```
 
@@ -88,7 +92,7 @@ fixtures/unsafe-pr-zoo/workflow-permission-escalation
 Replay:
 
 ```bash
-pnpm --filter @jinhyuk9714/agent-gate build
+pnpm --filter mergewarden build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/workflow-permission-escalation
 ```
 
@@ -125,7 +129,7 @@ fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
 Replay:
 
 ```bash
-pnpm --filter @jinhyuk9714/agent-gate build
+pnpm --filter mergewarden build
 node packages/cli/dist/main.js replay fixtures/unsafe-pr-zoo/out-of-scope-agent-edit
 ```
 

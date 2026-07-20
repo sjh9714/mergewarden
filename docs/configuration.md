@@ -1,6 +1,6 @@
 # Configuration Reference
 
-Agent Gate reads `agent-gate.yml` from the exact PR base SHA. A PR cannot weaken
+MergeWarden reads `mergewarden.yml` from the exact PR base SHA. A PR cannot weaken
 its own policy by modifying its head copy.
 
 ## Top-Level Policy
@@ -29,7 +29,7 @@ contract:
 PR contracts are comment blocks in the PR body:
 
 ```md
-<!-- agent-gate-contract
+<!-- mergewarden-contract
 version: 1
 agent: codex
 task: update authentication

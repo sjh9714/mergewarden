@@ -70,7 +70,7 @@ describe("documentation contracts", () => {
   it("keeps the README concise and ordered around first value", async () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
     const headings = [
-      "# Agent Gate for AI PRs",
+      "# MergeWarden for AI PRs",
       "## Try It in 60 Seconds",
       "## Install in 30 Seconds",
       "## What It Catches",

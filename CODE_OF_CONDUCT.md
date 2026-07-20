@@ -2,7 +2,7 @@
 
 ## Our Pledge
 
-We pledge to make participation in Agent Gate welcoming and harassment-free,
+We pledge to make participation in MergeWarden welcoming and harassment-free,
 regardless of age, body size, disability, ethnicity, sex characteristics,
 gender identity or expression, experience level, education, socioeconomic
 status, nationality, appearance, race, religion, or sexual identity and

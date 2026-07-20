@@ -1,4 +1,4 @@
-import type { AgentGateConfig } from "../config/schema.js";
+import type { MergeWardenConfig } from "../config/schema.js";
 import type { Evidence, RawFinding } from "../types.js";
 import {
   findSecretReferences,
@@ -55,7 +55,7 @@ function actionName(uses: string): string {
   return (index >= 0 ? uses.slice(0, index) : uses).toLowerCase();
 }
 
-function registry(config: AgentGateConfig["agentic_workflows"]): AgenticAction[] {
+function registry(config: MergeWardenConfig["agentic_workflows"]): AgenticAction[] {
   const entries = [
     ...DEFAULT_AGENTIC_ACTIONS,
     ...config.additional_actions.map((action) => ({
@@ -153,7 +153,7 @@ function effectiveCapability(
 
 function candidates(
   workflow: WorkflowDocument | undefined,
-  config: AgentGateConfig["agentic_workflows"],
+  config: MergeWardenConfig["agentic_workflows"],
 ): Candidate[] {
   if (!workflow) {
     return [];
@@ -208,7 +208,7 @@ function candidates(
   return results;
 }
 
-function finding(filePath: string, candidate: Candidate, config: AgentGateConfig): RawFinding {
+function finding(filePath: string, candidate: Candidate, config: MergeWardenConfig): RawFinding {
   const privileged = candidate.capability !== "read-only";
   const evidence: Evidence[] = [
     { label: "changed_file", value: filePath },

@@ -3,7 +3,7 @@
 ## 1. Try a PR Without Installing
 
 ```bash
-npx --yes @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
+npx --yes mergewarden@0.4.0 scan owner/repository#123
 ```
 
 Public repositories work without a token. Set `GH_TOKEN`, or
@@ -11,10 +11,10 @@ Public repositories work without a token. Set `GH_TOKEN`, or
 
 ## 2. Add the Checkout-Free Action
 
-Create `.github/workflows/agent-gate.yml`:
+Create `.github/workflows/mergewarden.yml`:
 
 ```yaml
-name: Agent Gate
+name: MergeWarden
 
 on:
   pull_request:
@@ -25,22 +25,22 @@ permissions:
   pull-requests: read
 
 jobs:
-  agent-gate:
+  mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.3.1
+      - uses: sjh9714/mergewarden@v0.4.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
 ```
 
-Do not add checkout. Agent Gate reads the PR through GitHub APIs and loads
+Do not add checkout. MergeWarden reads the PR through GitHub APIs and loads
 policy from the exact base commit.
 
 ## 3. Read the First Report
 
-Start without `agent-gate.yml` or with `mode: warn`. A confirmed missing
+Start without `mergewarden.yml` or with `mode: warn`. A confirmed missing
 default config selects the built-in policy; other retrieval errors fail.
 
 - `PASSED`: complete analysis, no active warning/error findings.
@@ -62,7 +62,7 @@ After enough warn-mode observation:
 1. Set stable checks to `error`.
 2. Set `mode: block`.
 3. Set `fail-on-block: true`.
-4. Require the Agent Gate check in branch protection.
+4. Require the MergeWarden check in branch protection.
 
 Pin the Action to the release tag or, for maximum assurance, the exact release
-commit SHA. Agent Gate does not publish a mutable `v0` tag.
+commit SHA. MergeWarden does not publish a mutable `v0` tag.

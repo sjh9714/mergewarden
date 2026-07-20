@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Agent Gate for AI-generated pull requests.
+Thanks for helping improve MergeWarden for AI-generated pull requests.
 
 ## Five-Minute Setup
 

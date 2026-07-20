@@ -1,4 +1,4 @@
-import type { AgentGateConfig } from "./config/schema.js";
+import type { MergeWardenConfig } from "./config/schema.js";
 import type { ParseContractResult } from "./contract/schema.js";
 
 export type Severity = "info" | "warn" | "error";
@@ -104,7 +104,7 @@ export interface CheckEvidence {
 export interface AnalysisInput {
   repo: RepoContext;
   pr: PullRequestContext;
-  config: AgentGateConfig;
+  config: MergeWardenConfig;
   contract: ParseContractResult;
   changes: ChangeSet;
   reviews: ReviewEvidence[];

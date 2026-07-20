@@ -1,7 +1,7 @@
 import { parseDocument } from "yaml";
 
 import { formatZodIssues } from "../validation/formatZodIssues.js";
-import { AgentGateConfigSchema, CONFIG_FILE_NAME, type AgentGateConfig } from "./schema.js";
+import { MergeWardenConfigSchema, CONFIG_FILE_NAME, type MergeWardenConfig } from "./schema.js";
 
 function formatYamlErrors(errors: { message: string }[]): string {
   return errors.map((error) => error.message).join("; ");
@@ -34,7 +34,7 @@ function assertNoGitHubActionsConfigMixing(value: unknown): void {
   }
 }
 
-export function parseConfig(yamlText: string): AgentGateConfig {
+export function parseConfig(yamlText: string): MergeWardenConfig {
   const document = parseDocument(yamlText);
 
   if (document.errors.length > 0) {
@@ -45,7 +45,7 @@ export function parseConfig(yamlText: string): AgentGateConfig {
 
   const rawValue = document.toJS();
   assertNoGitHubActionsConfigMixing(rawValue);
-  const parsed = AgentGateConfigSchema.safeParse(rawValue);
+  const parsed = MergeWardenConfigSchema.safeParse(rawValue);
 
   if (!parsed.success) {
     throw new Error(`Invalid ${CONFIG_FILE_NAME}: ${formatZodIssues(parsed.error.issues)}`);

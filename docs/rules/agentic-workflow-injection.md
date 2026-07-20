@@ -2,7 +2,7 @@
 
 Rule ID: `workflow/agentic-untrusted-input`
 
-Agent Gate reports when untrusted GitHub event text is newly connected to a
+MergeWarden reports when untrusted GitHub event text is newly connected to a
 registered coding-agent prompt input. The rule is deterministic and deliberately
 narrow; it is not a general workflow taint analyzer.
 

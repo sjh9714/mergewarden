@@ -138,7 +138,7 @@ function buildMarkdownReport(
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
   const lines = [
-    `# Agent Gate: ${humanDecisionLabel(result)}`,
+    `# MergeWarden: ${humanDecisionLabel(result)}`,
     "",
     `Decision: ${result.decision}`,
     `Status: ${result.status}`,

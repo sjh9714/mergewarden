@@ -1,18 +1,18 @@
 {
-  "name": "@jinhyuk9714/agent-gate",
-  "version": "0.3.1",
+  "name": "mergewarden",
+  "version": "0.4.0",
   "private": false,
   "type": "module",
   "description": "Checkout-free policy scanning for AI-generated GitHub pull requests",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sjh9714/Agent-Gate.git",
+    "url": "git+https://github.com/sjh9714/mergewarden.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/sjh9714/Agent-Gate#readme",
+  "homepage": "https://github.com/sjh9714/mergewarden#readme",
   "bugs": {
-    "url": "https://github.com/sjh9714/Agent-Gate/issues"
+    "url": "https://github.com/sjh9714/mergewarden/issues"
   },
   "keywords": [
     "coding-agents",
@@ -30,7 +30,7 @@
     "node": ">=20"
   },
   "bin": {
-    "agent-gate": "./dist/main.js"
+    "mergewarden": "./dist/main.js"
   },
   "files": [
     "dist",
@@ -46,7 +46,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
-    "@agent-gate/core": "workspace:*",
-    "@agent-gate/github": "workspace:*"
+    "@mergewarden/core": "workspace:*",
+    "@mergewarden/github": "workspace:*"
   }
 }

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { NonEmptyStringSchema } from "../validation/schemas.js";
 
-export const CONFIG_FILE_NAME = "agent-gate.yml";
+export const CONFIG_FILE_NAME = "mergewarden.yml";
 
 export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "AGENTS.md",
@@ -215,7 +215,7 @@ const PackageScriptsConfigSchema = z
   })
   .strict();
 
-export const AgentGateConfigSchema = z
+export const MergeWardenConfigSchema = z
   .object({
     version: z.literal(1),
     mode: z.enum(["observe", "warn", "block"]).default("warn"),
@@ -273,4 +273,4 @@ export const AgentGateConfigSchema = z
     }
   });
 
-export type AgentGateConfig = z.infer<typeof AgentGateConfigSchema>;
+export type MergeWardenConfig = z.infer<typeof MergeWardenConfigSchema>;

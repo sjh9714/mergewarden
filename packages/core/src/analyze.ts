@@ -58,8 +58,8 @@ function rawFindingForGap(gap: AnalysisGap): RawFinding {
     evidence: gap.evidence,
     remediation: [
       gap.ruleId === "analysis/file-list-incomplete"
-        ? "Reduce or split the pull request, then rerun Agent Gate with a complete file list."
-        : "Rerun Agent Gate once the required base and head content can be read.",
+        ? "Reduce or split the pull request, then rerun MergeWarden with a complete file list."
+        : "Rerun MergeWarden once the required base and head content can be read.",
     ],
     tags: ["analysis", "incomplete"],
     confidence: "high",
@@ -187,13 +187,13 @@ function capFinding(total: number, retained: number): Finding {
       ruleId: "analysis/finding-limit-exceeded",
       severity: "error",
       title: "Analysis finding limit exceeded",
-      message: `Agent Gate produced ${total} findings; only ${retained} are included in this result.`,
+      message: `MergeWarden produced ${total} findings; only ${retained} are included in this result.`,
       evidence: [
         { label: "total_findings", value: String(total) },
         { label: "retained_findings", value: String(retained) },
         { label: "finding_limit", value: String(MAX_RESULT_FINDINGS) },
       ],
-      remediation: ["Split the pull request and rerun Agent Gate to obtain complete evidence."],
+      remediation: ["Split the pull request and rerun MergeWarden to obtain complete evidence."],
       tags: ["analysis", "incomplete", "limit"],
       confidence: "high",
     },
@@ -236,7 +236,7 @@ function titleForStatus(status: AnalysisStatus): string {
     incomplete: "analysis incomplete",
   };
 
-  return `Agent Gate: ${label[status]}`;
+  return `MergeWarden: ${label[status]}`;
 }
 
 export async function analyze(input: AnalysisInput): Promise<AnalysisResult> {

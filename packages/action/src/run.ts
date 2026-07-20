@@ -3,9 +3,9 @@ import {
   renderJsonReport,
   renderMarkdownReport,
   renderPlainTextReportSummary,
-  type AgentGateConfig,
+  type MergeWardenConfig,
   type AnalysisResult,
-} from "@agent-gate/core";
+} from "@mergewarden/core";
 import {
   createOctokitGitHubApi,
   describeGitHubApiError,
@@ -14,11 +14,11 @@ import {
   type OctokitContentApi,
   type PullRequestLocator,
   type RemotePullRequest,
-} from "@agent-gate/github";
+} from "@mergewarden/github";
 
-import { AGENT_GATE_VERSION } from "./version.js";
+import { MERGEWARDEN_VERSION } from "./version.js";
 
-type Mode = AgentGateConfig["mode"];
+type Mode = MergeWardenConfig["mode"];
 
 interface RepositoryRef {
   owner: string;
@@ -146,9 +146,9 @@ export interface ActionRuntime {
   now(): Date;
 }
 
-const AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
-const AGENT_GATE_MANAGED_COMMENT_NOTE =
-  "<!-- This comment is managed by Agent Gate. Do not edit manually. -->";
+const MERGEWARDEN_COMMENT_MARKER = "<!-- mergewarden-report -->";
+const MERGEWARDEN_MANAGED_COMMENT_NOTE =
+  "<!-- This comment is managed by MergeWarden. Do not edit manually. -->";
 const COMMENT_MAX_BYTES = 60_000;
 const COMMENT_WRAPPER_RESERVE_BYTES = 512;
 const GITHUB_REQUEST_TIMEOUT_MS = 30_000;
@@ -323,11 +323,11 @@ async function listIssueComments(
 }
 
 function markedCommentBody(markdownReport: string): string {
-  return `${AGENT_GATE_COMMENT_MARKER}\n${AGENT_GATE_MANAGED_COMMENT_NOTE}\n\n${markdownReport}`;
+  return `${MERGEWARDEN_COMMENT_MARKER}\n${MERGEWARDEN_MANAGED_COMMENT_NOTE}\n\n${markdownReport}`;
 }
 
-function isAgentGateManagedComment(comment: IssueComment): boolean {
-  if (!comment.body?.startsWith(AGENT_GATE_COMMENT_MARKER)) {
+function isMergeWardenManagedComment(comment: IssueComment): boolean {
+  if (!comment.body?.startsWith(MERGEWARDEN_COMMENT_MARKER)) {
     return false;
   }
 
@@ -342,7 +342,7 @@ function isAgentGateManagedComment(comment: IssueComment): boolean {
 }
 
 function latestMarkedComment(comments: IssueComment[]): IssueComment | undefined {
-  return comments.filter(isAgentGateManagedComment).sort((left, right) => right.id - left.id)[0];
+  return comments.filter(isMergeWardenManagedComment).sort((left, right) => right.id - left.id)[0];
 }
 
 async function upsertPullRequestComment(
@@ -412,14 +412,14 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
   const pr = context.payload.pull_request;
 
   if (context.eventName !== "pull_request" || !pr) {
-    throw new Error("Agent Gate can only run on pull_request events.");
+    throw new Error("MergeWarden can only run on pull_request events.");
   }
 
-  const configPath = inputOrDefault(runtime.getInput("config"), "agent-gate.yml");
-  const reportJsonPath = inputOrDefault(runtime.getInput("report-json"), "agent-gate-report.json");
+  const configPath = inputOrDefault(runtime.getInput("config"), "mergewarden.yml");
+  const reportJsonPath = inputOrDefault(runtime.getInput("report-json"), "mergewarden-report.json");
   const reportMarkdownPath = inputOrDefault(
     runtime.getInput("report-markdown"),
-    "agent-gate-report.md",
+    "mergewarden-report.md",
   );
   const comment = parseBooleanInput("comment", runtime.getInput("comment"), false);
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
@@ -436,8 +436,8 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
     configPath,
     modeOverride,
     now: runtime.now().toISOString(),
-    engineVersion: AGENT_GATE_VERSION,
-    runtimeRef: `agent-gate-action@${AGENT_GATE_VERSION}`,
+    engineVersion: MERGEWARDEN_VERSION,
+    runtimeRef: `mergewarden-action@${MERGEWARDEN_VERSION}`,
     warning: (message) => runtime.warning(message),
   });
   const result = await analyze(input);
@@ -465,14 +465,14 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
       });
       await upsertPullRequestComment(runtime.octokit, context.repo, pr.number, commentReport);
     } catch (error) {
-      runtime.warning(`Agent Gate could not upsert PR comment: ${errorMessage(error)}`);
+      runtime.warning(`MergeWarden could not upsert PR comment: ${errorMessage(error)}`);
     }
   }
 
   if (!result.metadata.analysisComplete) {
-    runtime.setFailed("Agent Gate analysis is incomplete.");
+    runtime.setFailed("MergeWarden analysis is incomplete.");
   } else if (result.decision === "block" && failOnBlock) {
-    runtime.setFailed("Agent Gate blocked this pull request.");
+    runtime.setFailed("MergeWarden blocked this pull request.");
   }
 
   return result;

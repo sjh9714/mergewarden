@@ -1,13 +1,13 @@
-# Agent Gate for AI PRs
+# MergeWarden for AI PRs
 
-[![Release](https://img.shields.io/github/v/release/sjh9714/Agent-Gate?label=release)](https://github.com/sjh9714/Agent-Gate/releases)
-[![CI](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/ci.yml)
-[![Agent Gate](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml/badge.svg)](https://github.com/sjh9714/Agent-Gate/actions/workflows/agent-gate.yml)
-[![License](https://img.shields.io/github/license/sjh9714/Agent-Gate)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/sjh9714/mergewarden?label=release)](https://github.com/sjh9714/mergewarden/releases)
+[![CI](https://github.com/sjh9714/mergewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/ci.yml)
+[![MergeWarden](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml)
+[![License](https://img.shields.io/github/license/sjh9714/mergewarden)](LICENSE)
 
-> **AI agents can open PRs. Agent Gate shows when they cross the line.**
+> **AI agents can open PRs. MergeWarden shows when they cross the line.**
 
-Agent Gate is a checkout-free policy gate that surfaces scope escapes, GitHub
+MergeWarden is a checkout-free policy gate that surfaces scope escapes, GitHub
 Actions privilege escalation, agent-control-plane drift, and risky package
 script changes before merge.
 
@@ -17,7 +17,7 @@ replayed locally.
 
 [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 
-![Real Agent Gate v0.3.1 report from a public composite PR](docs/assets/agent-gate-report-v0.3.1.png)
+![Real MergeWarden v0.3.1 report from a public composite PR](docs/assets/mergewarden-report-v0.3.1.png)
 
 _Real checkout-free report from [public composite PR #16](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29071622785)._
 
@@ -26,19 +26,19 @@ _Real checkout-free report from [public composite PR #16](https://github.com/sjh
 Scan any public GitHub pull request without installing the Action:
 
 ```bash
-npx --yes @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
+npx --yes mergewarden@0.4.0 scan owner/repository#123
 ```
 
 A full pull-request URL works too:
 
 ```bash
-npx --yes @jinhyuk9714/agent-gate@0.3.1 scan https://github.com/owner/repository/pull/123
+npx --yes mergewarden@0.4.0 scan https://github.com/owner/repository/pull/123
 ```
 
-![Real npm CLI scan with Agent Gate v0.3.1](docs/assets/agent-gate-cli-v0.3.1.gif)
+![Real npm CLI scan with MergeWarden v0.3.1](docs/assets/mergewarden-cli-v0.3.1.gif)
 
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
-limits. Agent Gate intentionally has no token command-line flag.
+limits. MergeWarden intentionally has no token command-line flag.
 
 The default output is concise. Use `--format json` or `--format markdown` for
 the complete machine-readable report. See the [CLI reference](docs/cli.md).
@@ -47,10 +47,10 @@ simulated CLI output is used.
 
 ## Install in 30 Seconds
 
-Create `.github/workflows/agent-gate.yml`:
+Create `.github/workflows/mergewarden.yml`:
 
 ```yaml
-name: Agent Gate
+name: MergeWarden
 
 on:
   pull_request:
@@ -61,10 +61,10 @@ permissions:
   pull-requests: read
 
 jobs:
-  agent-gate:
+  mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/Agent-Gate@v0.3.1
+      - uses: sjh9714/mergewarden@v0.4.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -75,13 +75,13 @@ For an immutable, commit-addressed install, pin the exact v0.3.1 release
 commit:
 
 ```yaml
-- uses: sjh9714/Agent-Gate@5fc4a3a5087620ff23c6cb5b0351c3969339fc01
+- uses: sjh9714/mergewarden@5fc4a3a5087620ff23c6cb5b0351c3969339fc01
 ```
 
 No checkout step is needed.
-Agent Gate does not publish or recommend a mutable `v0` tag.
+MergeWarden does not publish or recommend a mutable `v0` tag.
 
-The first run works without `agent-gate.yml`: a confirmed 404 on the PR base
+The first run works without `mergewarden.yml`: a confirmed 404 on the PR base
 branch selects the built-in warn policy. Authentication, rate-limit, and server
 errors never fall back silently.
 
@@ -104,13 +104,13 @@ scope escapes, workflow permission escalation, and agent-control-plane drift.
 | Package execution          | Added or changed install/prepare lifecycle scripts                  |
 | Analysis integrity         | Missing content, incomplete file lists, or report limits            |
 
-Agent Gate evaluates changes rather than re-reporting every pre-existing
+MergeWarden evaluates changes rather than re-reporting every pre-existing
 workflow condition. Findings show the rule, severity, path, canonical evidence,
 and a stable finding ID.
 
 ## Minimal Policy
 
-Add `agent-gate.yml` to the base branch when you are ready to tune behavior:
+Add `mergewarden.yml` to the base branch when you are ready to tune behavior:
 
 ```yaml
 version: 1
@@ -145,7 +145,7 @@ high_risk_paths:
 For an agent-authored PR, the body can declare its intended scope:
 
 ```md
-<!-- agent-gate-contract
+<!-- mergewarden-contract
 version: 1
 agent: codex
 task: update session expiry handling
@@ -189,7 +189,7 @@ Human report labels are deliberately distinct:
 - `OBSERVED FINDINGS`: observe mode found evidence without changing the pass decision.
 - `NEEDS REVIEW`: warn mode requires a human decision.
 - `BLOCKED`: block mode rejected active policy findings.
-- `ANALYSIS INCOMPLETE`: Agent Gate could not make a trustworthy decision and fails closed.
+- `ANALYSIS INCOMPLETE`: MergeWarden could not make a trustworthy decision and fails closed.
 
 ## Trust Boundary
 
@@ -204,17 +204,17 @@ The GitHub Action:
   findings, and rendered report size
 - records base/head SHAs, policy digest, analyzed file counts, and engine version
 
-The pull-request files API has a 3,000-file maximum. Agent Gate compares the
+The pull-request files API has a 3,000-file maximum. MergeWarden compares the
 authoritative PR file count with the collected list and fails closed instead of
 presenting a partial pass.
 
 Read the full [security model](docs/security-model.md) and
 [evidence model](docs/evidence-model.md).
 
-## Agent Gate Is Not a Workflow Linter
+## MergeWarden Is Not a Workflow Linter
 
 Workflow linters such as zizmor inspect workflow correctness and known
-misconfigurations. LLM reviewers apply semantic judgment. Agent Gate is the
+misconfigurations. LLM reviewers apply semantic judgment. MergeWarden is the
 change-control layer between an AI-generated PR and merge: it asks whether the
 PR crossed repository-specific boundaries and records why.
 
@@ -261,7 +261,7 @@ assertions, and a Markdown snapshot for user-facing findings. Start with the
 - [Security model](docs/security-model.md)
 - [Roadmap](docs/roadmap.md)
 
-If Agent Gate catches a real boundary crossing in your repository, a GitHub
+If MergeWarden catches a real boundary crossing in your repository, a GitHub
 Star is a simple way to tell us the project is useful.
 
 ## License

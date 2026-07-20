@@ -10,7 +10,7 @@ const { parse } = requireFromCore("yaml") as { parse(text: string): unknown };
 const rootAction = readFileSync(join(repoRoot, "action.yml"), "utf8");
 const packageAction = readFileSync(join(repoRoot, "packages/action/action.yml"), "utf8");
 const selfDogfoodingWorkflow = readFileSync(
-  join(repoRoot, ".github/workflows/agent-gate.yml"),
+  join(repoRoot, ".github/workflows/mergewarden.yml"),
   "utf8",
 );
 

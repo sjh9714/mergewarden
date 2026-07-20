@@ -58,7 +58,7 @@ describe("user-facing Markdown rule snapshots", () => {
       expectedFileCount: 42,
       analyzedFileCount: 41,
       contentFileCount: 0,
-      runtimeRef: "agent-gate@v0.3.0",
+      runtimeRef: "mergewarden@v0.3.0",
       gaps: [
         {
           ruleId: "analysis/file-list-incomplete",
@@ -222,7 +222,7 @@ waivers:
       expectedFileCount: 2,
       analyzedFileCount: 1,
       contentFileCount: 0,
-      runtimeRef: "agent-gate@v0.3.0",
+      runtimeRef: "mergewarden@v0.3.0",
       gaps: [
         {
           ruleId: "analysis/file-list-incomplete",

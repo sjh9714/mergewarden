@@ -23,6 +23,6 @@ describe("committed action bundle", () => {
     const output = `${result.stdout}\n${result.stderr}`;
 
     expect(output).not.toContain("Dynamic require");
-    expect(output).toContain("Agent Gate requires the github-token input.");
+    expect(output).toContain("MergeWarden requires the github-token input.");
   });
 });

@@ -1,4 +1,4 @@
-name: Agent Gate
+name: MergeWarden
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ on:
       - ready_for_review
 
 concurrency:
-  group: agent-gate-${{ github.event.pull_request.number }}
+  group: mergewarden-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -20,14 +20,14 @@ permissions:
   pull-requests: read
 
 jobs:
-  agent-gate:
-    name: Agent Gate
+  mergewarden:
+    name: MergeWarden
     runs-on: ubuntu-latest
     steps:
-      - name: Run Agent Gate
-        uses: sjh9714/Agent-Gate/packages/action@main
+      - name: Run MergeWarden
+        uses: sjh9714/mergewarden/packages/action@main
         with:
-          config: agent-gate.yml
+          config: mergewarden.yml
           mode: warn
           fail-on-block: "false"
           comment: "false"

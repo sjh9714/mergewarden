@@ -1,6 +1,6 @@
 import {
   DEFAULT_CONFIG,
-  type AgentGateConfig,
+  type MergeWardenConfig,
   type AnalysisInput,
   type ChangeSet,
   type FileChange,
@@ -9,7 +9,7 @@ import {
 } from "../src/index.js";
 
 interface CreateAnalysisInputOptions {
-  config?: AgentGateConfig;
+  config?: MergeWardenConfig;
   contract?: ParseContractResult;
   pr?: Partial<PullRequestContext>;
   files?: FileChange[];
@@ -41,7 +41,7 @@ export function createAnalysisInput(options: CreateAnalysisInputOptions = {}): A
 
   return {
     repo: {
-      owner: "agent-gate",
+      owner: "mergewarden",
       repo: "demo",
       defaultBranch: "main",
       baseRef: "main",
@@ -51,7 +51,7 @@ export function createAnalysisInput(options: CreateAnalysisInputOptions = {}): A
     },
     pr: {
       number: 42,
-      title: "Scaffold Agent Gate",
+      title: "Scaffold MergeWarden",
       body: "",
       author: "codex",
       labels: [],

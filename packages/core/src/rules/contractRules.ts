@@ -42,11 +42,11 @@ export const contractInvalidRule: Rule = {
       "contract/invalid",
       "error",
       "Invalid agent contract",
-      "This PR contains an agent-gate contract, but it could not be parsed.",
+      "This PR contains an mergewarden contract, but it could not be parsed.",
     );
 
     finding.evidence.push({ label: "parser_message", value: ctx.input.contract.message });
-    finding.remediation.push("Fix the agent-gate contract block in the PR body.");
+    finding.remediation.push("Fix the mergewarden contract block in the PR body.");
 
     return [finding];
   },
@@ -69,14 +69,14 @@ export const contractMissingRule: Rule = {
       "contract/missing",
       severity,
       "Missing agent contract",
-      "Agent-generated PRs must include an agent-gate contract.",
+      "Agent-generated PRs must include an mergewarden contract.",
     );
 
     finding.evidence.push({
       label: "required_for",
       value: ctx.input.config.contract.required_for.join(", "),
     });
-    finding.remediation.push("Add an agent-gate contract block to the PR body.");
+    finding.remediation.push("Add an mergewarden contract block to the PR body.");
 
     return [finding];
   },

@@ -92,7 +92,7 @@ describe("report renderers", () => {
       decision: "block",
       riskScore: 100,
       summary: {
-        title: "Agent Gate: blocked",
+        title: "MergeWarden: blocked",
         agentDetected: false,
         contractPresent: false,
         errorCount: findings.length,
@@ -131,7 +131,7 @@ describe("report renderers", () => {
       decision: "block",
       riskScore: 100,
       summary: {
-        title: "Agent Gate: blocked",
+        title: "MergeWarden: blocked",
         agentDetected: false,
         contractPresent: false,
         errorCount: findings.length + 2,
@@ -148,7 +148,7 @@ describe("report renderers", () => {
     const report = renderMarkdownReport(result, {
       maxFindings: findings.length,
       maxBytes: 12_000,
-      fullReportPath: "agent-gate-report.md",
+      fullReportPath: "mergewarden-report.md",
     });
     const visibleFindingCount = (report.match(/^### ERROR test\/markdown-cap-/gm) ?? []).length;
     const expectedOmitted = 2 + findings.length - visibleFindingCount;
@@ -158,7 +158,7 @@ describe("report renderers", () => {
     expect(visibleFindingCount).toBeLessThan(findings.length);
     expect(report.match(/^Finding ID:/gm)).toHaveLength(visibleFindingCount);
     expect(report).toContain(`_${expectedOmitted} findings omitted from this surface._`);
-    expect(report).toContain("Full report: agent-gate-report.md");
+    expect(report).toContain("Full report: mergewarden-report.md");
     expect(report).not.toContain("Report truncated");
   });
 
@@ -167,7 +167,7 @@ describe("report renderers", () => {
       decision: "pass",
       riskScore: 0,
       summary: {
-        title: "Agent Gate: passed",
+        title: "MergeWarden: passed",
         agentDetected: false,
         contractPresent: false,
         errorCount: 0,
@@ -215,7 +215,7 @@ describe("report renderers", () => {
 
     const markdown = renderMarkdownReport(result);
 
-    expect(markdown).toContain("# Agent Gate: PASSED");
+    expect(markdown).toContain("# MergeWarden: PASSED");
     expect(markdown).toContain("Decision: pass");
     expect(markdown).not.toContain("Risk score:");
     expect(markdown).toContain("No active warning or blocking findings were detected.");
@@ -231,7 +231,7 @@ describe("report renderers", () => {
       decision: "warn" as const,
       riskScore: 10,
       summary: {
-        title: "Agent Gate: warning",
+        title: "MergeWarden: warning",
         agentDetected: true,
         contractPresent: true,
         errorCount: 0,
@@ -260,7 +260,7 @@ describe("report renderers", () => {
     });
     const markdown = renderMarkdownReport(result);
 
-    expect(markdown).toContain("# Agent Gate: NEEDS REVIEW");
+    expect(markdown).toContain("# MergeWarden: NEEDS REVIEW");
     expect(markdown).toContain("Decision: warn");
     expect(markdown).toContain("## Recommended Next Step");
     expect(markdown).toContain("Add or review matching test evidence before merging.");
@@ -285,7 +285,7 @@ describe("report renderers", () => {
       decision: "warn" as const,
       riskScore: 89,
       summary: {
-        title: "Agent Gate: warning",
+        title: "MergeWarden: warning",
         agentDetected: true,
         contractPresent: true,
         errorCount: 1,
@@ -332,7 +332,7 @@ describe("report renderers", () => {
       throw new Error("Expected warn report fixture to include two findings");
     }
 
-    expect(summary).toContain("Agent Gate: NEEDS REVIEW");
+    expect(summary).toContain("MergeWarden: NEEDS REVIEW");
     expect(summary).toContain("Decision: warn");
     expect(summary).not.toContain("Risk score:");
     expect(summary).toContain("Why: Workflow permissions changed from read to write.");
@@ -403,7 +403,7 @@ describe("report renderers", () => {
       decision: "pass",
       riskScore: 1,
       summary: {
-        title: "Agent Gate: passed",
+        title: "MergeWarden: passed",
         agentDetected: true,
         contractPresent: false,
         errorCount: 0,
@@ -432,10 +432,10 @@ describe("report renderers", () => {
       throw new Error("Expected info-only report fixture to include one finding");
     }
 
-    expect(markdown).toContain("# Agent Gate: PASSED");
+    expect(markdown).toContain("# MergeWarden: PASSED");
     expect(markdown).toContain("No active warning or blocking findings were detected.");
     expect(markdown).toContain("### INFO agent/origin-detected");
-    expect(plainText).toContain("Agent Gate: PASSED");
+    expect(plainText).toContain("MergeWarden: PASSED");
     expect(plainText).toContain("Why: No warning or blocking findings were detected.");
     expect(plainText).toContain(`- info ${infoFinding.findingId} agent/origin-detected`);
   });
@@ -447,7 +447,7 @@ describe("report renderers", () => {
         decision: "warn",
         riskScore: 10,
         summary: {
-          title: "Agent Gate: warning",
+          title: "MergeWarden: warning",
           agentDetected: true,
           contractPresent: true,
           errorCount: 0,
@@ -491,7 +491,7 @@ describe("report renderers", () => {
         decision: "warn",
         riskScore: 1,
         summary: {
-          title: "Agent Gate: warning",
+          title: "MergeWarden: warning",
           agentDetected: false,
           contractPresent: false,
           errorCount: 0,
@@ -523,7 +523,7 @@ describe("report renderers", () => {
       decision: "warn" as const,
       riskScore: 10,
       summary: {
-        title: "Agent Gate: warning",
+        title: "MergeWarden: warning",
         agentDetected: true,
         contractPresent: true,
         errorCount: 0,
@@ -567,7 +567,7 @@ describe("report renderers", () => {
       decision: "block",
       riskScore: 20,
       summary: {
-        title: "Agent Gate: blocked",
+        title: "MergeWarden: blocked",
         agentDetected: false,
         contractPresent: true,
         errorCount: 1,
@@ -592,13 +592,13 @@ describe("report renderers", () => {
     const markdown = renderMarkdownReport(result);
     const plainText = renderPlainTextReportSummary(result);
 
-    expect(markdown).toContain("# Agent Gate: BLOCKED");
+    expect(markdown).toContain("# MergeWarden: BLOCKED");
     expect(markdown).toContain("Decision: block");
     expect(markdown).toContain("Review or split the out-of-scope file changes before merging.");
     expect(markdown).toContain("### ERROR contract/out-of-scope");
     expect(markdown).toContain("Finding ID: agf_");
     expect(markdown).toContain("Path: src/payments/webhook.ts");
-    expect(plainText).toContain("Agent Gate: BLOCKED");
+    expect(plainText).toContain("MergeWarden: BLOCKED");
     expect(plainText).toContain("Decision: block");
     expect(plainText).toContain("agf_");
   });

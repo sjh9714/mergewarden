@@ -5,9 +5,9 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { analyze, renderMarkdownReport } from "@agent-gate/core";
+import { analyze, renderMarkdownReport } from "@mergewarden/core";
 import { loadReplayFixture, renderHumanReport, runCli, safeTerminalValue } from "../src/replay.js";
-import { AGENT_GATE_VERSION } from "../src/version.js";
+import { MERGEWARDEN_VERSION } from "../src/version.js";
 
 const repoRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const baseWorkflow = "permissions:\n  contents: read\n";
@@ -47,8 +47,8 @@ async function createFixture(
   fixture: Record<string, unknown>,
   options: { config?: string; prBody?: string } = {},
 ): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "agent-gate-replay-"));
-  await writeFile(join(dir, "agent-gate.yml"), options.config ?? "version: 1\nmode: block\n");
+  const dir = await mkdtemp(join(tmpdir(), "mergewarden-replay-"));
+  await writeFile(join(dir, "mergewarden.yml"), options.config ?? "version: 1\nmode: block\n");
   if (options.prBody !== undefined) {
     await writeFile(join(dir, "pr-body.md"), options.prBody);
   }
@@ -171,9 +171,9 @@ describe("CLI replay", () => {
     expect(input.changes.totals).toEqual({ filesChanged: 1, additions: 12, deletions: 1 });
   });
 
-  it("defaults replay metadata to the current Agent Gate version", async () => {
+  it("defaults replay metadata to the current MergeWarden version", async () => {
     const input = await loadReplayFixture(await createFixture({ files: [] }));
-    expect(input.version).toBe(AGENT_GATE_VERSION);
+    expect(input.version).toBe(MERGEWARDEN_VERSION);
   });
 
   it("renders human replay output with status, rules, evidence, and paths", async () => {
@@ -181,7 +181,7 @@ describe("CLI replay", () => {
       await analyze(await loadReplayFixture(await createTempFixture())),
     );
 
-    expect(output).toContain("Agent Gate: BLOCKED");
+    expect(output).toContain("MergeWarden: BLOCKED");
     expect(output).toContain("Analysis: complete");
     expect(output).toContain("Files analyzed: 1 of 1");
     expect(output).toContain("ERROR workflow/permission-escalation");
@@ -225,7 +225,7 @@ describe("CLI replay", () => {
       findings: [
         {
           ...finding!,
-          message: "normal\n# Agent Gate: PASSED\u001b[2J @everyone",
+          message: "normal\n# MergeWarden: PASSED\u001b[2J @everyone",
           path: "src/\u001b[31mred\u001b[0m\rfile.ts",
           evidence: [{ label: "value\tname", value: "line one\n## fake heading" }],
         },
@@ -233,9 +233,9 @@ describe("CLI replay", () => {
     });
 
     expect(output).not.toContain("\u001b");
-    expect(output).not.toContain("\n# Agent Gate: PASSED");
+    expect(output).not.toContain("\n# MergeWarden: PASSED");
     expect(output).not.toContain("@everyone");
-    expect(output).toContain("normal\\n# Agent Gate: PASSED");
+    expect(output).toContain("normal\\n# MergeWarden: PASSED");
     expect(output).toContain("@\u200beveryone");
     expect(output).toContain("src/red\\rfile.ts");
     expect(output).toContain("value\\tname: line one\\n## fake heading");
@@ -277,7 +277,7 @@ describe("CLI replay", () => {
       expect(result.findings.map((finding) => finding.ruleId)).toEqual(expectedRuleIds);
       expect(result.findings.map((finding) => finding.severity)).toEqual(expectedSeverities);
       expect(output).toContain(
-        expectedDecision === "block" ? "Agent Gate: BLOCKED" : "Agent Gate: NEEDS REVIEW",
+        expectedDecision === "block" ? "MergeWarden: BLOCKED" : "MergeWarden: NEEDS REVIEW",
       );
       expect(output).toContain(expectedRuleIds[0]);
       expect(output).toContain(`Path: ${expectedPath}`);
@@ -403,7 +403,7 @@ describe("CLI replay", () => {
 
   it("returns deterministic errors for missing or invalid fixtures", async () => {
     const errors: string[] = [];
-    const missingCode = await runCli(["replay", join(tmpdir(), "missing-agent-gate-fixture")], {
+    const missingCode = await runCli(["replay", join(tmpdir(), "missing-mergewarden-fixture")], {
       stdout: () => undefined,
       stderr: (text) => errors.push(text),
     });
@@ -416,14 +416,14 @@ describe("CLI replay", () => {
 
     expect(missingCode).toBe(2);
     expect(invalidCode).toBe(2);
-    expect(errors.join("")).toContain("Agent Gate CLI error:");
+    expect(errors.join("")).toContain("MergeWarden CLI error:");
     expect(errors.join("")).not.toContain("SyntaxError");
   });
 
   it("sanitizes attacker-controlled fixture paths in stderr", async () => {
     const stderr: string[] = [];
     const exitCode = await runCli(
-      ["replay", join(tmpdir(), "missing\n# Agent Gate: PASSED\u001b[2J@everyone")],
+      ["replay", join(tmpdir(), "missing\n# MergeWarden: PASSED\u001b[2J@everyone")],
       {
         stdout: () => undefined,
         stderr: (text) => stderr.push(text),
@@ -433,9 +433,9 @@ describe("CLI replay", () => {
 
     expect(exitCode).toBe(2);
     expect(output).not.toContain("\u001b");
-    expect(output).not.toContain("\n# Agent Gate: PASSED");
+    expect(output).not.toContain("\n# MergeWarden: PASSED");
     expect(output).not.toContain("@everyone");
-    expect(output).toContain("\\n# Agent Gate: PASSED");
+    expect(output).toContain("\\n# MergeWarden: PASSED");
     expect(output).toContain("@\u200beveryone");
   });
 
@@ -458,7 +458,7 @@ describe("CLI replay", () => {
     });
 
     expect(exitCode).toBe(2);
-    expect(stderr.join("")).toContain("Agent Gate CLI error:");
+    expect(stderr.join("")).toContain("MergeWarden CLI error:");
     expect(stderr.join("")).not.toContain("TypeError");
   });
 

@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-The Agent Gate CLI bundle includes the following third-party packages through `@agent-gate/core`. The notices and license texts below are reproduced from the installed package distributions used to build this release.
+The MergeWarden CLI bundle includes the following third-party packages through `@mergewarden/core`. The notices and license texts below are reproduced from the installed package distributions used to build this release.
 
 ## picomatch 4.0.4
 

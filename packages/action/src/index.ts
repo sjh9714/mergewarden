@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   const token = core.getInput("github-token");
 
   if (!token) {
-    core.setFailed("Agent Gate requires the github-token input.");
+    core.setFailed("MergeWarden requires the github-token input.");
     return;
   }
 

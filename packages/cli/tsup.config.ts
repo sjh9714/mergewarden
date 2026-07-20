@@ -10,6 +10,6 @@ export default defineConfig({
   sourcemap: false,
   noExternal: [/.*/],
   banner: {
-    js: 'import { createRequire as __agentGateCreateRequire } from "node:module"; const require = __agentGateCreateRequire(import.meta.url);',
+    js: 'import { createRequire as __mergeWardenCreateRequire } from "node:module"; const require = __mergeWardenCreateRequire(import.meta.url);',
   },
 });

@@ -1,6 +1,6 @@
 # Security Policy
 
-Agent Gate is a security-adjacent developer tool for deterministic policy
+MergeWarden is a security-adjacent developer tool for deterministic policy
 evidence on AI-generated pull requests.
 
 ## Reporting a Vulnerability
@@ -15,6 +15,6 @@ report injection, or unauthorized comment replacement.
 
 ## Non-Goals
 
-Agent Gate is not a semantic vulnerability scanner and does not claim to find
+MergeWarden is not a semantic vulnerability scanner and does not claim to find
 all security bugs, prove correctness, or replace human review. See the full
 [security model](docs/security-model.md).

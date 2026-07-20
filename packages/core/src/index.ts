@@ -2,7 +2,7 @@ export { analyze } from "./analyze.js";
 export { DEFAULT_CONFIG } from "./config/defaults.js";
 export { parseConfig } from "./config/load.js";
 export {
-  AgentGateConfigSchema,
+  MergeWardenConfigSchema,
   CONFIG_FILE_NAME,
   DEFAULT_GITHUB_ACTION_CHECKS,
   DEFAULT_AGENT_CONTROL_PLANE_PATHS,
@@ -19,10 +19,10 @@ export { renderMarkdownReport } from "./report/markdown.js";
 export type { MarkdownReportOptions } from "./report/markdown.js";
 export { renderPlainTextReportSummary } from "./report/plainText.js";
 export { detectAgentOrigin } from "./rules/agentOrigin.js";
-export { AGENT_GATE_VERSION } from "./version.js";
+export { MERGEWARDEN_VERSION } from "./version.js";
 export type { AgentOriginResult, AgentOriginSignal } from "./rules/agentOrigin.js";
 export type { Rule, RuleContext } from "./rules/index.js";
-export type { AgentGateConfig } from "./config/schema.js";
+export type { MergeWardenConfig } from "./config/schema.js";
 export type { AgentContract, ParseContractResult } from "./contract/schema.js";
 export type {
   AnalysisInput,

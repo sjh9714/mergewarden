@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseContractFromPrBody, type ParseContractResult } from "../../src/index.js";
 
-const validContractBlock = `<!-- agent-gate-contract
+const validContractBlock = `<!-- mergewarden-contract
 version: 1
 agent: codex
 task: "Fix session expiration bug"
@@ -32,7 +32,7 @@ describe("parseContractFromPrBody", () => {
     expect(parseContractFromPrBody("Regular pull request body")).toEqual({ kind: "missing" });
   });
 
-  it("returns a valid contract parsed from the agent-gate HTML comment block", () => {
+  it("returns a valid contract parsed from the mergewarden HTML comment block", () => {
     const result = parseContractFromPrBody(`Context before\n\n${validContractBlock}\n`);
 
     expect(result).toEqual({
@@ -49,18 +49,18 @@ describe("parseContractFromPrBody", () => {
   });
 
   it("returns invalid for malformed YAML", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 allowed_paths:
   - "src/**"
   - [
 -->`);
 
-    expect(expectInvalid(result).message).toMatch(/Invalid agent-gate contract YAML/);
+    expect(expectInvalid(result).message).toMatch(/Invalid mergewarden contract YAML/);
   });
 
   it("returns invalid when allowed_paths is missing", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 agent: codex
 -->`);
@@ -69,7 +69,7 @@ agent: codex
   });
 
   it("returns invalid when allowed_paths is empty", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 allowed_paths: []
 -->`);
@@ -78,7 +78,7 @@ allowed_paths: []
   });
 
   it("returns invalid when allowed_paths contains an empty pattern", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 allowed_paths:
   - ""
@@ -88,7 +88,7 @@ allowed_paths:
   });
 
   it("returns invalid when scalar contract strings are whitespace-only", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 agent: " "
 task: "   "
@@ -101,10 +101,10 @@ allowed_paths:
   });
 
   it("returns invalid when the contract block is empty", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 -->`);
 
-    expect(expectInvalid(result).message).toMatch(/Invalid agent-gate contract/);
+    expect(expectInvalid(result).message).toMatch(/Invalid mergewarden contract/);
   });
 
   it("returns invalid when multiple contract blocks are present", () => {
@@ -112,12 +112,12 @@ allowed_paths:
 
     expect(result).toEqual({
       kind: "invalid",
-      message: "Multiple agent-gate contract blocks found; expected exactly one.",
+      message: "Multiple mergewarden contract blocks found; expected exactly one.",
     });
   });
 
   it("rejects planned risk budget fields that are not implemented yet", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 allowed_paths:
   - "src/**"
@@ -130,7 +130,7 @@ risk_budget:
   });
 
   it("rejects unknown fields instead of stripping them", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 allowed_paths:
   - "src/**"
@@ -141,7 +141,7 @@ unexpected: true
   });
 
   it("rejects the removed required_evidence claim instead of silently accepting it", () => {
-    const result = parseContractFromPrBody(`<!-- agent-gate-contract
+    const result = parseContractFromPrBody(`<!-- mergewarden-contract
 version: 1
 allowed_paths:
   - "src/**"

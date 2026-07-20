@@ -2,15 +2,15 @@
 
 ## Inputs
 
-| Input             | Default                  | Meaning                                         |
-| ----------------- | ------------------------ | ----------------------------------------------- |
-| `config`          | `agent-gate.yml`         | Policy path on the exact PR base commit         |
-| `github-token`    | `${{ github.token }}`    | API-only PR read token                          |
-| `mode`            | Policy value             | Optional `observe`, `warn`, or `block` override |
-| `comment`         | `false`                  | Upsert the bounded PR report comment            |
-| `fail-on-block`   | `true`                   | Fail a complete block decision                  |
-| `report-json`     | `agent-gate-report.json` | JSON report path                                |
-| `report-markdown` | `agent-gate-report.md`   | Markdown report path                            |
+| Input             | Default                   | Meaning                                         |
+| ----------------- | ------------------------- | ----------------------------------------------- |
+| `config`          | `mergewarden.yml`         | Policy path on the exact PR base commit         |
+| `github-token`    | `${{ github.token }}`     | API-only PR read token                          |
+| `mode`            | Policy value              | Optional `observe`, `warn`, or `block` override |
+| `comment`         | `false`                   | Upsert the bounded PR report comment            |
+| `fail-on-block`   | `true`                    | Fail a complete block decision                  |
+| `report-json`     | `mergewarden-report.json` | JSON report path                                |
+| `report-markdown` | `mergewarden-report.md`   | Markdown report path                            |
 
 `fail-on-block` does not suppress an incomplete-analysis failure. Missing file
 lists, unavailable required content, or exceeded analysis limits always fail.
@@ -42,9 +42,9 @@ permissions:
 ```
 
 `comment: true` also needs `issues: write`. Comment API failures remain
-non-fatal, but Agent Gate only updates a marker-bearing comment owned by
+non-fatal, but MergeWarden only updates a marker-bearing comment owned by
 `github-actions[bot]`. Discovery is bounded to the newest 100 comments; if no
-owned marker appears there, Agent Gate creates a fresh managed comment.
+owned marker appears there, MergeWarden creates a fresh managed comment.
 
 ## Packaging
 
@@ -56,7 +56,7 @@ target PR.
 
 Collection requests have a 30-second timeout and at most three attempts.
 Network failures and HTTP 502/503/504 use 250 ms then 1 s backoff. HTTP 403/429
-is retried only when GitHub identifies a rate limit; Agent Gate honors
+is retried only when GitHub identifies a rate limit; MergeWarden honors
 `Retry-After` or the rate-limit reset time and allows at most 60 seconds of
 additional waiting across the analysis. Fatal errors retain the HTTP status and
 GitHub request ID. See GitHub's guidance on

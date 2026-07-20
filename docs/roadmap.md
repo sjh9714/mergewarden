@@ -35,4 +35,4 @@ The roadmap is ordered by evidence quality, not promised dates.
 - Runtime LLM judgment by default.
 - Executing or checking out PR-controlled code in the Action.
 - A hosted SaaS, GitHub App, or built-in usage telemetry.
-- Claims that Agent Gate proves semantic correctness.
+- Claims that MergeWarden proves semantic correctness.

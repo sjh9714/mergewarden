@@ -1,12 +1,12 @@
 # Security Model
 
-Agent Gate inspects pull-request metadata and changed-file content without
+MergeWarden inspects pull-request metadata and changed-file content without
 executing PR-controlled code.
 
 ## Trusted Inputs
 
-- Built-in policy bundled with the pinned Agent Gate ref.
-- `agent-gate.yml` from the exact base commit.
+- Built-in policy bundled with the pinned MergeWarden ref.
+- `mergewarden.yml` from the exact base commit.
 - Action code from the selected release tag or commit SHA.
 - GitHub REST responses, subject to explicit completeness checks.
 
@@ -30,7 +30,7 @@ executing PR-controlled code.
 
 ## Collection Integrity
 
-Agent Gate fetches the authoritative PR file count and compares it with pages
+MergeWarden fetches the authoritative PR file count and compares it with pages
 from GitHub's files endpoint. More than 3,000 files or any count mismatch fails
 closed as `analysis/file-list-incomplete` without running partial policy rules.
 

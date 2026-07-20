@@ -5,7 +5,7 @@ import {
   parseConfig,
   parseContractFromPrBody,
   type AnalysisInput,
-} from "@agent-gate/core";
+} from "@mergewarden/core";
 import {
   GitHubApiError,
   loadGitHubAnalysis,
@@ -14,10 +14,10 @@ import {
   type LoadGitHubAnalysisOptions,
   type PullRequestLocator,
   type RemotePullRequest,
-} from "@agent-gate/github";
+} from "@mergewarden/github";
 import { HELP_TEXT, runCli, type CliDependencies } from "../src/cli.js";
 import { NativeGitHubApi } from "../src/githubApi.js";
-import { AGENT_GATE_VERSION } from "../src/version.js";
+import { MERGEWARDEN_VERSION } from "../src/version.js";
 
 function analysisInput(options: { blocked?: boolean; complete?: boolean } = {}): AnalysisInput {
   const files = options.blocked
@@ -62,13 +62,13 @@ function analysisInput(options: { blocked?: boolean; complete?: boolean } = {}):
     checks: [],
     now: "2026-07-10T00:00:00.000Z",
     configSource: "base-branch",
-    version: AGENT_GATE_VERSION,
+    version: MERGEWARDEN_VERSION,
     analysis: {
       complete,
       expectedFileCount: files.length,
       analyzedFileCount: complete ? files.length : 0,
       contentFileCount: 0,
-      runtimeRef: `agent-gate-cli@${AGENT_GATE_VERSION}`,
+      runtimeRef: `mergewarden-cli@${MERGEWARDEN_VERSION}`,
       gaps: complete
         ? []
         : [
@@ -130,7 +130,7 @@ describe("CLI scan", () => {
     expect(helpIo.stdout.join("")).toBe(HELP_TEXT);
     expect(helpIo.stderr).toEqual([]);
     expect(await runCli(["--version"], versionIo.value)).toBe(0);
-    expect(versionIo.stdout.join("")).toBe(`${AGENT_GATE_VERSION}\n`);
+    expect(versionIo.stdout.join("")).toBe(`${MERGEWARDEN_VERSION}\n`);
   });
 
   it.each([
@@ -149,7 +149,7 @@ describe("CLI scan", () => {
   ])("shows the version for %s", async (...argv) => {
     const output = io();
     expect(await runCli(argv, output.value)).toBe(0);
-    expect(output.stdout.join("")).toBe(`${AGENT_GATE_VERSION}\n`);
+    expect(output.stdout.join("")).toBe(`${MERGEWARDEN_VERSION}\n`);
     expect(output.stderr).toEqual([]);
   });
 
@@ -172,9 +172,9 @@ describe("CLI scan", () => {
     expect(loadSpy).toHaveBeenCalledWith(
       { owner: "owner", repo: "project", number: 17 },
       expect.objectContaining({
-        configPath: "agent-gate.yml",
-        engineVersion: AGENT_GATE_VERSION,
-        runtimeRef: `agent-gate-cli@${AGENT_GATE_VERSION}`,
+        configPath: "mergewarden.yml",
+        engineVersion: MERGEWARDEN_VERSION,
+        runtimeRef: `mergewarden-cli@${MERGEWARDEN_VERSION}`,
       }),
     );
     expect(JSON.parse(output.stdout.join(""))).toMatchObject({
@@ -240,7 +240,7 @@ describe("CLI scan", () => {
           }),
         );
       }
-      if (url.includes("/contents/agent-gate.yml?ref=base-sha")) {
+      if (url.includes("/contents/mergewarden.yml?ref=base-sha")) {
         return new Response("version: 1\nmode: block\n");
       }
       if (url.includes("/pulls/17/files?per_page=100&page=1")) {
@@ -287,7 +287,7 @@ describe("CLI scan", () => {
         "scan",
         "https://github.com/owner/project/pull/17",
         "--config",
-        ".github/agent-gate.yml",
+        ".github/mergewarden.yml",
         "--mode",
         "observe",
         "--format",
@@ -303,9 +303,9 @@ describe("CLI scan", () => {
     expect(exitCode).toBe(0);
     expect(loadSpy).toHaveBeenCalledWith(
       { owner: "owner", repo: "project", number: 17 },
-      expect.objectContaining({ configPath: ".github/agent-gate.yml", modeOverride: "observe" }),
+      expect.objectContaining({ configPath: ".github/mergewarden.yml", modeOverride: "observe" }),
     );
-    expect(output.stdout.join("")).toContain("# Agent Gate: PASSED");
+    expect(output.stdout.join("")).toContain("# MergeWarden: PASSED");
   });
 
   it("supports unauthenticated public scans and explains the lower rate limit", async () => {
@@ -366,13 +366,13 @@ describe("CLI scan", () => {
     { argv: ["scan"] },
     { argv: ["scan", "owner/project#0"] },
     { argv: ["scan", "owner/project#17", "--format", "xml"] },
-    { argv: ["scan", "owner/project#17", "--config", "../agent-gate.yml"] },
+    { argv: ["scan", "owner/project#17", "--config", "../mergewarden.yml"] },
     { argv: ["scan", "owner/project#17", "--mode", "strict"] },
     { argv: ["scan", "owner/project#17", "--unknown"] },
   ])("returns 2 without stdout for invalid invocation $argv", async ({ argv }) => {
     const output = io();
     expect(await runCli(argv, output.value, dependencies(analysisInput()))).toBe(2);
     expect(output.stdout).toEqual([]);
-    expect(output.stderr.join("")).toContain("Agent Gate CLI error:");
+    expect(output.stderr.join("")).toContain("MergeWarden CLI error:");
   });
 });

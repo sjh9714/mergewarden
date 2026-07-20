@@ -1,6 +1,6 @@
 # Package Lifecycle Script Drift
 
-Agent Gate reports package lifecycle script drift when an AI-generated pull
+MergeWarden reports package lifecycle script drift when an AI-generated pull
 request adds or changes one of these `package.json` scripts:
 
 - `preinstall`
@@ -18,8 +18,8 @@ exist in the base branch `package.json`, but exists in the pull request.
 `dependency/package-script-drift` means a configured lifecycle script existed in
 the base branch and its command changed in the pull request.
 
-Agent Gate records the manifest path, script name, change kind, and before/after
-commands when available. If package manifest content cannot be read, Agent Gate
+MergeWarden records the manifest path, script name, change kind, and before/after
+commands when available. If package manifest content cannot be read, MergeWarden
 emits `analysis/content-unavailable` instead of guessing.
 
 ## Why It Matters
@@ -85,6 +85,6 @@ package_scripts:
 
 ## What Is Not Covered Yet
 
-Agent Gate does not currently detect dependency additions, lockfile mismatch,
+MergeWarden does not currently detect dependency additions, lockfile mismatch,
 package manager-specific install semantics, or maintainer override records.
 Those remain future dependency evidence work.

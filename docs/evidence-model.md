@@ -1,6 +1,6 @@
 # Evidence Model
 
-Agent Gate findings are deterministic merge evidence, not claims of perfect
+MergeWarden findings are deterministic merge evidence, not claims of perfect
 correctness. A maintainer should be able to understand why a rule fired and
 re-derive the same reference from the recorded material.
 
@@ -53,7 +53,7 @@ A report records:
 - whether analysis completed
 - total and omitted finding counts
 
-The GitHub pull-request files endpoint is capped at 3,000 files. Agent Gate
+The GitHub pull-request files endpoint is capped at 3,000 files. MergeWarden
 compares the authoritative PR count with the collected list. A mismatch is
 `ANALYSIS INCOMPLETE`, never a partial pass.
 
@@ -77,7 +77,7 @@ An active waiver is stored in trusted base policy and matches one finding ID.
 The report retains the finding, reason, and expiry with `disposition: waived`.
 Waived findings do not affect active counts or decisions.
 
-At expiry, the original finding becomes active and Agent Gate emits
+At expiry, the original finding becomes active and MergeWarden emits
 `policy/waiver-expired`. Analysis-integrity findings cannot be waived.
 
 ## Limits of Evidence
@@ -88,4 +88,4 @@ At expiry, the original finding becomes active and Agent Gate emits
 - A PR-body contract is an untrusted declaration, not verified authorship.
 - The agentic-workflow rule covers registered prompt inputs and one `env` hop,
   not arbitrary cross-step or shell data flow.
-- Agent Gate does not replace human review or a semantic security scanner.
+- MergeWarden does not replace human review or a semantic security scanner.
