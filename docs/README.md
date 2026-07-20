@@ -11,6 +11,10 @@ requests. Start with the shortest path for your task:
 - [Evidence model](evidence-model.md): finding IDs and reproducibility metadata.
 - [Security model](security-model.md): trust boundaries and known limitations.
 - [Demo PRs](demo-prs.md): verified external Action runs.
+- [Gating Claude Code PRs](integrations/claude-code.md): detection, contracts,
+  and CLAUDE.md wiring.
+- [Gating Codex PRs](integrations/codex.md): detection, contracts, and
+  AGENTS.md wiring.
 - [Roadmap](roadmap.md): current product direction without date promises.
 - [Agentic workflow injection rule](rules/agentic-workflow-injection.md): exact
   sources, sinks, severity, and limits.
