@@ -81,6 +81,26 @@ Exact search queries, date windows, and per-window result totals are recorded
 in the run's `windows-done.jsonl`; scan results are append-only JSONL keyed by
 `owner/repo#number`. Rate limits are honored (search 30/min, core 5,000/h).
 
-## Results
+## Results (run of 2026-07-20)
 
-To be filled from `stats.json` after the full run. Do not hand-edit numbers.
+Engine v0.4.0; 1,609 PRs scanned, 1,605 complete analyses (1 incomplete, 3
+deleted head repositories). 299 PRs were on repositories with 200+ stars (261
+on 10k+). All numbers below are reproduced by `tools/study/aggregate.mjs`.
+
+- 124 PRs (7.7% of complete analyses) had at least one finding.
+- 0 of 1,609 PRs declared a machine-readable scope contract.
+- `agent-control-plane/drift`: 71 PRs (4.4%).
+- 281 PRs touched workflow or package-manifest content. Among them:
+  `workflow/dangerous-pattern` 22.4% (unpinned references 18.1%),
+  `workflow/permission-escalation` 12.1%.
+- `dependency/lifecycle-script-added`: 1 PR.
+- Finding rates on 10k+ star repositories (7 of 258, 2.7%) were roughly 3x
+  lower than the overall rate — consistent with established projects having
+  stronger guardrails, and with the long tail of small repositories being
+  where agent PRs run with the least oversight.
+
+Per-cohort finding rates varied (codex-branch 10.2%, cursor-branch 9.5%,
+copilot 9.0%, claude-code-body 2.0%, devin 1.1%); cohort attribution is
+heuristic, cohort populations differ in repository mix, and none of this
+measures code quality — only boundary-crossing evidence under the default
+policy.
