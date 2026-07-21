@@ -30,9 +30,9 @@ proofs show the original name.
 
 [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 
-![Report from the v0.3.1 release, under the former Agent Gate name](docs/assets/mergewarden-report-v0.3.1.png)
+![Report from a real v0.4.0 scan of a public composite PR](docs/assets/mergewarden-report-v0.4.0.png)
 
-_Real checkout-free report from [public composite PR #16](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29071622785)._
+_Real checkout-free report from [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29817195616)._
 
 ## Try It in 60 Seconds
 
@@ -48,7 +48,7 @@ A full pull-request URL works too:
 npx --yes mergewarden@0.4.0 scan https://github.com/owner/repository/pull/123
 ```
 
-![CLI scan recorded on the v0.3.1 release, under the former Agent Gate name](docs/assets/mergewarden-cli-v0.3.1.gif)
+![Real npx execution of mergewarden@0.4.0 scanning a public PR](docs/assets/mergewarden-cli-v0.4.0.gif)
 
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
 limits. MergeWarden intentionally has no token command-line flag.
@@ -84,8 +84,12 @@ jobs:
           fail-on-block: false
 ```
 
-For an immutable, commit-addressed install, replace the version tag with the
-full 40-character commit SHA shown on the v0.4.0 release.
+For an immutable, commit-addressed install, pin the exact v0.4.0 release
+commit:
+
+```yaml
+- uses: sjh9714/mergewarden@21982fe53cec6d465777bc853de097da8f74708d
+```
 
 No checkout step is needed.
 MergeWarden does not publish or recommend a mutable `v0` tag.
@@ -95,10 +99,10 @@ branch selects the built-in warn policy. Authentication, rate-limit, and server
 errors never fall back silently.
 
 Verified checkout-free Action evidence is available in
-[sandbox PR #16](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16),
-recorded on the v0.3.1 release under the former Agent Gate name. Its public
-run downloads the exact release commit and reports contract scope escapes,
-workflow permission escalation, and agent-control-plane drift.
+[sandbox PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17).
+Its public run downloads the exact SHA-pinned v0.4.0 release commit and
+reports contract scope escapes, workflow permission escalation, and
+agent-control-plane drift.
 
 ## What It Catches
 

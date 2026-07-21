@@ -7,6 +7,35 @@ Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
+## v0.4.0 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29817195616
+- Action ref: `sjh9714/mergewarden@21982fe53cec6d465777bc853de097da8f74708d`
+- Checkout step: not used
+- Base-branch policy: repository `mergewarden.yml`
+- Declared scope: `src/auth/**`, `tests/auth/**`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: 9 error, 2 warning, 1 info
+- Findings: two `contract/out-of-scope` findings
+- Finding: `agent-control-plane/drift` for `AGENTS.md`
+- Findings: three `workflow/permission-escalation` findings covering workflow
+  scope, job scope, and job-scope `id-token`
+- Findings: two `risk/high-risk-path` findings and two
+  `workflow/dangerous-pattern` warnings
+- Finding: `evidence/missing-test-change` for `src/auth/**` without matching
+  `tests/auth/**` changes
+- Managed PR comment: posted by the run via `comment: true`
+
+The PR intentionally combines an in-contract auth change with a workflow
+permission increase, an unpinned action, and agent instruction drift. The
+public Action run downloads the exact v0.4.0 release commit, performs no
+checkout, loads `mergewarden.yml` from the base branch, and records stable
+finding IDs for every boundary crossing. The README GIF and report PNG are
+rendered from real executions of the published `mergewarden@0.4.0` package
+against this PR.
+
 ## v0.3.1 Public Composite Proof
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/16
