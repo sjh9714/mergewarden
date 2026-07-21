@@ -6,7 +6,7 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## Unreleased
+## v0.4.0 - 2026-07-21
 
 ### Changed
 
