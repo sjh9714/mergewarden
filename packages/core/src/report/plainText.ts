@@ -39,7 +39,7 @@ export function renderPlainTextReportSummary(result: AnalysisResult): string {
   const findings = result.findings.slice(0, MAX_LOG_FINDINGS);
   const omittedFindings = result.findings.length - findings.length;
   const lines = [
-    `Agent Gate: ${humanDecisionLabel(result)}`,
+    `MergeWarden: ${humanDecisionLabel(result)}`,
     `Decision: ${result.decision}`,
     `Status: ${result.status}`,
     `Why: ${whyText(result)}`,

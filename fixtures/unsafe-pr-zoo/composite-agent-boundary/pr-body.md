@@ -1,4 +1,4 @@
-<!-- agent-gate-contract
+<!-- mergewarden-contract
 version: 1
 agent: codex
 task: clarify the installation guide

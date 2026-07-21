@@ -2,13 +2,13 @@
 
 ## Project
 
-This repository implements Agent Gate, a deterministic CI firewall for AI-generated pull requests.
+This repository implements MergeWarden, a deterministic CI firewall for AI-generated pull requests.
 
 ## Non-Negotiable Principles
 
 - Runtime analysis must not call LLMs by default.
 - The GitHub Action must not execute PR-controlled code.
-- The GitHub Action must eventually load `agent-gate.yml` from the PR base branch, not from the PR head branch.
+- The GitHub Action must eventually load `mergewarden.yml` from the PR base branch, not from the PR head branch.
 - All policy decisions must be explainable with deterministic evidence.
 - Core analysis must be independent from GitHub APIs.
 - Every rule must have fixture-based tests.
@@ -29,8 +29,8 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 ## Architecture
 
 - `packages/core`: pure analysis engine with no GitHub API dependency
-- `packages/github`: private API-only pull-request collection package; depends on `@agent-gate/core` through the workspace and exposes transport ports used by the Action and CLI. It adds no third-party production dependency.
-- `packages/cli`: public `agent-gate` CLI; uses the private core and GitHub packages at build time, then bundles every runtime dependency into the published executable so npm metadata has no private or `workspace:*` runtime dependency
+- `packages/github`: private API-only pull-request collection package; depends on `@mergewarden/core` through the workspace and exposes transport ports used by the Action and CLI. It adds no third-party production dependency.
+- `packages/cli`: public `mergewarden` CLI; uses the private core and GitHub packages at build time, then bundles every runtime dependency into the published executable so npm metadata has no private or `workspace:*` runtime dependency
 - `packages/action`: API-only GitHub Action wrapper package; depends on the private core and GitHub packages through the workspace and on the official `@actions/core` / `@actions/github` toolkit only to read pull request data through GitHub APIs, write bounded reports, set outputs, update the job summary, and optionally upsert a marked PR report comment without checking out or executing PR-controlled code
 
 ## Action Packaging
@@ -38,7 +38,7 @@ This repository implements Agent Gate, a deterministic CI firewall for AI-genera
 - Root `action.yml` and `packages/action/action.yml` must stay in sync for inputs, outputs, branding, and Node runtime.
 - `packages/action/dist/index.cjs` must remain committed because both action entrypoints execute it.
 - The self-dogfooding workflow must not use `actions/checkout`; it should continue to run the main-branch package-local action instead of PR branch Action code.
-- `.github/workflows/ci.yml` is ordinary repository CI and may checkout this repo and run package scripts; `.github/workflows/agent-gate.yml` must remain API-only and checkout-free.
+- `.github/workflows/ci.yml` is ordinary repository CI and may checkout this repo and run package scripts; `.github/workflows/mergewarden.yml` must remain API-only and checkout-free.
 - CI uses Node 22 for pnpm, but the committed Action bundle should be smoke-tested on Node 24 because `action.yml` declares a Node 24 runtime.
 
 ## Release Guidance

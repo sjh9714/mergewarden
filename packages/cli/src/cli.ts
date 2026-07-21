@@ -3,7 +3,7 @@ import {
   renderJsonReport,
   renderMarkdownReport,
   type AnalysisResult,
-} from "@agent-gate/core";
+} from "@mergewarden/core";
 import {
   GitHubApiError,
   describeGitHubApiError,
@@ -11,7 +11,7 @@ import {
   type GitHubApi,
   type LoadGitHubAnalysisOptions,
   type PullRequestLocator,
-} from "@agent-gate/github";
+} from "@mergewarden/github";
 
 import { NativeGitHubApi } from "./githubApi.js";
 import {
@@ -22,7 +22,7 @@ import {
   type CliIo,
 } from "./replay.js";
 import { parsePullRequestTarget } from "./target.js";
-import { AGENT_GATE_VERSION } from "./version.js";
+import { MERGEWARDEN_VERSION } from "./version.js";
 
 type ScanFormat = "human" | "json" | "markdown";
 type Mode = "observe" | "warn" | "block";
@@ -55,12 +55,12 @@ const DEFAULT_DEPENDENCIES: CliDependencies = {
   environment: process.env,
 };
 
-export const HELP_TEXT = `Agent Gate — checkout-free policy scanning for AI-generated pull requests
+export const HELP_TEXT = `MergeWarden — checkout-free policy scanning for AI-generated pull requests
 
 Usage:
-  agent-gate scan <owner/repository#number> [options]
-  agent-gate scan <github-pull-request-url> [options]
-  agent-gate replay <fixture-dir> [--format json]
+  mergewarden scan <owner/repository#number> [options]
+  mergewarden scan <github-pull-request-url> [options]
+  mergewarden replay <fixture-dir> [--format json]
 
 Commands:
   scan     Analyze a GitHub pull request through the GitHub API only.
@@ -68,10 +68,10 @@ Commands:
 
 Scan options:
   --format <human|json|markdown>  Output format (default: human).
-  --config <base-branch-path>     Policy path (default: agent-gate.yml).
+  --config <base-branch-path>     Policy path (default: mergewarden.yml).
   --mode <observe|warn|block>     Override the configured rollout mode.
   -h, --help                      Show help.
-  -V, --version                   Show the Agent Gate version.
+  -V, --version                   Show the MergeWarden version.
 
 Authentication:
   GH_TOKEN is preferred over GITHUB_TOKEN. Public repositories can be scanned
@@ -105,12 +105,12 @@ function parseScanOptions(args: string[]): ScanOptions {
 
   if (!targetText || targetText.startsWith("-")) {
     throw new CliUsageError(
-      "Usage: agent-gate scan <owner/repository#number|GitHub PR URL> [options]",
+      "Usage: mergewarden scan <owner/repository#number|GitHub PR URL> [options]",
     );
   }
 
   let format: ScanFormat = "human";
-  let configPath = "agent-gate.yml";
+  let configPath = "mergewarden.yml";
   let modeOverride: Mode | undefined;
 
   for (let index = 1; index < args.length; index += 1) {
@@ -189,16 +189,16 @@ async function runScan(args: string[], io: CliIo, dependencies: CliDependencies)
 
   if (!token) {
     io.stderr(
-      "Agent Gate CLI: scanning without authentication; GitHub's unauthenticated API rate limit applies.\n",
+      "MergeWarden CLI: scanning without authentication; GitHub's unauthenticated API rate limit applies.\n",
     );
   }
 
   const loaderOptions: LoadGitHubAnalysisOptions = {
     configPath: options.configPath,
     now: dependencies.now(),
-    engineVersion: AGENT_GATE_VERSION,
-    runtimeRef: `agent-gate-cli@${AGENT_GATE_VERSION}`,
-    warning: (message) => io.stderr(`Agent Gate CLI: ${safeTerminalValue(message)}\n`),
+    engineVersion: MERGEWARDEN_VERSION,
+    runtimeRef: `mergewarden-cli@${MERGEWARDEN_VERSION}`,
+    warning: (message) => io.stderr(`MergeWarden CLI: ${safeTerminalValue(message)}\n`),
     ...(options.modeOverride ? { modeOverride: options.modeOverride } : {}),
   };
   const input = await dependencies.loadGitHubAnalysis(
@@ -245,7 +245,7 @@ export async function runCli(
   }
 
   if (isVersion(argv) || (knownCommand && isVersion(commandArguments))) {
-    io.stdout(`${AGENT_GATE_VERSION}\n`);
+    io.stdout(`${MERGEWARDEN_VERSION}\n`);
     return 0;
   }
 
@@ -256,13 +256,13 @@ export async function runCli(
   try {
     if (argv[0] !== "scan") {
       throw new CliUsageError(
-        "Expected a command: scan or replay. Run agent-gate --help for usage.",
+        "Expected a command: scan or replay. Run mergewarden --help for usage.",
       );
     }
 
     return await runScan(argv.slice(1), io, dependencies);
   } catch (error) {
-    io.stderr(`Agent Gate CLI error: ${safeTerminalValue(errorMessage(error))}\n`);
+    io.stderr(`MergeWarden CLI error: ${safeTerminalValue(errorMessage(error))}\n`);
     return 2;
   }
 }

@@ -1,5 +1,5 @@
 name: Policy feedback
-description: Share what Agent Gate should warn or block on
+description: Share what MergeWarden should warn or block on
 title: "[Policy feedback]: "
 labels:
   - question

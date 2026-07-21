@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a focused Agent Gate capability or improvement
+description: Suggest a focused MergeWarden capability or improvement
 title: "[Feature]: "
 labels:
   - enhancement
@@ -15,7 +15,7 @@ body:
     id: proposed_behavior
     attributes:
       label: Proposed behavior
-      description: What should Agent Gate do?
+      description: What should MergeWarden do?
     validations:
       required: true
   - type: dropdown

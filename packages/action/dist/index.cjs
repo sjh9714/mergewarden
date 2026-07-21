@@ -48303,10 +48303,10 @@ var contractInvalidRule = {
       "contract/invalid",
       "error",
       "Invalid agent contract",
-      "This PR contains an agent-gate contract, but it could not be parsed."
+      "This PR contains an mergewarden contract, but it could not be parsed."
     );
     finding2.evidence.push({ label: "parser_message", value: ctx.input.contract.message });
-    finding2.remediation.push("Fix the agent-gate contract block in the PR body.");
+    finding2.remediation.push("Fix the mergewarden contract block in the PR body.");
     return [finding2];
   }
 };
@@ -48322,13 +48322,13 @@ var contractMissingRule = {
       "contract/missing",
       severity,
       "Missing agent contract",
-      "Agent-generated PRs must include an agent-gate contract."
+      "Agent-generated PRs must include an mergewarden contract."
     );
     finding2.evidence.push({
       label: "required_for",
       value: ctx.input.config.contract.required_for.join(", ")
     });
-    finding2.remediation.push("Add an agent-gate contract block to the PR body.");
+    finding2.remediation.push("Add an mergewarden contract block to the PR body.");
     return [finding2];
   }
 };
@@ -49218,7 +49218,7 @@ function rawFindingForGap(gap) {
     ...gap.path ? { path: gap.path } : {},
     evidence: gap.evidence,
     remediation: [
-      gap.ruleId === "analysis/file-list-incomplete" ? "Reduce or split the pull request, then rerun Agent Gate with a complete file list." : "Rerun Agent Gate once the required base and head content can be read."
+      gap.ruleId === "analysis/file-list-incomplete" ? "Reduce or split the pull request, then rerun MergeWarden with a complete file list." : "Rerun MergeWarden once the required base and head content can be read."
     ],
     tags: ["analysis", "incomplete"],
     confidence: "high"
@@ -49320,13 +49320,13 @@ function capFinding(total, retained) {
       ruleId: "analysis/finding-limit-exceeded",
       severity: "error",
       title: "Analysis finding limit exceeded",
-      message: `Agent Gate produced ${total} findings; only ${retained} are included in this result.`,
+      message: `MergeWarden produced ${total} findings; only ${retained} are included in this result.`,
       evidence: [
         { label: "total_findings", value: String(total) },
         { label: "retained_findings", value: String(retained) },
         { label: "finding_limit", value: String(MAX_RESULT_FINDINGS) }
       ],
-      remediation: ["Split the pull request and rerun Agent Gate to obtain complete evidence."],
+      remediation: ["Split the pull request and rerun MergeWarden to obtain complete evidence."],
       tags: ["analysis", "incomplete", "limit"],
       confidence: "high"
     }
@@ -49356,7 +49356,7 @@ function titleForStatus(status) {
     blocked: "blocked",
     incomplete: "analysis incomplete"
   };
-  return `Agent Gate: ${label[status]}`;
+  return `MergeWarden: ${label[status]}`;
 }
 async function analyze(input) {
   const ctx = createRuleContext(input);
@@ -49465,7 +49465,7 @@ async function analyze(input) {
   };
 }
 var NonEmptyStringSchema = external_exports.string().trim().min(1);
-var CONFIG_FILE_NAME = "agent-gate.yml";
+var CONFIG_FILE_NAME = "mergewarden.yml";
 var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "AGENTS.md",
   "**/AGENTS.md",
@@ -49616,7 +49616,7 @@ var PackageScriptsConfigSchema = external_exports.object({
   lifecycle_scripts: external_exports.array(NonEmptyStringSchema).default(DEFAULT_LIFECYCLE_SCRIPTS),
   severity: SeveritySettingSchema.default("warn")
 }).strict();
-var AgentGateConfigSchema = external_exports.object({
+var MergeWardenConfigSchema = external_exports.object({
   version: external_exports.literal(1),
   mode: external_exports.enum(["observe", "warn", "block"]).default("warn"),
   agent_detection: AgentDetectionSchema.default({
@@ -49668,7 +49668,7 @@ var AgentGateConfigSchema = external_exports.object({
     seen.add(waiver.finding_id);
   }
 });
-var DEFAULT_CONFIG = AgentGateConfigSchema.parse({ version: 1 });
+var DEFAULT_CONFIG = MergeWardenConfigSchema.parse({ version: 1 });
 function formatPath(path) {
   return path.length > 0 ? path.map(String).join(".") : "<root>";
 }
@@ -49713,7 +49713,7 @@ function parseConfig(yamlText) {
   }
   const rawValue = document.toJS();
   assertNoGitHubActionsConfigMixing(rawValue);
-  const parsed = AgentGateConfigSchema.safeParse(rawValue);
+  const parsed = MergeWardenConfigSchema.safeParse(rawValue);
   if (!parsed.success) {
     throw new Error(`Invalid ${CONFIG_FILE_NAME}: ${formatZodIssues(parsed.error.issues)}`);
   }
@@ -49727,7 +49727,7 @@ var AgentContractSchema = external_exports.object({
   allowed_paths: external_exports.array(NonEmptyStringSchema).min(1),
   blocked_paths: external_exports.array(NonEmptyStringSchema).optional()
 }).strict();
-var CONTRACT_BLOCK_PATTERN = /<!--\s*agent-gate-contract\b([\s\S]*?)-->/g;
+var CONTRACT_BLOCK_PATTERN = /<!--\s*mergewarden-contract\b([\s\S]*?)-->/g;
 function formatYamlErrors2(errors) {
   return errors.map((error52) => error52.message).join("; ");
 }
@@ -49736,7 +49736,7 @@ function parseContractYaml(yamlText) {
   if (document.errors.length > 0) {
     return {
       kind: "invalid",
-      message: `Invalid agent-gate contract YAML: ${formatYamlErrors2(document.errors)}`,
+      message: `Invalid mergewarden contract YAML: ${formatYamlErrors2(document.errors)}`,
       issues: document.errors
     };
   }
@@ -49744,7 +49744,7 @@ function parseContractYaml(yamlText) {
   if (!parsed.success) {
     return {
       kind: "invalid",
-      message: `Invalid agent-gate contract: ${formatZodIssues(parsed.error.issues)}`,
+      message: `Invalid mergewarden contract: ${formatZodIssues(parsed.error.issues)}`,
       issues: parsed.error.issues
     };
   }
@@ -49758,7 +49758,7 @@ function parseContractFromPrBody(body) {
   if (matches.length > 1) {
     return {
       kind: "invalid",
-      message: "Multiple agent-gate contract blocks found; expected exactly one."
+      message: "Multiple mergewarden contract blocks found; expected exactly one."
     };
   }
   const contractYaml = matches[0]?.[1]?.trim() ?? "";
@@ -49858,7 +49858,7 @@ function highestActionableFinding(findings) {
 }
 function recommendedNextStep(result) {
   if (result.status === "incomplete") {
-    return "Restore complete analysis evidence and rerun Agent Gate before merging.";
+    return "Restore complete analysis evidence and rerun MergeWarden before merging.";
   }
   const finding2 = highestActionableFinding(result.findings);
   if (!finding2) {
@@ -49994,7 +49994,7 @@ function buildMarkdownReport(result, combined, visibleCount, fullReportPath) {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
   const lines = [
-    `# Agent Gate: ${humanDecisionLabel(result)}`,
+    `# MergeWarden: ${humanDecisionLabel(result)}`,
     "",
     `Decision: ${result.decision}`,
     `Status: ${result.status}`,
@@ -50110,7 +50110,7 @@ function renderPlainTextReportSummary(result) {
   const findings = result.findings.slice(0, MAX_LOG_FINDINGS);
   const omittedFindings = result.findings.length - findings.length;
   const lines = [
-    `Agent Gate: ${humanDecisionLabel(result)}`,
+    `MergeWarden: ${humanDecisionLabel(result)}`,
     `Decision: ${result.decision}`,
     `Status: ${result.status}`,
     `Why: ${whyText(result)}`
@@ -50552,7 +50552,7 @@ async function loadConfig(api, pullRequest, options, retryBudget) {
       );
     }
     options.warning?.(
-      `Agent Gate could not load ${options.configPath} from the base branch; using built-in default policy.`
+      `MergeWarden could not load ${options.configPath} from the base branch; using built-in default policy.`
     );
     return {
       config: applyModeOverride(DEFAULT_CONFIG, options.modeOverride),
@@ -50685,11 +50685,11 @@ async function loadGitHubAnalysis(api, target, options) {
 }
 
 // src/version.ts
-var AGENT_GATE_VERSION = "0.3.1";
+var MERGEWARDEN_VERSION = "0.4.0";
 
 // src/run.ts
-var AGENT_GATE_COMMENT_MARKER = "<!-- agent-gate-report -->";
-var AGENT_GATE_MANAGED_COMMENT_NOTE = "<!-- This comment is managed by Agent Gate. Do not edit manually. -->";
+var MERGEWARDEN_COMMENT_MARKER = "<!-- mergewarden-report -->";
+var MERGEWARDEN_MANAGED_COMMENT_NOTE = "<!-- This comment is managed by MergeWarden. Do not edit manually. -->";
 var COMMENT_MAX_BYTES = 6e4;
 var COMMENT_WRAPPER_RESERVE_BYTES = 512;
 var GITHUB_REQUEST_TIMEOUT_MS = 3e4;
@@ -50815,13 +50815,13 @@ async function listIssueComments(octokit, repository, issueNumber) {
   return (await listComments(args)).data;
 }
 function markedCommentBody(markdownReport) {
-  return `${AGENT_GATE_COMMENT_MARKER}
-${AGENT_GATE_MANAGED_COMMENT_NOTE}
+  return `${MERGEWARDEN_COMMENT_MARKER}
+${MERGEWARDEN_MANAGED_COMMENT_NOTE}
 
 ${markdownReport}`;
 }
-function isAgentGateManagedComment(comment) {
-  if (!comment.body?.startsWith(AGENT_GATE_COMMENT_MARKER)) {
+function isMergeWardenManagedComment(comment) {
+  if (!comment.body?.startsWith(MERGEWARDEN_COMMENT_MARKER)) {
     return false;
   }
   if (comment.user?.type !== "Bot" || comment.user.login !== "github-actions[bot]") {
@@ -50830,7 +50830,7 @@ function isAgentGateManagedComment(comment) {
   return comment.performed_via_github_app == null || comment.performed_via_github_app.slug === "github-actions";
 }
 function latestMarkedComment(comments) {
-  return comments.filter(isAgentGateManagedComment).sort((left, right) => right.id - left.id)[0];
+  return comments.filter(isMergeWardenManagedComment).sort((left, right) => right.id - left.id)[0];
 }
 async function upsertPullRequestComment(octokit, repository, issueNumber, markdownReport) {
   const comments = await listIssueComments(octokit, repository, issueNumber);
@@ -50880,13 +50880,13 @@ async function runActionInner(runtime) {
   const { context: context3 } = runtime;
   const pr = context3.payload.pull_request;
   if (context3.eventName !== "pull_request" || !pr) {
-    throw new Error("Agent Gate can only run on pull_request events.");
+    throw new Error("MergeWarden can only run on pull_request events.");
   }
-  const configPath = inputOrDefault(runtime.getInput("config"), "agent-gate.yml");
-  const reportJsonPath = inputOrDefault(runtime.getInput("report-json"), "agent-gate-report.json");
+  const configPath = inputOrDefault(runtime.getInput("config"), "mergewarden.yml");
+  const reportJsonPath = inputOrDefault(runtime.getInput("report-json"), "mergewarden-report.json");
   const reportMarkdownPath = inputOrDefault(
     runtime.getInput("report-markdown"),
-    "agent-gate-report.md"
+    "mergewarden-report.md"
   );
   const comment = parseBooleanInput("comment", runtime.getInput("comment"), false);
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
@@ -50904,8 +50904,8 @@ async function runActionInner(runtime) {
     configPath,
     modeOverride,
     now: runtime.now().toISOString(),
-    engineVersion: AGENT_GATE_VERSION,
-    runtimeRef: `agent-gate-action@${AGENT_GATE_VERSION}`,
+    engineVersion: MERGEWARDEN_VERSION,
+    runtimeRef: `mergewarden-action@${MERGEWARDEN_VERSION}`,
     warning: (message) => runtime.warning(message)
   });
   const result = await analyze(input);
@@ -50931,13 +50931,13 @@ async function runActionInner(runtime) {
       });
       await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport);
     } catch (error52) {
-      runtime.warning(`Agent Gate could not upsert PR comment: ${errorMessage(error52)}`);
+      runtime.warning(`MergeWarden could not upsert PR comment: ${errorMessage(error52)}`);
     }
   }
   if (!result.metadata.analysisComplete) {
-    runtime.setFailed("Agent Gate analysis is incomplete.");
+    runtime.setFailed("MergeWarden analysis is incomplete.");
   } else if (result.decision === "block" && failOnBlock) {
-    runtime.setFailed("Agent Gate blocked this pull request.");
+    runtime.setFailed("MergeWarden blocked this pull request.");
   }
   return result;
 }
@@ -50963,7 +50963,7 @@ var summary2 = {
 async function main() {
   const token = getInput("github-token");
   if (!token) {
-    setFailed("Agent Gate requires the github-token input.");
+    setFailed("MergeWarden requires the github-token input.");
     return;
   }
   await runAction({

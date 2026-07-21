@@ -1,6 +1,6 @@
 {
-  "name": "@agent-gate/action",
-  "version": "0.3.1",
+  "name": "@mergewarden/action",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "files": [
@@ -10,8 +10,8 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
-    "@agent-gate/core": "workspace:*",
-    "@agent-gate/github": "workspace:*"
+    "@mergewarden/core": "workspace:*",
+    "@mergewarden/github": "workspace:*"
   },
   "scripts": {
     "build": "tsup",

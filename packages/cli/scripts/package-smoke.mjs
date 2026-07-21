@@ -12,9 +12,9 @@ const MAX_PACKED_BYTES = 2 * 1024 * 1024;
 const MAX_UNPACKED_BYTES = 5 * 1024 * 1024;
 const MAX_HELP_MILLISECONDS = 10_000;
 const MAX_SCAN_MILLISECONDS = 60_000;
-const PUBLISHED_PACKAGE = "@jinhyuk9714/agent-gate";
+const PUBLISHED_PACKAGE = "mergewarden";
 const PUBLIC_SCAN_TARGET =
-  process.env.AGENT_GATE_PACKAGE_SMOKE_SCAN_TARGET ??
+  process.env.MERGEWARDEN_PACKAGE_SMOKE_SCAN_TARGET ??
   "https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/14";
 const EXPECTED_FILES = [
   "LICENSE",
@@ -85,7 +85,7 @@ async function validateTarball(tarball, tempRoot) {
   await mkdir(installRoot, { recursive: true });
   await writeFile(
     join(installRoot, "package.json"),
-    JSON.stringify({ name: "agent-gate-package-smoke", private: true }, null, 2),
+    JSON.stringify({ name: "mergewarden-package-smoke", private: true }, null, 2),
   );
   await run(
     npmCommand,
@@ -93,7 +93,7 @@ async function validateTarball(tarball, tempRoot) {
     { cwd: installRoot },
   );
 
-  const installedPackagePath = join(installRoot, "node_modules", "@jinhyuk9714", "agent-gate");
+  const installedPackagePath = join(installRoot, "node_modules", "mergewarden");
   const installed = await installedFiles(installedPackagePath);
   assert(
     installed.byteLength < MAX_UNPACKED_BYTES,
@@ -112,7 +112,10 @@ async function validateTarball(tarball, tempRoot) {
     `published manifest name ${installedManifest.name} does not match ${PUBLISHED_PACKAGE}`,
   );
   for (const [name, dependency] of Object.entries(installedManifest.dependencies ?? {})) {
-    assert(!name.startsWith("@agent-gate/"), `published manifest contains private package ${name}`);
+    assert(
+      !name.startsWith("@mergewarden/"),
+      `published manifest contains private package ${name}`,
+    );
     assert(
       typeof dependency !== "string" || !dependency.startsWith("workspace:"),
       "published manifest must not contain workspace dependencies",
@@ -128,18 +131,18 @@ async function validateTarball(tarball, tempRoot) {
     cwd: installRoot,
     timeout: MAX_HELP_MILLISECONDS,
   });
-  assert(help.stdout.includes("agent-gate scan"), "installed CLI help did not describe scan");
+  assert(help.stdout.includes("mergewarden scan"), "installed CLI help did not describe scan");
   const helpStartedAt = Date.now();
   const binHelp = await run(
     npmCommand,
-    ["exec", "--offline", "--no", "--", "agent-gate", "--help"],
+    ["exec", "--offline", "--no", "--", "mergewarden", "--help"],
     {
       cwd: installRoot,
       timeout: MAX_HELP_MILLISECONDS,
     },
   );
   const helpMilliseconds = Date.now() - helpStartedAt;
-  assert(binHelp.stdout.includes("agent-gate scan"), "installed npm bin did not execute its CLI");
+  assert(binHelp.stdout.includes("mergewarden scan"), "installed npm bin did not execute its CLI");
   assert(
     helpMilliseconds < MAX_HELP_MILLISECONDS,
     `installed npm-exec help took ${helpMilliseconds}ms; limit is ${MAX_HELP_MILLISECONDS}ms`,
@@ -153,7 +156,7 @@ async function validateTarball(tarball, tempRoot) {
 
   const fixtureRoot = join(installRoot, "fixture");
   await mkdir(fixtureRoot, { recursive: true });
-  await writeFile(join(fixtureRoot, "agent-gate.yml"), "version: 1\nmode: warn\n");
+  await writeFile(join(fixtureRoot, "mergewarden.yml"), "version: 1\nmode: warn\n");
   await writeFile(join(fixtureRoot, "fixture.json"), JSON.stringify({ files: [] }, null, 2));
   const replay = await run(
     process.execPath,
@@ -196,7 +199,7 @@ if (process.env.npm_lifecycle_event === "test:packed") {
   assert(arguments_.length === 1, "test:packed requires the exact tarball path to validate.");
 }
 
-const tempRoot = await mkdtemp(join(tmpdir(), "agent-gate-package-smoke-"));
+const tempRoot = await mkdtemp(join(tmpdir(), "mergewarden-package-smoke-"));
 const tarball = arguments_[0]
   ? resolve(process.cwd(), arguments_[0])
   : await createTarball(tempRoot);

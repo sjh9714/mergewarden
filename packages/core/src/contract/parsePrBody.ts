@@ -3,7 +3,7 @@ import { parseDocument } from "yaml";
 import { formatZodIssues } from "../validation/formatZodIssues.js";
 import { AgentContractSchema, type AgentContract, type ParseContractResult } from "./schema.js";
 
-const CONTRACT_BLOCK_PATTERN = /<!--\s*agent-gate-contract\b([\s\S]*?)-->/g;
+const CONTRACT_BLOCK_PATTERN = /<!--\s*mergewarden-contract\b([\s\S]*?)-->/g;
 
 function formatYamlErrors(errors: { message: string }[]): string {
   return errors.map((error) => error.message).join("; ");
@@ -15,7 +15,7 @@ function parseContractYaml(yamlText: string): ParseContractResult {
   if (document.errors.length > 0) {
     return {
       kind: "invalid",
-      message: `Invalid agent-gate contract YAML: ${formatYamlErrors(document.errors)}`,
+      message: `Invalid mergewarden contract YAML: ${formatYamlErrors(document.errors)}`,
       issues: document.errors,
     };
   }
@@ -25,7 +25,7 @@ function parseContractYaml(yamlText: string): ParseContractResult {
   if (!parsed.success) {
     return {
       kind: "invalid",
-      message: `Invalid agent-gate contract: ${formatZodIssues(parsed.error.issues)}`,
+      message: `Invalid mergewarden contract: ${formatZodIssues(parsed.error.issues)}`,
       issues: parsed.error.issues,
     };
   }
@@ -43,7 +43,7 @@ export function parseContractFromPrBody(body: string): ParseContractResult {
   if (matches.length > 1) {
     return {
       kind: "invalid",
-      message: "Multiple agent-gate contract blocks found; expected exactly one.",
+      message: "Multiple mergewarden contract blocks found; expected exactly one.",
     };
   }
 

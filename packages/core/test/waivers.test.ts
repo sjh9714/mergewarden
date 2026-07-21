@@ -119,7 +119,7 @@ describe("exact finding-ID waivers", () => {
       expectedFileCount: 42,
       analyzedFileCount: 41,
       contentFileCount: 0,
-      runtimeRef: "agent-gate@v0.3.0",
+      runtimeRef: "mergewarden@v0.3.0",
       gaps: [
         {
           ruleId: "analysis/file-list-incomplete",

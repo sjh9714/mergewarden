@@ -1,3 +1,3 @@
-import { AgentGateConfigSchema, type AgentGateConfig } from "./schema.js";
+import { MergeWardenConfigSchema, type MergeWardenConfig } from "./schema.js";
 
-export const DEFAULT_CONFIG: AgentGateConfig = AgentGateConfigSchema.parse({ version: 1 });
+export const DEFAULT_CONFIG: MergeWardenConfig = MergeWardenConfigSchema.parse({ version: 1 });

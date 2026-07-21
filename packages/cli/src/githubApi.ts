@@ -6,9 +6,9 @@ import {
   type RemotePullRequest,
   type RemoteRepository,
   type TextFileResult,
-} from "@agent-gate/github";
+} from "@mergewarden/github";
 
-import { AGENT_GATE_VERSION } from "./version.js";
+import { MERGEWARDEN_VERSION } from "./version.js";
 
 type Fetch = (input: string | URL, init?: RequestInit) => Promise<Response>;
 
@@ -184,7 +184,7 @@ async function readBodyCapped(
       byteLength += chunk.byteLength;
 
       if (byteLength >= maxBytes) {
-        await withAbort(reader.cancel("Agent Gate response body byte limit reached."), signal);
+        await withAbort(reader.cancel("MergeWarden response body byte limit reached."), signal);
         break;
       }
     }
@@ -273,7 +273,7 @@ export class NativeGitHubApi implements GitHubApi {
     const headers: Record<string, string> = {
       Accept: accept,
       "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": `agent-gate-cli/${AGENT_GATE_VERSION}`,
+      "User-Agent": `mergewarden-cli/${MERGEWARDEN_VERSION}`,
     };
 
     if (this.#token) {
@@ -371,7 +371,7 @@ export class NativeGitHubApi implements GitHubApi {
         const contentLength = headerNumber(response.headers, "content-length");
         if (contentLength !== undefined && contentLength > MAX_TEXT_FILE_BYTES) {
           void response.body
-            ?.cancel("Agent Gate content-length limit exceeded.")
+            ?.cancel("MergeWarden content-length limit exceeded.")
             .catch(() => undefined);
           throw new GitHubApiError(
             `${operation}: content-length ${contentLength} bytes exceeds the ${MAX_TEXT_FILE_BYTES}-byte analysis limit.`,

@@ -16,9 +16,9 @@ import {
   type PullRequestContext,
   type RepoContext,
   type ReviewEvidence,
-} from "@agent-gate/core";
+} from "@mergewarden/core";
 
-import { AGENT_GATE_VERSION } from "./version.js";
+import { MERGEWARDEN_VERSION } from "./version.js";
 
 type OutputWriter = (text: string) => void;
 
@@ -52,7 +52,7 @@ const FILE_STATUSES = new Set<FileChange["status"]>(["added", "modified", "remov
 const TERMINAL_PREVIEW_BYTES = 2_048;
 
 const DEFAULT_REPO: RepoContext = {
-  owner: "agent-gate",
+  owner: "mergewarden",
   repo: "replay-fixture",
   defaultBranch: "main",
   baseRef: "main",
@@ -200,7 +200,7 @@ async function readOptionalText(filePath: string): Promise<string | undefined> {
 
 export async function loadReplayFixture(fixtureDir: string): Promise<AnalysisInput> {
   const root = resolve(fixtureDir);
-  const configText = await readRequiredText(resolve(root, "agent-gate.yml"));
+  const configText = await readRequiredText(resolve(root, "mergewarden.yml"));
   const fixtureText = await readRequiredText(resolve(root, "fixture.json"));
   const prBody = await readOptionalText(resolve(root, "pr-body.md"));
   const fixture = parseFixtureJson(fixtureText, resolve(root, "fixture.json"));
@@ -223,7 +223,7 @@ export async function loadReplayFixture(fixtureDir: string): Promise<AnalysisInp
     checks: fixture.checks ?? [],
     now: fixture.now ?? new Date(0).toISOString(),
     configSource: "local",
-    version: fixture.version ?? AGENT_GATE_VERSION,
+    version: fixture.version ?? MERGEWARDEN_VERSION,
   };
 }
 
@@ -330,7 +330,7 @@ export function safeTerminalValue(value: string): string {
 
 export function renderHumanReport(result: AnalysisResult): string {
   const lines = [
-    `Agent Gate: ${statusLabel(result)}`,
+    `MergeWarden: ${statusLabel(result)}`,
     "",
     `Decision: ${result.decision}`,
     `Findings: ${result.summary.errorCount} error, ${result.summary.warnCount} warning, ${result.summary.infoCount} info`,
@@ -387,7 +387,7 @@ function parseReplayOptions(argv: string[]): { fixtureDir: string; options: Repl
   const [command, fixtureDir, ...rest] = argv;
 
   if (command !== "replay" || !fixtureDir) {
-    throw new CliError("Usage: agent-gate replay <fixture-dir> [--format json]");
+    throw new CliError("Usage: mergewarden replay <fixture-dir> [--format json]");
   }
 
   let format: ReplayOptions["format"] = "human";
@@ -430,7 +430,7 @@ export async function runCli(
     return exitCodeForResult(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown error";
-    io.stderr(`Agent Gate CLI error: ${safeTerminalValue(message)}\n`);
+    io.stderr(`MergeWarden CLI error: ${safeTerminalValue(message)}\n`);
     return 2;
   }
 }

@@ -19,7 +19,7 @@ contract:
 high_risk_paths:
   policy:
     paths:
-      - agent-gate.yml
+      - mergewarden.yml
     severity: warn
   core:
     paths:

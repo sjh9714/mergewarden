@@ -1,4 +1,4 @@
-import type { AgentGateConfig } from "../config/schema.js";
+import type { MergeWardenConfig } from "../config/schema.js";
 import type { Evidence, RawFinding, Severity } from "../types.js";
 import {
   findJobsWithIdTokenWritePermission,
@@ -14,7 +14,7 @@ import {
 import { parseWorkflow, type WorkflowDocument } from "../workflow/parseWorkflow.js";
 import type { Rule, RuleContext } from "./types.js";
 
-type CheckName = keyof AgentGateConfig["github_actions"]["checks"];
+type CheckName = keyof MergeWardenConfig["github_actions"]["checks"];
 
 function isWorkflowFile(ctx: RuleContext, path: string): boolean {
   return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
@@ -25,7 +25,7 @@ function wasWorkflowFile(ctx: RuleContext, file: { path: string; previousPath?: 
 }
 
 function severityFor(
-  config: AgentGateConfig["github_actions"],
+  config: MergeWardenConfig["github_actions"],
   check: CheckName,
 ): Severity | undefined {
   const value = config.checks[check];

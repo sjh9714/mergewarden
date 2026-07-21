@@ -57,7 +57,7 @@ function api(options: ApiOptions = {}): GitHubApi {
       options.pages ? (options.pages[page] ?? []) : files.slice((page - 1) * 100, page * 100),
     ),
     getTextFile: vi.fn(async (repository, path, sha) => {
-      if (path === "agent-gate.yml") {
+      if (path === "mergewarden.yml") {
         return { kind: "found", text: CONFIG };
       }
 
@@ -70,7 +70,7 @@ function api(options: ApiOptions = {}): GitHubApi {
 
 function options(overrides: Partial<LoadGitHubAnalysisOptions> = {}): LoadGitHubAnalysisOptions {
   return {
-    configPath: "agent-gate.yml",
+    configPath: "mergewarden.yml",
     now: "2026-07-10T00:00:00.000Z",
     engineVersion: "0.3.0",
     runtimeRef: "test@0.3.0",

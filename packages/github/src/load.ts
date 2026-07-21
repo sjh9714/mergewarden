@@ -4,9 +4,9 @@ import {
   matchesAny,
   parseConfig,
   parseContractFromPrBody,
-  type AgentGateConfig,
+  type MergeWardenConfig,
   type FileChange,
-} from "@agent-gate/core";
+} from "@mergewarden/core";
 
 import { describeGitHubApiError } from "./errors.js";
 import { createRetryBudget, withGitHubRetry } from "./retry.js";
@@ -49,9 +49,9 @@ type ContentTaskResult =
   | { kind: "gap"; gap: CollectionAnalysis["gaps"][number] };
 
 function applyModeOverride(
-  config: AgentGateConfig,
-  modeOverride: AgentGateConfig["mode"] | undefined,
-): AgentGateConfig {
+  config: MergeWardenConfig,
+  modeOverride: MergeWardenConfig["mode"] | undefined,
+): MergeWardenConfig {
   return modeOverride ? { ...config, mode: modeOverride } : config;
 }
 
@@ -76,7 +76,7 @@ function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
 
-function relevantContentPath(path: string, config: AgentGateConfig): boolean {
+function relevantContentPath(path: string, config: MergeWardenConfig): boolean {
   if (matchesAny(path, config.github_actions.paths)) {
     return true;
   }
@@ -84,7 +84,7 @@ function relevantContentPath(path: string, config: AgentGateConfig): boolean {
   return config.package_scripts.enabled && matchesAny(path, config.package_scripts.paths);
 }
 
-function needsContent(file: MutableFileChange, config: AgentGateConfig): boolean {
+function needsContent(file: MutableFileChange, config: MergeWardenConfig): boolean {
   return (
     relevantContentPath(file.path, config) ||
     (file.previousPath !== undefined && relevantContentPath(file.previousPath, config))
@@ -94,7 +94,7 @@ function needsContent(file: MutableFileChange, config: AgentGateConfig): boolean
 function contentTasks(
   files: MutableFileChange[],
   pullRequest: RemotePullRequest,
-  config: AgentGateConfig,
+  config: MergeWardenConfig,
 ): ContentTask[] {
   const tasks: ContentTask[] = [];
 
@@ -249,7 +249,7 @@ async function loadConfig(
   pullRequest: RemotePullRequest,
   options: LoadGitHubAnalysisOptions,
   retryBudget: ReturnType<typeof createRetryBudget>,
-): Promise<{ config: AgentGateConfig; source: "base-branch" | "default" }> {
+): Promise<{ config: MergeWardenConfig; source: "base-branch" | "default" }> {
   const result = await withGitHubRetry(
     `Load ${options.configPath} from base SHA ${pullRequest.base.sha}`,
     retryBudget,
@@ -264,7 +264,7 @@ async function loadConfig(
     }
 
     options.warning?.(
-      `Agent Gate could not load ${options.configPath} from the base branch; using built-in default policy.`,
+      `MergeWarden could not load ${options.configPath} from the base branch; using built-in default policy.`,
     );
     return {
       config: applyModeOverride(DEFAULT_CONFIG, options.modeOverride),

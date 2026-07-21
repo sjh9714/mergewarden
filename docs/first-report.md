@@ -1,4 +1,4 @@
-# Your First Agent Gate Report
+# Your First MergeWarden Report
 
 Start in observe or warn mode. A finding is deterministic evidence to review,
 not proof that a PR is unsafe.

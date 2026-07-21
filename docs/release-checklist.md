@@ -30,9 +30,9 @@ not authorize a tag, npm publication, GitHub release, or Marketplace change.
 
 ## Before Publishing
 
-- [ ] Recheck that the exact `@jinhyuk9714/agent-gate` npm name is available and owned by
+- [ ] Recheck that the exact `mergewarden` npm name is available and owned by
       the intended publisher; stop if it is not.
-- [ ] Confirm the npm Trusted Publisher maps `sjh9714/Agent-Gate`,
+- [ ] Confirm the npm Trusted Publisher maps `sjh9714/mergewarden`,
       `publish-npm.yml`, and the `npm-release` environment with only
       `npm publish` permission.
 - [ ] Confirm npm publishing access disallows traditional tokens and the
@@ -44,7 +44,7 @@ not authorize a tag, npm publication, GitHub release, or Marketplace change.
 ## Publish Order
 
 - [ ] Publish the tested tarball with `--provenance --access public`.
-- [ ] Verify a cold `npx --yes @jinhyuk9714/agent-gate@VERSION --version` and public scan.
+- [ ] Verify a cold `npx --yes mergewarden@VERSION --version` and public scan.
 - [ ] Publish a non-prerelease GitHub release.
 - [ ] Confirm Marketplace shows the same version and install ref.
 - [ ] Configure npm Trusted Publisher and remove the first-publish token.

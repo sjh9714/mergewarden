@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { analyze, type AnalysisResult } from "@agent-gate/core";
-import { loadGitHubAnalysis, type GitHubApi, type RemotePullRequest } from "@agent-gate/github";
+import { analyze, type AnalysisResult } from "@mergewarden/core";
+import { loadGitHubAnalysis, type GitHubApi, type RemotePullRequest } from "@mergewarden/github";
 import { runCli, type CliDependencies } from "../../cli/src/cli.js";
 import { runAction, type ActionContext, type ActionSummary, type OctokitLike } from "../src/run.js";
 
@@ -42,7 +42,7 @@ const remotePullRequest: RemotePullRequest = {
 };
 
 function content(path: string, sha: string): string {
-  if (path === "agent-gate.yml" && sha === BASE_SHA) {
+  if (path === "mergewarden.yml" && sha === BASE_SHA) {
     return POLICY;
   }
 

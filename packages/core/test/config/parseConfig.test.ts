@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  AgentGateConfigSchema,
+  MergeWardenConfigSchema,
   DEFAULT_CONFIG,
   DEFAULT_GITHUB_ACTION_CHECKS,
   parseConfig,
@@ -172,7 +172,7 @@ github_actions:
 
     expect(() => parseConfig(yaml)).toThrow(/cannot be mixed with legacy/);
     expect(
-      AgentGateConfigSchema.safeParse({
+      MergeWardenConfigSchema.safeParse({
         version: 1,
         github_actions: {
           severity: "error",
@@ -240,7 +240,7 @@ waivers:
 
   it("rejects an invalid mode with a config-prefixed message and issue path", () => {
     expect(() => parseConfig("version: 1\nmode: strict\n")).toThrow(
-      /Invalid agent-gate\.yml: mode/,
+      /Invalid mergewarden\.yml: mode/,
     );
   });
 
@@ -251,11 +251,11 @@ version: 1
 agent_control_plane:
   severity: critical
 `),
-    ).toThrow(/Invalid agent-gate\.yml: agent_control_plane\.severity/);
+    ).toThrow(/Invalid mergewarden\.yml: agent_control_plane\.severity/);
   });
 
   it("rejects invalid versions", () => {
-    expect(() => parseConfig("version: 2\n")).toThrow(/Invalid agent-gate\.yml: version/);
+    expect(() => parseConfig("version: 2\n")).toThrow(/Invalid mergewarden\.yml: version/);
   });
 
   it("parses high risk path records by area name", () => {
@@ -279,7 +279,7 @@ high_risk_paths:
 
   it("rejects unknown fields instead of stripping them", () => {
     expect(() => parseConfig("version: 1\nunexpected: true\n")).toThrow(
-      /Invalid agent-gate\.yml: unexpected/,
+      /Invalid mergewarden\.yml: unexpected/,
     );
   });
 
@@ -321,7 +321,7 @@ high_risk_paths:
     paths:
       - ""
 `),
-    ).toThrow(/Invalid agent-gate\.yml: high_risk_paths\.auth\.paths\.0/);
+    ).toThrow(/Invalid mergewarden\.yml: high_risk_paths\.auth\.paths\.0/);
   });
 
   it("rejects whitespace-only agent detection labels", () => {
@@ -332,7 +332,7 @@ agent_detection:
   labels:
     - "   "
 `),
-    ).toThrow(/Invalid agent-gate\.yml: agent_detection\.labels\.0/);
+    ).toThrow(/Invalid mergewarden\.yml: agent_detection\.labels\.0/);
   });
 
   it("rejects planned config fields that are not implemented yet", () => {
@@ -342,7 +342,7 @@ version: 1
 risk_budget:
   max_files_changed_for_agent: 12
 `),
-    ).toThrow(/Invalid agent-gate\.yml: risk_budget/);
+    ).toThrow(/Invalid mergewarden\.yml: risk_budget/);
 
     expect(() =>
       parseConfig(`
@@ -350,7 +350,7 @@ version: 1
 dependencies:
   require_lockfile_update: true
 `),
-    ).toThrow(/Invalid agent-gate\.yml: dependencies/);
+    ).toThrow(/Invalid mergewarden\.yml: dependencies/);
 
     expect(() =>
       parseConfig(`
@@ -359,7 +359,7 @@ evidence:
   claim_vs_ci:
     enabled: true
 `),
-    ).toThrow(/Invalid agent-gate\.yml: evidence/);
+    ).toThrow(/Invalid mergewarden\.yml: evidence/);
   });
 
   it("rejects planned reviewer, rollback, and file-contract fields", () => {
@@ -370,7 +370,7 @@ contract:
   sources:
     - file
 `),
-    ).toThrow(/Invalid agent-gate\.yml: contract\.sources/);
+    ).toThrow(/Invalid mergewarden\.yml: contract\.sources/);
 
     expect(() =>
       parseConfig(`
@@ -382,7 +382,7 @@ high_risk_paths:
     require_reviewers:
       - "@security-team"
 `),
-    ).toThrow(/Invalid agent-gate\.yml: high_risk_paths\.auth\.require_reviewers/);
+    ).toThrow(/Invalid mergewarden\.yml: high_risk_paths\.auth\.require_reviewers/);
 
     expect(() =>
       parseConfig(`
@@ -393,7 +393,7 @@ high_risk_paths:
       - src/auth/**
     require_rollback_plan: true
 `),
-    ).toThrow(/Invalid agent-gate\.yml: high_risk_paths\.auth\.require_rollback_plan/);
+    ).toThrow(/Invalid mergewarden\.yml: high_risk_paths\.auth\.require_rollback_plan/);
 
     expect(() =>
       parseConfig(`
@@ -402,6 +402,6 @@ agent_control_plane:
   require_reviewers:
     - "@platform-team"
 `),
-    ).toThrow(/Invalid agent-gate\.yml: agent_control_plane\.require_reviewers/);
+    ).toThrow(/Invalid mergewarden\.yml: agent_control_plane\.require_reviewers/);
   });
 });

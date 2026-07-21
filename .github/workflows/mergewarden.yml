@@ -1,0 +1,35 @@
+name: MergeWarden
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+concurrency:
+  group: mergewarden-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  mergewarden:
+    name: MergeWarden
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run MergeWarden
+        uses: sjh9714/mergewarden/packages/action@main
+        with:
+          # No explicit config path: each action version loads its own default
+          # policy file name, which keeps this gate working across the
+          # agent-gate.yml -> mergewarden.yml rename.
+          mode: warn
+          fail-on-block: "false"
+          comment: "false"

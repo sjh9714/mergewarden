@@ -20,17 +20,17 @@ async function readPackageVersion(path: string): Promise<string> {
 
 async function readVersionConstant(path: string): Promise<string> {
   const source = await readFile(join(repoRoot, path), "utf8");
-  const match = source.match(/export const AGENT_GATE_VERSION = "([^"]+)";/);
+  const match = source.match(/export const MERGEWARDEN_VERSION = "([^"]+)";/);
 
   if (!match?.[1]) {
-    throw new Error(`${path} does not export AGENT_GATE_VERSION as a string constant`);
+    throw new Error(`${path} does not export MERGEWARDEN_VERSION as a string constant`);
   }
 
   return match[1];
 }
 
 describe("version consistency", () => {
-  it("keeps package versions and Agent Gate version constants in sync", async () => {
+  it("keeps package versions and MergeWarden version constants in sync", async () => {
     const versions = await Promise.all([
       readPackageVersion("package.json"),
       readPackageVersion("packages/core/package.json"),

@@ -7,7 +7,7 @@ feature request and clearly label it as a setup question.
 
 ## Bugs
 
-Use the bug report form with a sanitized report, Agent Gate version, Action or
+Use the bug report form with a sanitized report, MergeWarden version, Action or
 CLI invocation, and expected behavior. Never include tokens or private
 repository content.
 

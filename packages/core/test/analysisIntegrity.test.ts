@@ -14,7 +14,7 @@ describe("analysis integrity", () => {
       expectedFileCount: 3_001,
       analyzedFileCount: 3_000,
       contentFileCount: 0,
-      runtimeRef: "agent-gate@v0.3.0",
+      runtimeRef: "mergewarden@v0.3.0",
       gaps: [
         {
           ruleId: "analysis/file-list-incomplete",
@@ -48,7 +48,7 @@ describe("analysis integrity", () => {
       expectedFileCount: 2,
       analyzedFileCount: 1,
       contentFileCount: 0,
-      runtimeRef: "agent-gate@v0.3.0",
+      runtimeRef: "mergewarden@v0.3.0",
     };
 
     const result = await analyze(input);
@@ -104,11 +104,11 @@ describe("analysis integrity", () => {
 
     const report = renderMarkdownReport(result, {
       maxFindings: 1,
-      fullReportPath: "agent-gate-report.md",
+      fullReportPath: "mergewarden-report.md",
     });
 
     expect(report).toContain("1 finding omitted from this surface");
-    expect(report).toContain("Full report: agent-gate-report.md");
+    expect(report).toContain("Full report: mergewarden-report.md");
     expect(result.findings).toHaveLength(2);
   });
 });

@@ -84,7 +84,7 @@ export function highestActionableFinding(findings: Finding[]): Finding | undefin
 
 export function recommendedNextStep(result: AnalysisResult): string {
   if (result.status === "incomplete") {
-    return "Restore complete analysis evidence and rerun Agent Gate before merging.";
+    return "Restore complete analysis evidence and rerun MergeWarden before merging.";
   }
 
   const finding = highestActionableFinding(result.findings);

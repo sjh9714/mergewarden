@@ -48,19 +48,19 @@ importers:
       '@actions/github':
         specifier: ^9.1.1
         version: 9.1.1
-      '@agent-gate/core':
+      '@mergewarden/core':
         specifier: workspace:*
         version: link:../core
-      '@agent-gate/github':
+      '@mergewarden/github':
         specifier: workspace:*
         version: link:../github
 
   packages/cli:
     devDependencies:
-      '@agent-gate/core':
+      '@mergewarden/core':
         specifier: workspace:*
         version: link:../core
-      '@agent-gate/github':
+      '@mergewarden/github':
         specifier: workspace:*
         version: link:../github
 
@@ -82,7 +82,7 @@ importers:
 
   packages/github:
     dependencies:
-      '@agent-gate/core':
+      '@mergewarden/core':
         specifier: workspace:*
         version: link:../core
 

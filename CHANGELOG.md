@@ -1,13 +1,29 @@
 # Changelog
 
-All notable changes to Agent Gate will be documented in this file.
+All notable changes to MergeWarden (formerly Agent Gate) will be documented in
+this file.
 
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
-No unreleased changes yet.
+### Changed
+
+- Rename the project from Agent Gate to MergeWarden. The GitHub repository is
+  now `sjh9714/mergewarden`, the npm package is the unscoped `mergewarden`, and
+  the executable is `mergewarden`. Old repository URLs redirect; the npm scoped
+  package `@jinhyuk9714/agent-gate` remains at v0.3.1 and is deprecated.
+- Rename the base-branch policy file from `agent-gate.yml` to `mergewarden.yml`
+  and the PR body contract marker from `agent-gate-contract` to
+  `mergewarden-contract`. This is a clean break with no compatibility alias;
+  see the [v0.4.0 migration guide](docs/migration-v0.4.0.md).
+- Rename default report outputs to `mergewarden-report.json` and
+  `mergewarden-report.md`, and environment/constant prefixes from `AGENT_GATE`
+  to `MERGEWARDEN`. Finding IDs keep the `agf_` prefix so existing waivers
+  remain valid.
+- Entries below this point predate the rename and intentionally keep the
+  original Agent Gate names.
 
 ## v0.3.1 - 2026-07-10
 

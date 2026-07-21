@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { GitHubApiError } from "@agent-gate/github";
+import { GitHubApiError } from "@mergewarden/github";
 import { NativeGitHubApi } from "../src/githubApi.js";
 
 const pullResponse = {
@@ -117,7 +117,7 @@ describe("native GitHub API adapter", () => {
       found.getTextFile({ owner: "owner", repo: "project" }, "policies/gate.yml", "base-sha"),
     ).resolves.toEqual({ kind: "found", text: "version: 1\n" });
     await expect(
-      missing.getTextFile({ owner: "owner", repo: "project" }, "agent-gate.yml", "base-sha"),
+      missing.getTextFile({ owner: "owner", repo: "project" }, "mergewarden.yml", "base-sha"),
     ).resolves.toEqual({ kind: "not-found" });
   });
 

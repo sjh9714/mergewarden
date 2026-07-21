@@ -1,11 +1,11 @@
 # Evidence Snapshot Example
 
-This is the kind of report proof Agent Gate is aiming for: a human-first
+This is the kind of report proof MergeWarden is aiming for: a human-first
 decision, a stable finding ID, and enough recorded evidence to understand why
 the finding fired.
 
 ```text
-Agent Gate: NEEDS REVIEW
+MergeWarden: NEEDS REVIEW
 Decision: warn
 Why: contents permission increased from read to write.
 Path: .github/workflows/release.yml
@@ -43,4 +43,4 @@ The finding ID is the short audit handle. The evidence snapshot is the
 re-derivation material. Severity is recorded for display but excluded from the
 v0.3 fingerprint, so tuning `warn` to `error` preserves the same identity. This
 is not a semantic correctness claim; it is a stable record of the deterministic
-inputs that caused Agent Gate to surface the finding.
+inputs that caused MergeWarden to surface the finding.

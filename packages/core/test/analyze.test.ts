@@ -14,7 +14,7 @@ describe("analyze", () => {
       status: "passed",
       riskScore: 0,
       summary: {
-        title: "Agent Gate: passed",
+        title: "MergeWarden: passed",
         agentDetected: false,
         contractPresent: false,
         errorCount: 0,

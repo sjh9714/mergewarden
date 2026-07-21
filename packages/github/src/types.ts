@@ -1,4 +1,4 @@
-import type { AgentGateConfig, AnalysisInput } from "@agent-gate/core";
+import type { MergeWardenConfig, AnalysisInput } from "@mergewarden/core";
 
 export interface PullRequestLocator {
   owner: string;
@@ -63,7 +63,7 @@ export interface RetryOptions {
 
 export interface LoadGitHubAnalysisOptions {
   configPath: string;
-  modeOverride?: AgentGateConfig["mode"];
+  modeOverride?: MergeWardenConfig["mode"];
   now: string;
   engineVersion: string;
   runtimeRef: string;

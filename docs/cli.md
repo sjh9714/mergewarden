@@ -6,26 +6,26 @@ target repository.
 ## Commands
 
 ```text
-agent-gate scan OWNER/REPO#NUMBER
-agent-gate scan https://github.com/OWNER/REPO/pull/NUMBER
-agent-gate replay FIXTURE_DIR
-agent-gate --help
-agent-gate --version
+mergewarden scan OWNER/REPO#NUMBER
+mergewarden scan https://github.com/OWNER/REPO/pull/NUMBER
+mergewarden replay FIXTURE_DIR
+mergewarden --help
+mergewarden --version
 ```
 
 Run without installing:
 
 ```bash
-npx --yes @jinhyuk9714/agent-gate@0.3.1 scan owner/repository#123
+npx --yes mergewarden@0.4.0 scan owner/repository#123
 ```
 
 ## Scan Options
 
-| Option     | Values                      | Default          |
-| ---------- | --------------------------- | ---------------- |
-| `--format` | `human`, `json`, `markdown` | `human`          |
-| `--config` | Base-branch repository path | `agent-gate.yml` |
-| `--mode`   | `observe`, `warn`, `block`  | Config value     |
+| Option     | Values                      | Default           |
+| ---------- | --------------------------- | ----------------- |
+| `--format` | `human`, `json`, `markdown` | `human`           |
+| `--config` | Base-branch repository path | `mergewarden.yml` |
+| `--mode`   | `observe`, `warn`, `block`  | Config value      |
 
 Config paths must be relative repository paths without `..`. The CLI always
 loads them from the exact base SHA, never from the PR head.
@@ -57,7 +57,7 @@ boundary and preserve any further omitted count.
 
 ## API Reliability
 
-Each GitHub request has a 30-second timeout. Agent Gate makes at most three
+Each GitHub request has a 30-second timeout. MergeWarden makes at most three
 attempts for network failures, HTTP 502/503/504, and confirmed rate limits,
 while bounding additional retry waits to 60 seconds. `Retry-After` and GitHub's
 reset time are honored; ordinary permission-denied 403 responses are not

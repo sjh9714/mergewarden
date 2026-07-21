@@ -19,4 +19,4 @@ Evidence:
 
 Remediation:
 
-- Reduce or split the pull request, then rerun Agent Gate with a complete file list.
+- Reduce or split the pull request, then rerun MergeWarden with a complete file list.

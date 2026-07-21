@@ -18,9 +18,9 @@
 - [ ] Confirmed JSON decisions remain compatible, or documented the breaking change
 - [ ] No tags, releases, package publishing, repository settings, or Marketplace settings changed unless explicitly intended
 
-## Optional Agent Gate Contract
+## Optional MergeWarden Contract
 
-For AI-generated PRs, add an `agent-gate-contract` block to the PR body only
+For AI-generated PRs, add an `mergewarden-contract` block to the PR body only
 when you want scope enforcement for this PR.
 
 Do not leave placeholder contracts in the PR body. See README for the contract

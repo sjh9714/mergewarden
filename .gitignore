@@ -6,3 +6,4 @@ coverage/
 .turbo/
 .DS_Store
 *.tsbuildinfo
+tools/study/data/

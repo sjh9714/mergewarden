@@ -1,4 +1,4 @@
-# Agent Gate: NEEDS REVIEW
+# MergeWarden: NEEDS REVIEW
 
 Decision: warn
 Status: needs-review
