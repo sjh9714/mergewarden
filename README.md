@@ -28,11 +28,27 @@ Every decision includes deterministic evidence that can be replayed locally.
 MergeWarden was formerly named Agent Gate; old links redirect and pre-v0.4.0
 proofs show the original name.
 
-[Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
+[What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 
 ![Report from a real v0.4.0 scan of a public composite PR](docs/assets/mergewarden-report-v0.4.0.png)
 
 _Real checkout-free report from [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29817195616)._
+
+## What 2,204 Real Agent PRs Showed
+
+We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
+agent, Codex, Claude Code, Cursor) on public repositories with the default
+policy:
+
+- **0 of 2,204** declared a machine-readable scope for the change.
+- Of the 349 PRs that touched workflows or package manifests, **12.9%**
+  escalated workflow permissions and **17.5%** introduced unpinned actions.
+- **3.9%** changed agent control-plane files (`AGENTS.md`, `.mcp.json`, and
+  similar) — the files that steer every future agent PR.
+- Repositories with 10k+ stars showed roughly **half** the finding rate of the
+  long tail.
+
+Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
 
 ## Try It in 60 Seconds
 
