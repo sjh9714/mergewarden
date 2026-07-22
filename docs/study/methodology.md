@@ -1,8 +1,8 @@
 # AI-Agent PR Scan Study: Methodology
 
-Status: draft — numbers land here only after `tools/study/aggregate.mjs`
-produces them from the full run. Every published number must be reproducible
-from the queries and commands on this page.
+Data: combined runs of 2026-07-20/21, aggregated by
+`tools/study/aggregate.mjs`. Every published number is reproducible from the
+queries and commands on this page.
 
 ## What We Measured
 
