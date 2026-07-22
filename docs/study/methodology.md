@@ -2,7 +2,8 @@
 
 Data: combined runs of 2026-07-20/21, aggregated by
 `tools/study/aggregate.mjs`. Every published number is reproducible from the
-queries and commands on this page.
+queries and commands on this page. For the narrative version of the results,
+read [What 2,204 agent PRs showed](what-2204-agent-prs-showed.md).
 
 ## What We Measured
 
