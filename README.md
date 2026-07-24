@@ -286,6 +286,11 @@ Every rule requires passing and failing fixtures, exact rule/severity/decision
 assertions, and a Markdown snapshot for user-facing findings. Start with the
 [contribution guide](CONTRIBUTING.md).
 
+New here? The
+[good first issues](https://github.com/sjh9714/mergewarden/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+are scoped small on purpose: each one names the file to touch, the command
+that verifies it, and what "done" means. Docs-only ones need no local setup.
+
 ## Documentation
 
 - [Documentation index](docs/README.md) — full list of guides and references
