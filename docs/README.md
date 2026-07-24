@@ -17,6 +17,8 @@ requests. Start with the shortest path for your task:
   and CLAUDE.md wiring.
 - [Gating Codex PRs](integrations/codex.md): detection, contracts, and
   AGENTS.md wiring.
+- [Gating Cursor background agent PRs](integrations/cursor.md): detection,
+  contracts, and project-rule wiring.
 - [Roadmap](roadmap.md): current product direction without date promises.
 - [Agentic workflow injection rule](rules/agentic-workflow-injection.md): exact
   sources, sinks, severity, and limits.
