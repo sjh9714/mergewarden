@@ -10,6 +10,8 @@ requests. Start with the shortest path for your task:
 - [Your first report](first-report.md): status labels and next actions.
 - [Evidence model](evidence-model.md): finding IDs and reproducibility metadata.
 - [Security model](security-model.md): trust boundaries and known limitations.
+- [Enforce an AI-contribution policy](enforce-ai-contribution-policy.md): a
+  copy-paste preset for the checkable clauses of your policy.
 - [What 2,204 agent PRs showed](study/what-2204-agent-prs-showed.md): the scan
   study narrative; [methodology](study/methodology.md) has every query.
 - [Demo PRs](demo-prs.md): verified external Action runs.

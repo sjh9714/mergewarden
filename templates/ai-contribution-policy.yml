@@ -1,0 +1,62 @@
+# MergeWarden preset: enforce the checkable half of an AI-contribution policy.
+#
+# Most AI-contribution policies (Apache, the Linux Foundation, OpenSSF, Bitcoin
+# Core, ripgrep, uv, ...) are prose in CONTRIBUTING.md. This file turns the
+# three clauses a machine can actually check into deterministic CI findings.
+# No LLM, no checkout of PR code.
+#
+# Put this file at the base of your default branch as `mergewarden.yml`, then
+# add the Action (templates/mergewarden-observe.yml). Start in `warn`.
+
+version: 1
+mode: warn
+
+# 1) "No autonomous-agent PRs" — the one enforceable authorship clause.
+#    Autonomous-agent PRs arrive on these branches / from these bots. Detection
+#    is a heuristic for *which PRs must carry a scope contract*, not proof of
+#    authorship.
+agent_detection:
+  labels: [ai, agent, codex, claude, cursor, copilot]
+  branch_patterns:
+    - "codex/**"
+    - "claude/**"
+    - "cursor/**"
+    - "copilot/**"
+    - "devin/**"
+    - "ai/**"
+  authors:
+    - "devin-ai-integration[bot]"
+    - "copilot-swe-agent[bot]"
+
+# Require agent PRs to declare their intended scope in the PR body. Edits
+# outside allowed_paths then become `contract/out-of-scope` findings. The
+# contract is an untrusted declaration; this base policy stays authoritative.
+contract:
+  required_for: [agent]
+  allow_missing_in_observe_mode: true
+
+# 2) "Don't touch the files that steer future agents" — control-plane drift.
+#    AGENTS.md / CLAUDE.md / .cursor/** / .mcp.json and friends configure how
+#    every *future* agent behaves; an agent editing its own instructions is a
+#    quiet privilege-escalation path. Surfaced for mandatory human review.
+agent_control_plane:
+  severity: error
+
+# 3) "Don't quietly escalate CI permissions / add unpinned supply chain" —
+#    differential workflow checks (base vs head), so only what the PR *changed*
+#    is reported, never pre-existing conditions.
+github_actions:
+  checks:
+    permission_escalation: error # contents: read -> write, etc.
+    write_all: error
+    id_token_write: warn # OIDC minting
+    pull_request_target_head: error # attacker-controlled head checkout
+    unpinned_action: warn
+    unpinned_reusable_workflow: warn
+    unpinned_container: warn
+    added_secret_reference: warn
+
+# Package lifecycle scripts (postinstall/prepare) that would execute on install.
+package_scripts:
+  enabled: true
+  severity: warn

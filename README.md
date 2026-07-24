@@ -140,7 +140,11 @@ and a stable finding ID.
 
 ## Minimal Policy
 
-Add `mergewarden.yml` to the base branch when you are ready to tune behavior:
+Already have an AI-contribution policy (Apache / OpenSSF / Bitcoin Core
+lineage)? The [`ai-contribution-policy.yml`](templates/ai-contribution-policy.yml)
+preset enforces its checkable clauses in one copy-paste — see
+[Enforce a policy](docs/enforce-ai-contribution-policy.md). Or add
+`mergewarden.yml` to the base branch when you are ready to tune behavior:
 
 ```yaml
 version: 1
@@ -283,13 +287,8 @@ assertions, and a Markdown snapshot for user-facing findings. Start with the
 
 ## Documentation
 
-- [Documentation index](docs/README.md)
-- [Getting started](docs/getting-started.md)
-- [CLI reference](docs/cli.md)
-- [Configuration](docs/configuration.md)
-- [First report](docs/first-report.md)
-- [Security model](docs/security-model.md)
-- [Roadmap](docs/roadmap.md)
+- [Documentation index](docs/README.md) — full list of guides and references
+- [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
 
 If MergeWarden catches a real boundary crossing in your repository, a GitHub
 Star is a simple way to tell us the project is useful.
