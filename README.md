@@ -25,8 +25,9 @@ It does not execute pull-request code, load policy from the PR head, or call
 an LLM at runtime.
 Every decision includes deterministic evidence that can be replayed locally.
 
-MergeWarden was formerly named Agent Gate; old links redirect and pre-v0.4.0
-proofs show the original name.
+MergeWarden gates its own pull requests — the `MergeWarden` badge above is that
+live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)).
+Formerly named Agent Gate; old links redirect and pre-v0.4.0 proofs use that name.
 
 [What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 

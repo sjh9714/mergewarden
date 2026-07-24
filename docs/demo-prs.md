@@ -3,6 +3,25 @@
 This page collects concrete MergeWarden examples. Live sandbox pull requests are
 separate from local replay fixtures and are not external adopter claims.
 
+## Dogfooding: MergeWarden gates its own PRs
+
+MergeWarden runs on every pull request to this repository. The self-gate is a
+[base policy](../mergewarden.yml) plus a
+[checkout-free workflow](../.github/workflows/mergewarden.yml) that pins the
+Action — the same 30-second setup this project recommends to everyone else. The
+`MergeWarden` badge at the top of the README is that check's live status.
+
+This is not a sandbox: it gates real contributions, including ones from outside
+maintainers and coding agents. For example,
+[PR #120](https://github.com/sjh9714/mergewarden/pull/120) — an external
+contributor's PR on a `codex/**` agent branch — was detected as an agent PR and
+passed the [MergeWarden check](https://github.com/sjh9714/mergewarden/actions/runs/30059170947/job/89457928415)
+because it declared a `mergewarden-contract` and stayed inside its declared
+scope. That is the happy path the tool is built to make cheap.
+
+If you adopt MergeWarden and it catches a real boundary crossing in your
+repository, we would genuinely like to hear about it in an issue.
+
 Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
