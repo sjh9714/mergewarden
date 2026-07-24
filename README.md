@@ -283,13 +283,8 @@ pnpm format:check
 ```
 
 Every rule requires passing and failing fixtures, exact rule/severity/decision
-assertions, and a Markdown snapshot for user-facing findings. Start with the
-[contribution guide](CONTRIBUTING.md).
-
-New here? The
-[good first issues](https://github.com/sjh9714/mergewarden/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-are scoped small on purpose: each one names the file to touch, the command
-that verifies it, and what "done" means. Docs-only ones need no local setup.
+assertions, and a Markdown snapshot for user-facing findings. Start with a
+[good first issue](https://github.com/sjh9714/mergewarden/labels/good%20first%20issue) — each names its file, verify command, and done criteria — or the [contribution guide](CONTRIBUTING.md).
 
 ## Documentation
 
