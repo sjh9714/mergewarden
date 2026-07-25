@@ -290,19 +290,65 @@ npx --yes mergewarden demo
 
 ## Product Hunt launch day (scheduled Tue 2026-07-28)
 
-Launch goes live 2026-07-28 at 12:01am PT (4:01pm KST) for 24 hours. The draft
-(name, tagline, 3 gallery images, custom logo, first comment) is complete and
-scheduled. Goal for the day: genuine first-hour engagement. No upvote-begging,
-no cold DMs, no upvote services — Product Hunt removes launches for that.
+Launch goes live 2026-07-28 at 12:01am PT (4:01pm KST) for 24 hours. Name,
+tagline, gallery, logo and description are set and scheduled. Goal for the day:
+genuine first-hour engagement. No upvote-begging, no cold DMs, no upvote
+services — Product Hunt removes launches for that.
 
-### Before launch day
+Done already: the description now leads with `npx mergewarden demo` (488/500
+chars), and pricing is marked Free.
 
-The Product Hunt draft (description, maker first comment) was written before
-`mergewarden demo` existed and leads with `npx mergewarden scan owner/repo#123`.
-Update both to lead with `demo` at
-`producthunt.com/posts/mergewarden/edit` — `scan` asks a visitor to go find a
-pull request before they see anything, which is the exact friction `demo`
-removes.
+### Maker's first comment (post immediately after the launch goes live)
+
+There is **no field for this in the launch editor** — it is posted by hand as
+the first comment on the live page, so it has to be ready to paste. It is the
+most-read text of the launch after the tagline.
+
+> Hi Product Hunt 👋 I built MergeWarden.
+>
+> Coding agents open pull requests all day now. The review process for them is
+> still a human reading a diff and hoping to notice the one file that didn't
+> belong.
+>
+> Before building anything I wanted to know whether that was a real problem, so
+> I scanned 2,204 recently merged agent-authored PRs (Devin, Copilot coding
+> agent, Codex, Claude Code, Cursor) on public repos. Of the 349 that touched CI
+> workflows or package manifests, 12.9% escalated workflow permissions and 17.5%
+> added unpinned actions. 3.9% edited the agent instruction files — AGENTS.md,
+> CLAUDE.md, .mcp.json — that steer every future agent run in that repo.
+>
+> Most of those are probably intended. That's the actual problem: 0 of 2,204
+> declared what they meant to change, so a reviewer has no way to tell which.
+>
+> MergeWarden is the gate for that. It checks whether a PR stayed inside the
+> scope it declared, whether it touched the agent control plane, and whether it
+> wired untrusted text into an agentic workflow's prompt. It never checks out or
+> executes PR code, never reads its policy from the PR's own branch, and never
+> calls an LLM — so every finding is deterministic and replays locally.
+>
+> You can see exactly what it reports in one command. No token, no repo, no
+> signup:
+>
+> npx --yes mergewarden demo
+>
+> Honest limits: findings are review evidence, not verdicts, and "false
+> positive" here means "a boundary your team decided was fine" — which is why
+> every check is tunable and every finding waivable by ID. Agent detection is a
+> heuristic, not proof of authorship. And it doesn't judge code quality at all.
+>
+> The question I'd genuinely like answered: how is your team reviewing
+> agent-opened PRs today? Is anyone asking agents to declare scope up front, or
+> is reading the diff still the whole process? MIT, and I'll be here all day.
+
+Trim if PH truncates; the first three paragraphs and the `demo` command are the
+part that must survive.
+
+### If the launch does not go well
+
+Rank is mostly out of our control and PH traffic is not the point — the point is
+that anyone who arrives can see the tool do something in one command. Record
+what happened, keep the comment thread answered, and move on to the channels
+below. Do not extend the launch by asking people for support.
 
 ### The morning it goes live (do these, in order)
 
