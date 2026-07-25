@@ -28,7 +28,7 @@ Every decision includes deterministic evidence that can be replayed locally.
 MergeWarden gates its own pull requests — the `MergeWarden` badge above is that
 live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)).
 
-[What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
+[What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md) · [简体中文](README.zh-CN.md)
 
 ![Report from a real v0.4.0 scan of a public composite PR](docs/assets/mergewarden-report-v0.4.0.png)
 
