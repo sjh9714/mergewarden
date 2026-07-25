@@ -353,14 +353,51 @@ below. Do not extend the launch by asking people for support.
 ### The morning it goes live (do these, in order)
 
 1. Open the PH launch page and confirm it's live on the homepage.
-2. Post the X note below (share the link, don't ask for upvotes).
-3. Post the GitHub Discussion / pinned-issue note below so repo visitors see it.
+2. Post the maker's first comment below. It is the highest-value single action
+   of the day and there is no field for it in the launch editor.
+3. Post the GitHub Discussion note below (Announcements category) so repo
+   visitors see it.
 4. Reply to every PH comment within the hour, all day. Speed of maker replies
    is the single biggest lever on ranking.
-5. If anyone who already engaged (polar/MONAI threads, haystack, contributors)
+5. If anyone who already engaged (ecogetaway, microcks, the two contributors)
    is on PH, a genuine heads-up is fine — but never "please upvote."
+6. Optional, low value: the X post below. See the note on it first.
 
-### X post (launch morning)
+### What has actually worked, and what has not
+
+Worth reading before deciding where to spend launch day, because the evidence is
+one-sided.
+
+**Broadcast channels have rejected this project four times.** Show HN flagged and
+killed twice with three unanswered moderator emails; an r/ClaudeAI post removed;
+and on 2026-07-25 the X account was automatically suspended for "inauthentic
+behaviors" and restored two hours later on appeal with no violation found. The
+common factor is a low-history account posting promotional content — which is
+what every one of those attempts was.
+
+**Participation channels have produced everything the project has.** Both
+external contributors came from good-first-issue aggregators. The
+`oss-ai-contribution-policy` maintainer relationship and the September pilot came
+from answering a schema question with data. A CNCF org contributor adopted our
+pull-request template wording verbatim after we read their draft and commented on
+it. Every one of those started by being useful inside someone else's thread.
+
+Plan accordingly: Product Hunt is a one-day broadcast and should be treated as
+such. The durable work after it is participation.
+
+### X post (launch morning) — optional, and read this first
+
+**The account has 0 followers**, joined February 2026, and has 14 posts, none
+about developer tooling. Organic reach is approximately zero, so this is not a
+distribution channel — at most it is a link that exists if someone looks for it.
+
+**It was auto-suspended on 2026-07-25 for "inauthentic behaviors"** and restored
+the same day on appeal. Posting a promotional link with a URL from a
+freshly-restored, low-history account is exactly the shape that triggered it. The
+downside of a second suspension is worse than the upside of a post nobody sees.
+
+If posting anyway: post it as a plain note, no thread, no hashtags, no repeated
+posting through the day, and do not delete-and-repost if engagement is low.
 
 > MergeWarden is live on Product Hunt today 🚀
 >
