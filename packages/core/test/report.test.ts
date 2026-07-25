@@ -686,6 +686,38 @@ describe("report renderers", () => {
     expect(collapsed).toContain("Remediation:");
   });
 
+  it("does not restate the path when the finding message already names it", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: warn\n"),
+        contract: { kind: "valid", contract: { version: 1, allowed_paths: ["src/auth/**"] } },
+        files: [fileChange(".github/workflows/demo-release.yml")],
+      }),
+    );
+
+    const why = renderMarkdownReport(result, { collapseFindings: true })
+      .split("\n")
+      .find((line) => line.startsWith("**Why:**"));
+
+    expect(why).toBeDefined();
+    expect(why?.match(/demo-release\.yml/g)).toHaveLength(1);
+  });
+
+  it("appends the path when the finding message omits it", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: warn\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const why = renderMarkdownReport(result, { collapseFindings: true })
+      .split("\n")
+      .find((line) => line.startsWith("**Why:**"));
+
+    expect(why).toContain("(`AGENTS.md`)");
+  });
+
   it("labels the collapsed summary with waived counts", async () => {
     const result = await analyze(
       createAnalysisInput({

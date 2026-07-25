@@ -53,7 +53,16 @@ function whyLine(result: AnalysisResult): string {
   }
 
   const message = safeReportValue(finding.message);
-  return finding.path ? `${message} (\`${safeReportValue(finding.path)}\`)` : message;
+
+  if (!finding.path) {
+    return message;
+  }
+
+  const path = safeReportValue(finding.path);
+
+  // Most rule messages already name the file they are about. Appending it again is exactly the
+  // kind of restatement this compact header exists to remove.
+  return message.includes(path) ? message : `${message} (\`${path}\`)`;
 }
 
 function countsLine(result: AnalysisResult): string {

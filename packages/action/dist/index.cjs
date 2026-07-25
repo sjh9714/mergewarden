@@ -50117,7 +50117,11 @@ function whyLine(result) {
     return result.waivedFindings.length > 0 ? "All detected findings are covered by active base-policy waivers." : "No active warning or blocking findings were detected.";
   }
   const message = safeReportValue(finding2.message);
-  return finding2.path ? `${message} (\`${safeReportValue(finding2.path)}\`)` : message;
+  if (!finding2.path) {
+    return message;
+  }
+  const path = safeReportValue(finding2.path);
+  return message.includes(path) ? message : `${message} (\`${path}\`)`;
 }
 function countsLine(result) {
   const parts = [
