@@ -26,6 +26,23 @@ Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
+## v0.6.0 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30169314930
+- Action ref: `sjh9714/mergewarden@ec38a1dd467d04fa69a983a3b54ae6fb70f5aba6`
+- Checkout step: not used
+- Final decision: `warn`
+- Findings: 9 error, 2 warning, 1 info
+- Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
+
+Unchanged from v0.5.1, and here the reason is specific: this pull request
+**declares a contract**, so `contract/missing` — the rule v0.6.0 softened — never
+fires on it. The finding driving the decision is `contract/out-of-scope`, which
+stays `error` by design. A proof that a rule changed would need a pull request
+without a contract; that evidence is the two real agent pull requests in the
+[release notes](release-notes-v0.6.0.md).
+
 ## v0.5.1 Public Composite Proof
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
