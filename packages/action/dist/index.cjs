@@ -48303,7 +48303,7 @@ var contractInvalidRule = {
       "contract/invalid",
       "error",
       "Invalid agent contract",
-      "This PR contains an mergewarden contract, but it could not be parsed."
+      "This PR contains a MergeWarden contract, but it could not be parsed."
     );
     finding2.evidence.push({ label: "parser_message", value: ctx.input.contract.message });
     finding2.remediation.push("Fix the mergewarden contract block in the PR body.");
@@ -48317,18 +48317,19 @@ var contractMissingRule = {
     if (ctx.input.contract.kind !== "missing" || !contractRequired(ctx)) {
       return [];
     }
-    const severity = ctx.input.config.mode === "observe" && ctx.input.config.contract.allow_missing_in_observe_mode ? "warn" : "error";
+    const configured = ctx.input.config.contract.missing_severity;
+    const severity = ctx.input.config.mode === "observe" && ctx.input.config.contract.allow_missing_in_observe_mode ? "warn" : configured;
     const finding2 = baseFinding(
       "contract/missing",
       severity,
       "Missing agent contract",
-      "Agent-generated PRs must include an mergewarden contract."
+      "Agent-generated PRs must include a MergeWarden contract."
     );
     finding2.evidence.push({
       label: "required_for",
       value: ctx.input.config.contract.required_for.join(", ")
     });
-    finding2.remediation.push("Add an mergewarden contract block to the PR body.");
+    finding2.remediation.push("Add a MergeWarden contract block to the PR body.");
     return [finding2];
   }
 };
@@ -49677,7 +49678,22 @@ var AgentDetectionSchema = external_exports.object({
 }).strict();
 var ContractConfigSchema = external_exports.object({
   required_for: external_exports.array(external_exports.enum(["agent", "all"])).default(["agent"]),
-  allow_missing_in_observe_mode: external_exports.boolean().default(true)
+  allow_missing_in_observe_mode: external_exports.boolean().default(true),
+  /**
+   * Severity of `contract/missing` only — not of the other contract rules.
+   *
+   * It defaults to `warn` rather than `error` because it is the one rule that fires on the
+   * absence of a convention instead of on something a pull request did. The scan study found
+   * 0 of 2,204 merged agent pull requests declaring a scope, so on `mode: block` an `error`
+   * default would reject essentially every agent pull request on the day it is switched on,
+   * for a condition the repository cannot fix by reviewing the change. Teams that do want
+   * declaration enforced set this to `error` deliberately.
+   *
+   * `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay `error`:
+   * each of those fires on something the pull request actually did against its own
+   * declaration.
+   */
+  missing_severity: SeveritySettingSchema.default("warn")
 }).strict();
 var HighRiskPathAreaSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).min(1),
@@ -49828,7 +49844,8 @@ var MergeWardenConfigSchema = external_exports.object({
   }),
   contract: ContractConfigSchema.default({
     required_for: ["agent"],
-    allow_missing_in_observe_mode: true
+    allow_missing_in_observe_mode: true,
+    missing_severity: "warn"
   }),
   high_risk_paths: external_exports.record(external_exports.string(), HighRiskPathAreaSchema).default({}),
   agent_control_plane: AgentControlPlaneSchema.default({

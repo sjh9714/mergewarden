@@ -80,6 +80,21 @@ const ContractConfigSchema = z
   .object({
     required_for: z.array(z.enum(["agent", "all"])).default(["agent"]),
     allow_missing_in_observe_mode: z.boolean().default(true),
+    /**
+     * Severity of `contract/missing` only — not of the other contract rules.
+     *
+     * It defaults to `warn` rather than `error` because it is the one rule that fires on the
+     * absence of a convention instead of on something a pull request did. The scan study found
+     * 0 of 2,204 merged agent pull requests declaring a scope, so on `mode: block` an `error`
+     * default would reject essentially every agent pull request on the day it is switched on,
+     * for a condition the repository cannot fix by reviewing the change. Teams that do want
+     * declaration enforced set this to `error` deliberately.
+     *
+     * `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay `error`:
+     * each of those fires on something the pull request actually did against its own
+     * declaration.
+     */
+    missing_severity: SeveritySettingSchema.default("warn"),
   })
   .strict();
 
@@ -295,6 +310,7 @@ export const MergeWardenConfigSchema = z
     contract: ContractConfigSchema.default({
       required_for: ["agent"],
       allow_missing_in_observe_mode: true,
+      missing_severity: "warn",
     }),
     high_risk_paths: z.record(z.string(), HighRiskPathAreaSchema).default({}),
     agent_control_plane: AgentControlPlaneSchema.default({

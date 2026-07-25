@@ -24,6 +24,7 @@ agent_detection:
 contract:
   required_for: [agent]
   allow_missing_in_observe_mode: true
+  missing_severity: warn
 ```
 
 Those are the **defaults**, not a suggestion — they are the cohort definitions from the
@@ -48,6 +49,17 @@ blocked_paths:
 
 The contract is an untrusted declaration. `required_evidence` was removed in
 v0.3.0 because it had no enforceable deterministic semantics.
+
+`missing_severity` applies to `contract/missing` only. It defaults to `warn`
+because that rule fires on the _absence_ of a convention rather than on
+something a pull request did, and the [scan study](study/methodology.md) found
+0 of 2,204 merged agent pull requests declaring a scope — so an `error` default
+would make `mode: block` reject essentially every agent pull request the day it
+is switched on. Set it to `error` once your contributors do declare scope.
+
+`contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay
+`error` regardless: each fires on something the pull request did against its
+own declaration.
 
 ## High-Risk Paths
 

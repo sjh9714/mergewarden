@@ -6,6 +6,40 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- Three user-facing strings said **"an mergewarden contract"** — leftovers from the
+  v0.4.0 rename. `contract/missing` is the most frequently emitted finding in the
+  whole ruleset now that detection works, so this was the sentence most new installs
+  would see first. Now "a MergeWarden contract".
+
+### Changed
+
+- **`contract/missing` now defaults to `warn` instead of `error`**, and its severity is
+  configurable as `contract.missing_severity`.
+
+  It is the one rule that fires on the _absence_ of a convention rather than on
+  something a pull request did, and the scan study measured **0 of 2,204** merged agent
+  pull requests declaring a scope. At `error`, following this project's own documented
+  adoption path to `mode: block` would reject essentially every agent pull request from
+  the moment it was switched on — for a condition a reviewer cannot resolve by reviewing
+  the change. It also made a missing declaration exactly as severe as an observed
+  privilege escalation, which flattened the signal the tool exists to provide.
+
+  Verified on two real agent pull requests. One that only lacks a contract now warns and
+  does not block; one that also edits an agent instruction file still blocks, on the
+  drift finding. `contract` was also the only rule family with no severity control, so
+  this closes that inconsistency.
+
+  In the default `warn` mode the decision is unchanged — it was `needs-review` before and
+  still is. What changes is that the report no longer calls it an error. Repositories that
+  do want declaration enforced set `contract.missing_severity: error`.
+
+  `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` remain `error`:
+  each fires on something a pull request did against its own declaration.
+
 ## v0.5.1 - 2026-07-25
 
 ### Fixed

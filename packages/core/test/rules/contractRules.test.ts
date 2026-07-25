@@ -13,7 +13,7 @@ const validAuthContract: ParseContractResult = {
 };
 
 describe("contract rules", () => {
-  it("emits contract/missing for agent PRs without contracts", async () => {
+  it("emits contract/missing for agent PRs without contracts, warning rather than blocking", async () => {
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig(
@@ -23,11 +23,55 @@ describe("contract rules", () => {
       }),
     );
 
-    expect(result.decision).toBe("block");
+    // Deliberately not "block". This is the one rule that fires on the absence of a
+    // convention rather than on something the PR did, and the scan study measured 0 of
+    // 2,204 agent PRs declaring a scope — so blocking by default would reject every agent
+    // PR the day a repository switches to block mode. Opt in with contract.missing_severity.
+    expect(result.decision).toBe("warn");
     expect(result.findings.map((finding) => finding.ruleId)).toEqual([
       "agent/origin-detected",
       "contract/missing",
     ]);
+  });
+
+  it("blocks a missing contract when the repository opts in with missing_severity", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig(
+          [
+            "version: 1",
+            "mode: block",
+            "agent_detection:",
+            "  labels:",
+            "    - ai-generated",
+            "contract:",
+            "  missing_severity: error",
+            "",
+          ].join("\n"),
+        ),
+        pr: { labels: ["ai-generated"] },
+      }),
+    );
+
+    expect(result.decision).toBe("block");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ ruleId: "contract/missing", severity: "error" }),
+    );
+  });
+
+  it("keeps an out-of-scope change blocking even though a missing contract only warns", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        contract: validAuthContract,
+        files: [fileChange("src/billing/invoice.ts")],
+      }),
+    );
+
+    expect(result.decision).toBe("block");
+    expect(result.findings).toContainEqual(
+      expect.objectContaining({ ruleId: "contract/out-of-scope", severity: "error" }),
+    );
   });
 
   it("passes non-agent PRs without contracts when contracts are required only for agents", async () => {
@@ -48,7 +92,7 @@ describe("contract rules", () => {
       }),
     );
 
-    expect(result.decision).toBe("block");
+    expect(result.decision).toBe("warn");
     expect(result.findings.map((finding) => finding.ruleId)).toEqual(["contract/missing"]);
   });
 

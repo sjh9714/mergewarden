@@ -24,6 +24,7 @@ describe("parseConfig", () => {
     expect(config.contract).toEqual({
       required_for: ["agent"],
       allow_missing_in_observe_mode: true,
+      missing_severity: "warn",
     });
   });
 
