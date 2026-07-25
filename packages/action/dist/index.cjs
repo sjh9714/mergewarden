@@ -49663,7 +49663,10 @@ var DEFAULT_AGENT_BRANCH_PATTERNS = [
   "copilot/**",
   "devin/**"
 ];
-var DEFAULT_AGENT_BODY_PATTERNS = ["Generated with Claude Code"];
+var DEFAULT_AGENT_BODY_PATTERNS = [
+  "Generated with [Claude Code]",
+  "Generated with Claude Code"
+];
 var SeveritySettingSchema = external_exports.enum(["warn", "error"]);
 var CheckSettingSchema = external_exports.enum(["off", "warn", "error"]);
 var AgentDetectionSchema = external_exports.object({

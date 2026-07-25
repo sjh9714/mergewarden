@@ -19,7 +19,7 @@ describe("parseConfig", () => {
       authors: ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"],
       labels: [],
       branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"],
-      body_patterns: ["Generated with Claude Code"],
+      body_patterns: ["Generated with [Claude Code]", "Generated with Claude Code"],
     });
     expect(config.contract).toEqual({
       required_for: ["agent"],

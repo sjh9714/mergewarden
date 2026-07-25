@@ -6,6 +6,34 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- **The default Claude Code body marker matched nothing.** `DEFAULT_AGENT_BODY_PATTERNS`
+  shipped the plain string `Generated with Claude Code`, but Claude Code's real footer
+  is `🤖 Generated with [Claude Code](https://claude.com/claude-code)` — the product
+  name sits inside a Markdown link, so that substring never occurs in an actual pull
+  request body. Measured against 13 real Claude Code pull requests taken from the scan
+  study: the old default matched **0 of 13**, the corrected
+  `Generated with [Claude Code]` matches **12 of 13** (the remaining one had its footer
+  edited out before merge). The plain form is kept as a fallback.
+
+  This matters more than the other markers: Codex, Cursor, Copilot and Devin pull
+  requests are caught by branch or author, but Claude Code usually runs on a
+  developer's own machine and pushes to an ordinary branch name, so the body footer is
+  often the only signal available.
+
+### Changed
+
+- `docs/study/methodology.md` now states which of the study's rates carry across engine
+  versions and which do not. The per-rule boundary rates (3.9%, 12.9%, 17.5%, 22.1%) are
+  unaffected by the v0.5.0 detection fix — verified by re-scanning a 66-PR stratified
+  sample of the dataset under the new defaults, which produced identical boundary
+  findings on 66 of 66. The "at least one finding" rate and the star-band comparison are
+  boundary-crossing rates and are not comparable to a v0.5.0+ run, which would add
+  `contract/missing` to nearly the whole corpus.
+
 ## v0.5.0 - 2026-07-25
 
 ### Added

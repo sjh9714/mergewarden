@@ -19,7 +19,7 @@ agent_detection:
   authors: ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"]
   labels: [] # label conventions are per-repository; add your own
   branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"]
-  body_patterns: ["Generated with Claude Code"]
+  body_patterns: ["Generated with [Claude Code]"]
 
 contract:
   required_for: [agent]

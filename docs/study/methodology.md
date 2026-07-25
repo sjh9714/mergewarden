@@ -109,6 +109,37 @@ heuristic, cohort populations differ in repository mix, and none of this
 measures code quality — only boundary-crossing evidence under the default
 policy.
 
+### What these rates do and do not carry across engine versions
+
+Engine v0.4.0's `agent_detection` defaults were empty arrays, so agent detection
+never fired during this run and neither `agent/origin-detected` nor
+`contract/missing` appears anywhere in the results. That was a defect, fixed in
+[v0.5.0](../release-notes-v0.5.0.md). It has a specific consequence for how these
+numbers should be read.
+
+**The per-rule boundary rates are unaffected.** `agent-control-plane/drift`,
+`workflow/*` and `dependency/*` are not gated on agent detection — only
+`contract/missing` is. This was verified rather than assumed: a 66-PR stratified
+sample of this dataset was re-scanned under the current defaults and produced
+**identical boundary findings on 66 of 66**. The 3.9%, 12.9%, 17.5% and 22.1%
+figures reproduce on any engine version.
+
+**The "at least one finding" rate does not carry across.** Because detection was
+inert, 7.0% is precisely a boundary-crossing rate, which is what it was meant to
+measure. Re-running the same corpus on v0.5.0 or later would add
+`agent/origin-detected` to most of it and `contract/missing` to every pull request
+detection matches — and since 0 of 2,204 declared a contract, that is nearly all of
+them. A modern run would therefore report a headline rate approaching 100%, which
+is a statement about disclosure adoption, not about boundary crossings. The same
+applies to the 4.3% vs 8.6% star-band comparison and to the per-cohort rates above:
+read them as boundary-crossing rates, and do not compare them to a v0.5.0+ run.
+
+The `claude-code-body` cohort's low 2.0% rate is also partly an artifact of a
+second defect found the same way: the v0.5.0 default body marker was the plain
+string `Generated with Claude Code`, but Claude Code writes the product name inside
+a Markdown link, so the marker matched 0 of 13 sampled pull requests from this
+cohort. Fixed in v0.5.1, where the corrected marker matches 12 of the same 13.
+
 ## Related work
 
 This study measures a different axis than most prior empirical work on agent

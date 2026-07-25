@@ -45,8 +45,8 @@ policy:
   escalated workflow permissions and **17.5%** introduced unpinned actions.
 - **3.9%** changed agent control-plane files (`AGENTS.md`, `.mcp.json`, and
   similar) — the files that steer every future agent PR.
-- Repositories with 10k+ stars showed roughly **half** the finding rate of the
-  long tail.
+- Repositories with 10k+ stars showed roughly **half** the boundary-crossing
+  rate of the long tail.
 
 Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
 

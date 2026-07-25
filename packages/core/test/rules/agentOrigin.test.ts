@@ -99,3 +99,52 @@ describe("detectAgentOrigin", () => {
     expect(result.findings.map((finding) => finding.ruleId)).not.toContain("agent/origin-detected");
   });
 });
+
+describe("default body markers against real agent output", () => {
+  // Verbatim footer Claude Code appends to a pull request body. Pinned as a literal because the
+  // Markdown link is exactly what the pre-v0.5.1 default missed: the product name sits inside
+  // [ ], so "Generated with Claude Code" never appears as a substring. Sampled against 13 real
+  // Claude Code pull requests from the scan study; do not "tidy" the brackets out of this string.
+  const CLAUDE_CODE_FOOTER =
+    "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>";
+
+  it("detects a Claude Code pull request on the default config alone", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        pr: {
+          title: "Fix session expiry handling",
+          body: `Fixes the expiry clamp.\n\n${CLAUDE_CODE_FOOTER}`,
+          author: "some-human",
+          branchName: "fix/session-expiry",
+        },
+      }),
+    );
+
+    const detected = result.findings.find((finding) => finding.ruleId === "agent/origin-detected");
+
+    expect(detected).toBeDefined();
+    expect(detected?.evidence).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "body",
+          value: expect.stringContaining('matched "Generated with [Claude Code]"'),
+        }),
+      ]),
+    );
+  });
+
+  it("does not treat a pull request that merely mentions the product as agent-authored", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        pr: {
+          title: "docs: compare Claude Code, Codex and Cursor",
+          body: "A table of which coding agents support which hooks.",
+          author: "some-human",
+          branchName: "docs/agent-comparison",
+        },
+      }),
+    );
+
+    expect(result.findings.map((finding) => finding.ruleId)).not.toContain("agent/origin-detected");
+  });
+});

@@ -21,7 +21,7 @@ mode: warn
 agent_detection:
   labels: [ai, claude]
   branch_patterns: ["claude/**"]
-  body_patterns: ["Generated with Claude Code"]
+  body_patterns: ["Generated with [Claude Code]"]
 
 contract:
   required_for: [agent]

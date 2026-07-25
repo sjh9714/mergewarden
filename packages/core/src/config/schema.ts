@@ -44,7 +44,25 @@ export const DEFAULT_AGENT_BRANCH_PATTERNS = [
   "copilot/**",
   "devin/**",
 ];
-export const DEFAULT_AGENT_BODY_PATTERNS = ["Generated with Claude Code"];
+/**
+ * Body markers are matched as case-insensitive substrings, so they have to be the literal
+ * text an agent really writes.
+ *
+ * Claude Code's footer is `🤖 Generated with [Claude Code](https://claude.com/claude-code)` —
+ * the product name sits inside a Markdown link, so the plain string "Generated with Claude
+ * Code" never occurs in a real pull-request body. It was the default until v0.5.1 and matched
+ * 0 of 13 sampled Claude Code pull requests from the scan study; the bracketed form matches 12
+ * of the same 13 (the remaining one had its footer edited out before merge). The plain form is
+ * kept as a cheap fallback in case the footer is ever emitted without the link.
+ *
+ * The body marker matters more than it looks: Codex, Cursor, Copilot and Devin pull requests
+ * are identified by branch or author, but Claude Code usually runs on a developer's own machine
+ * and pushes to an ordinary branch name, so the footer is frequently the only signal there is.
+ */
+export const DEFAULT_AGENT_BODY_PATTERNS = [
+  "Generated with [Claude Code]",
+  "Generated with Claude Code",
+];
 
 const SeveritySettingSchema = z.enum(["warn", "error"]);
 const CheckSettingSchema = z.enum(["off", "warn", "error"]);
