@@ -6,7 +6,7 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## Unreleased
+## v0.5.0 - 2026-07-25
 
 ### Added
 
@@ -67,6 +67,12 @@ This project follows the spirit of
   is what explains why the contract rules fired at all. The selected findings are
   still printed in evaluation order, and `--format json` and `--format markdown`
   are unaffected.
+
+### Fixed
+
+- Piping CLI output into a command that closes the pipe early — `| head`, or
+  `| less` quit before the end — printed an unhandled `EPIPE` stack trace over
+  the terminal. The CLI now exits quietly, as command-line tools are expected to.
 
 ## v0.4.1 - 2026-07-25
 

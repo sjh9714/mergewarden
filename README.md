@@ -55,14 +55,14 @@ Every number reproduces from published queries: [study methodology](docs/study/m
 See what MergeWarden catches — no token, no repository, no network:
 
 ```bash
-npx --yes mergewarden@0.4.1 demo
+npx --yes mergewarden@0.5.0 demo
 ```
 
 Then scan a real pull request, by `owner/repo#number` or by URL:
 
 ```bash
-npx --yes mergewarden@0.4.1 scan owner/repository#123
-npx --yes mergewarden@0.4.1 scan https://github.com/owner/repository/pull/123
+npx --yes mergewarden@0.5.0 scan owner/repository#123
+npx --yes mergewarden@0.5.0 scan https://github.com/owner/repository/pull/123
 ```
 
 ![Real npx execution of mergewarden@0.4.0 scanning a public PR](docs/assets/mergewarden-cli-v0.4.0.gif)
@@ -93,7 +93,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.4.1
+      - uses: sjh9714/mergewarden@v0.5.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
