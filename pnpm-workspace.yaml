@@ -5,3 +5,6 @@ allowBuilds:
 overrides:
   esbuild: 0.28.1
   undici: ^6.27.0
+  # GHSA-mh99-v99m-4gvg: brace-expansion DoS. Reached only through eslint's
+  # transitive minimatch@3, which still resolves the vulnerable 1.x line.
+  brace-expansion: ^5.0.8
