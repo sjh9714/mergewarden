@@ -16,7 +16,7 @@ mergewarden --version
 Run without installing:
 
 ```bash
-npx --yes mergewarden@0.4.0 scan owner/repository#123
+npx --yes mergewarden@0.4.1 scan owner/repository#123
 ```
 
 ## Scan Options

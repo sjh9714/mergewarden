@@ -1,6 +1,6 @@
 {
   "name": "mergewarden",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": false,
   "type": "module",
   "description": "Checkout-free policy scanning for AI-generated GitHub pull requests",
