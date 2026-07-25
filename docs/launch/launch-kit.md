@@ -1,18 +1,44 @@
-# MergeWarden v0.4.0 Launch Kit
+# MergeWarden Launch Kit
 
-Working copy for the rename + scan-study launch. All `[N]` placeholders come
-from `tools/study/data/stats.json` after the full scan run; do not publish any
-number that is not reproduced by `tools/study/aggregate.mjs`. External
-publishing remains manual and is done by the maintainer, not by automation.
+Reusable copy for launches and outreach. Do not publish any number that is not
+reproduced by `tools/study/aggregate.mjs`. External publishing remains manual
+and is done by the maintainer, not by automation.
 
-Publishing order:
+Two standing rules, both learned the hard way:
 
-1. Merge the rename PR, tag v0.4.0, publish npm `mergewarden`, refresh the
-   Marketplace listing, re-record the CLI GIF and report screenshot.
-2. Publish the study methodology page and blog post.
-3. Show HN, then the smaller channels, then design-partner messages.
+- **Never ask for stars or upvotes.** Anywhere, in any wording.
+- **Hacker News is blocked.** Two submissions were flagged/killed and three
+  moderator emails went unanswered. Only a moderator can clear it. Do not
+  resubmit; the Show HN copy below is kept only as source material for other
+  channels.
 
-## Show HN (data story, not tool intro)
+## The one-command hook (use this everywhere)
+
+Since v0.5.0 there is a single command that shows what the tool does, with no
+token, no repository, and no network:
+
+```bash
+npx --yes mergewarden@0.5.1 demo
+```
+
+It analyzes an example pull request bundled inside the CLI **on the default
+policy**, and reports 13 findings — contract scope, agent-control-plane drift,
+workflow permission escalation, prompt injection into an agentic workflow, and
+an added lifecycle script.
+
+This replaces `npx mergewarden scan owner/repo#123` as the lead call to action
+in every channel. The reason is conversion, not novelty: `scan` asks the reader
+to go find a pull request first, and most real pull requests are clean, so the
+likely first impression was an empty report. `demo` cannot be empty.
+
+Keep `scan` as the _second_ line — it is what proves the tool works on real
+data, and it is the natural next step once `demo` has shown the shape of the
+output.
+
+## Show HN (BLOCKED — source material only)
+
+**Do not submit this.** Kept because the framing and the numbers are reused by
+the other channels below.
 
 Numbers below are from the combined 2026-07-20/21 runs (2,204 scanned, 2,191
 complete analyses, including an 894-PR popular-repository probe with 856 PRs
@@ -35,26 +61,28 @@ Body draft:
 >
 > What we measured (deterministic evidence, no LLM judgment):
 >
-> - 7.0% of complete analyses had at least one boundary finding.
-> - 3.9% touched agent control-plane files (AGENTS.md, CLAUDE.md,
->   .mcp.json and similar) — the files that steer every future agent PR.
 > - Of the 349 PRs that touched GitHub Actions workflows or package
 >   manifests, 12.9% escalated workflow permissions and 17.5% introduced
 >   unpinned actions.
-> - 0 out of 2,204 declared a machine-readable scope contract in the PR body.
-> - Finding rates on 10k+ star repositories (4.3%) were roughly half the
->   long-tail rate (8.6%) — established projects have guardrails; the long
+> - 3.9% touched agent control-plane files (AGENTS.md, CLAUDE.md,
+>   .mcp.json and similar) — the files that steer every future agent PR.
+> - 7.0% had at least one boundary crossing of any kind.
+> - 10k+ star repositories crossed a boundary at 4.3%, roughly half the
+>   long-tail rate of 8.6% — established projects have guardrails; the long
 >   tail is where agents run unfenced.
+> - And 0 out of 2,204 declared a machine-readable scope for the change. Most
+>   of those permission changes are probably intended. Nobody said so, so
+>   nobody reviewing them can tell which.
 >
 > Methodology, caveats, and how to reproduce every number:
 > [link to docs/study/methodology.md]. Findings are review evidence, not
 > vulnerabilities; we publish aggregates only and name no repositories.
 >
-> MergeWarden (formerly Agent Gate) is MIT-licensed, runs as a checkout-free
-> GitHub Action or `npx mergewarden scan owner/repo#123`, never executes PR
-> code, and never calls an LLM at runtime. I built it because agent PRs need a
-> change-control layer, not another linter. Happy to answer anything about the
-> data or the detection rules.
+> MergeWarden is MIT-licensed, never executes PR code, and never calls an LLM
+> at runtime. `npx --yes mergewarden demo` shows what it reports with no token
+> and no repository; `npx mergewarden scan owner/repo#123` runs it against any
+> public PR. I built it because agent PRs need a change-control layer, not
+> another linter. Happy to answer anything about the data or the rules.
 
 ## Blog / DEV.to post outline
 
@@ -63,7 +91,8 @@ Body draft:
    (firehose sample) vs on popular repos (probe sample).
 3. The numbers, with the honest denominators.
 4. Why "declared scope" is the missing primitive; what a contract looks like.
-5. Reproduce it: `npx mergewarden scan`, methodology link, open source.
+5. Reproduce it: `npx mergewarden demo` then `npx mergewarden scan`, methodology
+   link, open source.
 
 ## Community channels
 
@@ -71,7 +100,7 @@ Body draft:
 - r/devsecops, r/ExperiencedDevs (data discussion framing, not promotion).
 - lobste.rs: `show` tag, same data framing.
 
-## Awesome-list submissions (submit only after v0.4.0 ships)
+## Awesome-list and directory submissions
 
 | List                                      | Section                        | One-line entry                                                                                                       |
 | ----------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
@@ -106,10 +135,30 @@ Rules: never publish per-repo results without consent; if a finding looks
 security-sensitive, follow the repository's security policy instead of a
 public issue.
 
-## Anticipated Show HN questions (answer prep)
+## Anticipated questions (any channel)
 
 Answer honestly, concede limits fast, and link the methodology page. Never
 argue tone; the data carries the post.
+
+**"Isn't the demo cherry-picked to look bad?"**
+
+> The example is deliberately composite, and yes, a single real PR rarely
+> trips five rule families at once. What is not staged is the policy: `demo`
+> runs the shipped default config, and a test enforces that, so its output is
+> a claim about what you get with zero configuration. Point it at your own
+> repository with `npx mergewarden scan owner/repo#123` — on a clean PR it
+> reports nothing, which is the honest outcome.
+
+**"Your own tool missed a default for months — why trust the rules?"**
+
+> Fair, and it happened twice. v0.5.0 fixed agent detection defaults that were
+> empty arrays, and v0.5.1 fixed a Claude Code body marker that matched 0 of 13
+> real pull requests because the product name sits inside a Markdown link. Both
+> were found by re-running the scan study against its own stored data, both are
+> written up in the changelog with the measurements, and both now have tests
+> pinned to verbatim real-world output. The rules that were never gated on
+> detection — workflow permissions, control-plane drift — were verified
+> unaffected on 66 of 66 re-scanned PRs.
 
 **"What's the false-positive rate?"**
 
@@ -163,16 +212,29 @@ Title: 머지된 AI 에이전트 PR 2,204개를 스캔해보니 — 작업 범�
 
 > Devin, Copilot 코딩 에이전트, Codex, Claude Code, Cursor가 여는 PR을
 > 2,204개 스캔했습니다(체크아웃 없이 GitHub API만 사용, LLM 미사용,
-> 결정적 분석). 결과: 작업 범위를 기계가 검증할 수 있는 형태로 선언한
-> PR은 0개, 워크플로/패키지 매니페스트를 건드린 349개 중 12.9%는 워크플로
-> 권한을 상승시켰고 17.5%는 핀 안 된 액션을 추가했습니다. AGENTS.md,
-> .mcp.json처럼 "미래의 에이전트를 조종하는 파일"을 건드린 PR도 3.9%.
-> 10k+ 스타 저장소는 finding 비율이 롱테일의 절반 수준이었습니다.
+> 결정적 분석).
+>
+> 워크플로나 패키지 매니페스트를 건드린 349개 중 **12.9%가 워크플로 권한을
+> 상승**시켰고 **17.5%가 핀 안 된 액션**을 추가했습니다. AGENTS.md, .mcp.json
+> 처럼 "앞으로의 모든 에이전트 실행을 조종하는 파일"을 건드린 PR도 3.9%.
+> 10k+ 스타 저장소의 경계 위반율(4.3%)은 롱테일(8.6%)의 절반 수준이었습니다.
+>
+> 그리고 **2,204개 중 자기가 뭘 바꾸려는지 기계가 검증할 수 있는 형태로
+> 선언한 PR은 0개**였습니다. 저 권한 변경들은 아마 대부분 의도된 것일 겁니다.
+> 다만 아무도 선언하지 않았으니, 리뷰하는 쪽에서 어느 게 의도된 건지 구분할
+> 방법이 없습니다.
 >
 > 방법론과 쿼리 전문은 공개되어 있고 전부 재현 가능합니다:
 > https://github.com/sjh9714/mergewarden/blob/main/docs/study/methodology.md
-> 스캔에 쓴 도구(MergeWarden, MIT)는 `npx mergewarden scan owner/repo#123`
-> 으로 아무 공개 PR에나 바로 실행해볼 수 있습니다.
+>
+> 스캔에 쓴 도구는 MergeWarden(MIT)입니다. 토큰도 저장소도 없이 한 줄로
+> 뭘 잡는지 볼 수 있습니다:
+>
+> ```
+> npx --yes mergewarden demo
+> ```
+>
+> 실제 공개 PR에 돌려보려면 `npx mergewarden scan owner/repo#123`.
 
 ## Reddit copy (r/devops, r/ExperiencedDevs — discussion framing)
 
@@ -184,15 +246,18 @@ to change.
 > agents (Devin, Copilot coding agent, Codex, Claude Code, Cursor) on public
 > repos with a deterministic, checkout-free policy engine.
 >
-> - 0 of 2,204 declared a machine-readable scope for the change.
 > - 12.9% of workflow-touching agent PRs escalated workflow permissions;
 >   17.5% added unpinned actions.
 > - 3.9% edited agent instruction files (AGENTS.md, .mcp.json) — the files
 >   that steer every future agent PR.
-> - 10k+ star repos had roughly half the finding rate of the long tail.
+> - 10k+ star repos crossed a boundary at roughly half the long-tail rate.
+> - 0 of 2,204 declared a machine-readable scope for the change. Most of those
+>   permission changes are probably intended — but nobody said so, so a
+>   reviewer can't tell which.
 >
 > Full write-up and reproducible queries:
 > https://github.com/sjh9714/mergewarden/blob/main/docs/study/what-2204-agent-prs-showed.md
+> (`npx --yes mergewarden demo` shows what the scanner reports, no token needed.)
 >
 > Curious how other teams are reviewing agent PRs — is anyone requiring
 > declared scope, or is diff review still the whole story?
@@ -211,13 +276,17 @@ probably benign. Nobody declared them, so nobody can tell.
 that steer every FUTURE agent PR. An agent editing its own instructions is a
 quiet privilege-escalation path.
 
-4/ 10k+ star repos: 4.3% finding rate. The long tail: 8.6%. Guardrails
+4/ 10k+ star repos crossed a boundary at 4.3%. The long tail: 8.6%. Guardrails
 exist where reviewers are strongest — and agents run loosest where oversight
 is weakest.
 
 5/ Every number reproduces from published queries. Write-up:
 https://github.com/sjh9714/mergewarden/blob/main/docs/study/what-2204-agent-prs-showed.md
-The scanner is MIT: npx mergewarden scan owner/repo#123
+
+6/ The scanner is MIT and you can see exactly what it reports in one command —
+no token, no repo, no signup:
+
+npx --yes mergewarden demo
 
 ## Product Hunt launch day (scheduled Tue 2026-07-28)
 
@@ -225,6 +294,15 @@ Launch goes live 2026-07-28 at 12:01am PT (4:01pm KST) for 24 hours. The draft
 (name, tagline, 3 gallery images, custom logo, first comment) is complete and
 scheduled. Goal for the day: genuine first-hour engagement. No upvote-begging,
 no cold DMs, no upvote services — Product Hunt removes launches for that.
+
+### Before launch day
+
+The Product Hunt draft (description, maker first comment) was written before
+`mergewarden demo` existed and leads with `npx mergewarden scan owner/repo#123`.
+Update both to lead with `demo` at
+`producthunt.com/posts/mergewarden/edit` — `scan` asks a visitor to go find a
+pull request before they see anything, which is the exact friction `demo`
+removes.
 
 ### The morning it goes live (do these, in order)
 
@@ -240,9 +318,13 @@ no cold DMs, no upvote services — Product Hunt removes launches for that.
 
 > MergeWarden is live on Product Hunt today 🚀
 >
-> It's the checkout-free gate for AI-agent PRs — checks each one for declared
-> scope, agent-control-plane drift (AGENTS.md/.mcp.json), and workflow
-> permission escalation. No checkout, no LLM.
+> It's the checkout-free gate for AI-agent PRs — declared scope,
+> agent-control-plane drift (AGENTS.md/.mcp.json), workflow permission
+> escalation, prompt injection into agentic workflows. No checkout, no LLM.
+>
+> See exactly what it catches, no token or repo needed:
+>
+> npx --yes mergewarden demo
 >
 > Built after scanning 2,204 merged agent PRs: 0 declared their scope.
 >
@@ -255,6 +337,10 @@ Repository Discussions are enabled; use the **Announcements** category.
 > MergeWarden is on Product Hunt today. If the tool or the 2,204-PR study has
 > been useful, a look and any honest feedback there means a lot — link:
 > https://www.producthunt.com/products/mergewarden?launch=mergewarden
+>
+> If you have never run it: `npx --yes mergewarden demo` shows what it reports
+> on an example PR, with no token and no repository.
+>
 > Not asking for anything beyond genuine thoughts; happy to answer questions
 > about the detection rules or the data.
 
