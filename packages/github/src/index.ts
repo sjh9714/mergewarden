@@ -12,6 +12,7 @@ export type {
   GitHubApi,
   LoadGitHubAnalysisOptions,
   PullRequestLocator,
+  RemotePullCommit,
   RemotePullFile,
   RemotePullRequest,
   RemoteRepository,

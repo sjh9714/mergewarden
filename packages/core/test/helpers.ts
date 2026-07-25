@@ -3,6 +3,7 @@ import {
   type MergeWardenConfig,
   type AnalysisInput,
   type ChangeSet,
+  type CommitContext,
   type FileChange,
   type ParseContractResult,
   type PullRequestContext,
@@ -14,6 +15,7 @@ interface CreateAnalysisInputOptions {
   pr?: Partial<PullRequestContext>;
   files?: FileChange[];
   changes?: ChangeSet;
+  commits?: CommitContext[];
 }
 
 function changesFromFiles(files: FileChange[]): ChangeSet {
@@ -63,6 +65,7 @@ export function createAnalysisInput(options: CreateAnalysisInputOptions = {}): A
     config: options.config ?? DEFAULT_CONFIG,
     contract: options.contract ?? { kind: "missing" },
     changes: options.changes ?? changesFromFiles(files),
+    ...(options.commits === undefined ? {} : { commits: options.commits }),
     reviews: [],
     checks: [],
     now: "2026-06-13T00:00:00.000Z",

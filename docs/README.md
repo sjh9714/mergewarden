@@ -26,6 +26,8 @@ requests. Start with the shortest path for your task:
   sources, sinks, severity, and limits.
 - [Package lifecycle rule](rules/package-lifecycle-scripts.md): install/prepare
   script change evidence.
+- [Commit trailer rules](rules/commit-trailers.md): required and forbidden
+  disclosure trailers, and what they cannot prove.
 - [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.
 - [v0.3.0 migration](migration-v0.3.0.md): compatibility changes.
 - [v0.4.0 release notes](release-notes-v0.4.0.md): MergeWarden rename release.

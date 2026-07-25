@@ -6,6 +6,29 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- Commit trailer rules: `commit/trailer-missing` and `commit/trailer-forbidden`,
+  configured under `commit_trailers`. Real AI-contribution policies express
+  disclosure as a commit trailer and disagree on which one — Fedora and Mesa
+  require `Assisted-by:`, Kubernetes forbids it, QEMU and FreeBSD require a DCO
+  `Signed-off-by:` — and all of those clauses are decidable from commit metadata
+  alone. Both `required` and `forbidden` lists default to empty, so existing
+  repositories see no decision change until they add an entry. See
+  [the rule guide](docs/rules/commit-trailers.md).
+- The GitHub collector now enumerates pull-request commits. When it cannot
+  collect all of them — GitHub caps commit listing at 250 — it omits commits
+  entirely and the trailer rules stay inert rather than run against a partial
+  list that could only under-report. The CLI and Action print a warning.
+
+### Changed
+
+- The default policy digest changed because the configuration schema gained the
+  `commit_trailers` key. Stored digests from earlier versions will differ; no
+  finding IDs changed.
+
 ## v0.4.0 - 2026-07-21
 
 ### Changed

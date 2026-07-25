@@ -206,6 +206,30 @@ const AgenticWorkflowsSchema = z
   })
   .strict();
 
+const CommitTrailerRequirementSchema = z
+  .object({
+    any_of: z.array(NonEmptyStringSchema).min(1),
+    applies_to: z.enum(["agent", "all"]).default("agent"),
+    severity: SeveritySettingSchema.default("warn"),
+  })
+  .strict();
+
+const CommitTrailerProhibitionSchema = z
+  .object({
+    name: NonEmptyStringSchema,
+    value_patterns: z.array(NonEmptyStringSchema).default([]),
+    severity: SeveritySettingSchema.default("error"),
+  })
+  .strict();
+
+const CommitTrailersConfigSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    required: z.array(CommitTrailerRequirementSchema).default([]),
+    forbidden: z.array(CommitTrailerProhibitionSchema).default([]),
+  })
+  .strict();
+
 const PackageScriptsConfigSchema = z
   .object({
     enabled: z.boolean().default(true),
@@ -254,6 +278,11 @@ export const MergeWardenConfigSchema = z
       paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
       lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
       severity: "warn",
+    }),
+    commit_trailers: CommitTrailersConfigSchema.default({
+      enabled: true,
+      required: [],
+      forbidden: [],
     }),
   })
   .strict()

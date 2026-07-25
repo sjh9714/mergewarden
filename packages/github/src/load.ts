@@ -5,6 +5,7 @@ import {
   parseConfig,
   parseContractFromPrBody,
   type MergeWardenConfig,
+  type CommitContext,
   type FileChange,
 } from "@mergewarden/core";
 
@@ -16,6 +17,7 @@ import type {
   GitHubApi,
   LoadGitHubAnalysisOptions,
   PullRequestLocator,
+  RemotePullCommit,
   RemotePullFile,
   RemotePullRequest,
   RemoteRepository,
@@ -24,6 +26,10 @@ import type {
 const FILES_PER_PAGE = 100 as const;
 const MAX_FILE_PAGES = 30;
 const MAX_CHANGED_FILES = FILES_PER_PAGE * MAX_FILE_PAGES;
+const COMMITS_PER_PAGE = 100 as const;
+const MAX_COMMIT_PAGES = 3;
+// GitHub's pull-request commit listing tops out at 250 entries.
+const MAX_COMMITS = 250;
 const MAX_TEXT_BYTES = 1024 * 1024;
 const MAX_TOTAL_CONTENT_BYTES = 64 * 1024 * 1024;
 const CONTENT_CONCURRENCY = 8;
@@ -328,6 +334,64 @@ async function listPullFiles(
   return files;
 }
 
+/**
+ * Collects every commit on the pull request, or nothing.
+ *
+ * GitHub caps pull-request commit listing, and a partial list can only under-report trailer
+ * violations. Rather than hand the engine evidence it cannot trust, this returns undefined
+ * whenever the collected count does not match what GitHub reported — the commit trailer rules
+ * then stay inert, which is visible in the report as an absence of findings rather than a
+ * false all-clear on a rule the operator believes is running.
+ */
+async function listPullCommits(
+  api: GitHubApi,
+  target: PullRequestLocator,
+  pullRequest: RemotePullRequest,
+  retryBudget: ReturnType<typeof createRetryBudget>,
+  warning: ((message: string) => void) | undefined,
+): Promise<CommitContext[] | undefined> {
+  const expected = pullRequest.commitCount;
+
+  if (api.listPullRequestCommitsPage === undefined || !Number.isInteger(expected)) {
+    return undefined;
+  }
+
+  if (expected === 0) {
+    return [];
+  }
+
+  if ((expected as number) > MAX_COMMITS) {
+    warning?.(
+      `Pull request has ${String(expected)} commits, above the ${String(MAX_COMMITS)} MergeWarden collects; commit trailer checks were skipped.`,
+    );
+    return undefined;
+  }
+
+  const commits: RemotePullCommit[] = [];
+
+  for (let page = 1; page <= MAX_COMMIT_PAGES && commits.length < (expected as number); page += 1) {
+    const pageCommits = await withGitHubRetry(
+      `List pull request commits page ${page}`,
+      retryBudget,
+      () => api.listPullRequestCommitsPage?.(target, page, COMMITS_PER_PAGE) ?? Promise.resolve([]),
+    );
+    commits.push(...pageCommits);
+
+    if (pageCommits.length < COMMITS_PER_PAGE) {
+      break;
+    }
+  }
+
+  if (commits.length !== expected) {
+    warning?.(
+      `Collected ${String(commits.length)} of ${String(expected)} commits; commit trailer checks were skipped.`,
+    );
+    return undefined;
+  }
+
+  return commits.map((commit) => ({ sha: commit.sha, message: commit.message }));
+}
+
 function pullRequestContext(pullRequest: RemotePullRequest) {
   return {
     number: pullRequest.number,
@@ -390,6 +454,8 @@ export async function loadGitHubAnalysis(
     }
   }
 
+  const commits = await listPullCommits(api, target, pullRequest, retryBudget, options.warning);
+
   const analysis: CollectionAnalysis = {
     complete: gaps.length === 0,
     expectedFileCount: expected,
@@ -422,6 +488,7 @@ export async function loadGitHubAnalysis(
         deletions: files.reduce((sum, file) => sum + file.deletions, 0),
       },
     },
+    ...(commits === undefined ? {} : { commits }),
     reviews: [],
     checks: [],
     now: options.now,

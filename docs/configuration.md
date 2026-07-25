@@ -130,3 +130,33 @@ package_scripts:
   lifecycle_scripts: [preinstall, install, postinstall, prepare]
   severity: warn
 ```
+
+## Commit Trailers
+
+Enforces the trailer conventions real AI-contribution policies are written in —
+required disclosure trailers, or forbidden ones. Both lists are empty by
+default, so this changes nothing until you add an entry.
+
+```yaml
+commit_trailers:
+  enabled: true
+  required:
+    - any_of: [Assisted-by, Generated-by]
+      applies_to: agent # agent | all
+      severity: warn
+  forbidden:
+    - name: Co-authored-by
+      value_patterns: ["*claude*", "*copilot*"]
+      severity: error
+```
+
+A `required` entry is satisfied by **any** of its `any_of` trailers.
+`applies_to: agent` evaluates it only when agent detection fires;
+`applies_to: all` evaluates it on every pull request, which is what a DCO
+`Signed-off-by:` requirement needs. A `forbidden` entry without
+`value_patterns` rejects the trailer outright; with them, only matching values
+are rejected.
+
+These rules stay inert when MergeWarden could not enumerate every commit — see
+[the commit trailer rule guide](rules/commit-trailers.md) for the limits and
+how trailers are parsed.

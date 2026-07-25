@@ -11,6 +11,7 @@ import {
   type AnalysisInput,
   type AnalysisResult,
   type CheckEvidence,
+  type CommitContext,
   type ChangeSet,
   type FileChange,
   type PullRequestContext,
@@ -31,6 +32,7 @@ interface ReplayFixtureJson {
   repo?: Partial<RepoContext>;
   pr?: Partial<PullRequestContext>;
   files?: FileChange[];
+  commits?: CommitContext[];
   reviews?: ReviewEvidence[];
   checks?: CheckEvidence[];
   now?: string;
@@ -159,6 +161,22 @@ function validateFileChange(value: unknown, index: number): FileChange {
   };
 }
 
+function validateCommit(value: unknown, index: number): CommitContext {
+  if (!isRecord(value)) {
+    throw new CliError(`fixture.json commits[${index}] must be an object.`);
+  }
+
+  if (typeof value.sha !== "string" || value.sha.length === 0) {
+    throw new CliError(`fixture.json commits[${index}].sha must be a non-empty string.`);
+  }
+
+  if (typeof value.message !== "string") {
+    throw new CliError(`fixture.json commits[${index}].message must be a string.`);
+  }
+
+  return { sha: value.sha, message: value.message };
+}
+
 function parseFixtureJson(text: string, filePath: string): ReplayFixtureJson {
   let parsed: unknown;
 
@@ -176,9 +194,16 @@ function parseFixtureJson(text: string, filePath: string): ReplayFixtureJson {
     throw new CliError(`${filePath} must include a files array.`);
   }
 
+  if (parsed.commits !== undefined && !Array.isArray(parsed.commits)) {
+    throw new CliError(`${filePath} commits must be an array when present.`);
+  }
+
   return {
     ...(parsed as ReplayFixtureJson),
     files: parsed.files.map((file, index) => validateFileChange(file, index)),
+    ...(parsed.commits === undefined
+      ? {}
+      : { commits: parsed.commits.map((commit, index) => validateCommit(commit, index)) }),
   };
 }
 
@@ -219,6 +244,7 @@ export async function loadReplayFixture(fixtureDir: string): Promise<AnalysisInp
     config: parseConfig(configText),
     contract: parseContractFromPrBody(pr.body),
     changes: changesFromFiles(fixture.files ?? []),
+    ...(fixture.commits === undefined ? {} : { commits: fixture.commits }),
     reviews: fixture.reviews ?? [],
     checks: fixture.checks ?? [],
     now: fixture.now ?? new Date(0).toISOString(),

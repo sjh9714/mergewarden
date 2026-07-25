@@ -2,6 +2,7 @@ import { GitHubApiError, toGitHubApiError } from "./errors.js";
 import type {
   GitHubApi,
   PullRequestLocator,
+  RemotePullCommit,
   RemotePullFile,
   RemotePullRequest,
   RemoteRepository,
@@ -15,6 +16,20 @@ interface OctokitPullFile {
   deletions: number;
   patch?: string | null;
   previous_filename?: string | null;
+}
+
+interface OctokitPullCommit {
+  sha: string;
+  commit: { message: string };
+}
+
+interface ListCommitsArgs {
+  owner: string;
+  repo: string;
+  pull_number: number;
+  page: number;
+  per_page: number;
+  request: { signal: AbortSignal };
 }
 
 interface ListFilesArgs {
@@ -44,6 +59,7 @@ export interface OctokitContentApi {
   rest: {
     pulls: {
       listFiles(args: ListFilesArgs): Promise<{ data: OctokitPullFile[] }>;
+      listCommits?(args: ListCommitsArgs): Promise<{ data: OctokitPullCommit[] }>;
     };
     repos: {
       getContent(args: GetContentArgs): Promise<{ data: unknown }>;
@@ -118,6 +134,34 @@ export function createOctokitGitHubApi(
         throw toGitHubApiError(
           error,
           `List files for ${target.owner}/${target.repo}#${target.number} page ${page}`,
+        );
+      }
+    },
+
+    async listPullRequestCommitsPage(target, page, perPage): Promise<RemotePullCommit[]> {
+      const listCommits = octokit.rest.pulls.listCommits;
+
+      if (listCommits === undefined) {
+        return [];
+      }
+
+      try {
+        const response = await listCommits({
+          owner: target.owner,
+          repo: target.repo,
+          pull_number: target.number,
+          page,
+          per_page: perPage,
+          ...requestOptions(),
+        });
+        return response.data.map((commit) => ({
+          sha: commit.sha,
+          message: commit.commit.message,
+        }));
+      } catch (error) {
+        throw toGitHubApiError(
+          error,
+          `List commits for ${target.owner}/${target.repo}#${target.number} page ${page}`,
         );
       }
     },

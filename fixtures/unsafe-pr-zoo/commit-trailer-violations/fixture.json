@@ -1,0 +1,32 @@
+{
+  "repo": {
+    "baseSha": "base-commit-trailers",
+    "headSha": "head-commit-trailers"
+  },
+  "pr": {
+    "number": 141,
+    "title": "Add retry budget",
+    "branchName": "codex/retry-budget",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": "src/retry.ts",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 2
+    }
+  ],
+  "commits": [
+    {
+      "sha": "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
+      "message": "Add retry budget\n\nNo disclosure trailer on this commit."
+    },
+    {
+      "sha": "2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c",
+      "message": "Tighten the backoff ceiling\n\nCo-authored-by: Claude <noreply@anthropic.com>"
+    }
+  ],
+  "now": "2026-07-25T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

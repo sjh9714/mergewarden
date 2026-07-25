@@ -1,0 +1,18 @@
+version: 1
+mode: block
+agent_detection:
+  branch_patterns:
+    - "codex/**"
+commit_trailers:
+  required:
+    - any_of:
+        - Assisted-by
+        - Generated-by
+      applies_to: agent
+      severity: error
+  forbidden:
+    - name: Co-authored-by
+      value_patterns:
+        - "*claude*"
+        - "*copilot*"
+      severity: error

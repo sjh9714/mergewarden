@@ -2,6 +2,7 @@ import {
   GitHubApiError,
   type GitHubApi,
   type PullRequestLocator,
+  type RemotePullCommit,
   type RemotePullFile,
   type RemotePullRequest,
   type RemoteRepository,
@@ -93,6 +94,7 @@ function remotePullRequest(value: unknown): RemotePullRequest {
     labels,
     draft: pull.draft === true,
     changedFiles: requiredInteger(pull.changed_files, "pull request.changed_files"),
+    ...(Number.isInteger(pull.commits) ? { commitCount: pull.commits as number } : {}),
     head: {
       ref: requiredString(head.ref, "pull request.head.ref"),
       sha: requiredString(head.sha, "pull request.head.sha"),
@@ -104,6 +106,16 @@ function remotePullRequest(value: unknown): RemotePullRequest {
       sha: requiredString(base.sha, "pull request.base.sha"),
       repository: repository(base.repo, "pull request.base.repo"),
     },
+  };
+}
+
+function remotePullCommit(value: unknown, index: number): RemotePullCommit {
+  const entry = requiredRecord(value, `commits[${index}]`);
+  const commit = requiredRecord(entry.commit, `commits[${index}].commit`);
+
+  return {
+    sha: requiredString(entry.sha, `commits[${index}].sha`),
+    message: requiredString(commit.message, `commits[${index}].commit.message`),
   };
 }
 
@@ -346,6 +358,29 @@ export class NativeGitHubApi implements GitHubApi {
           throw invalidResponse("pull request files response was not an array");
         }
         return body.map(remotePullFile);
+      },
+    );
+  }
+
+  async listPullRequestCommitsPage(
+    target: PullRequestLocator,
+    page: number,
+    perPage: 100,
+  ): Promise<RemotePullCommit[]> {
+    const operation = `List commits for ${target.owner}/${target.repo}#${target.number} page ${page}`;
+    return this.#request(
+      `/repos/${repositoryRoute(target.owner, target.repo)}/pulls/${target.number}/commits?per_page=${perPage}&page=${page}`,
+      operation,
+      "application/vnd.github+json",
+      async (response, signal) => {
+        if (!response.ok) {
+          throw await responseError(response, operation, signal);
+        }
+        const body: unknown = await withAbort(response.json(), signal);
+        if (!Array.isArray(body)) {
+          throw invalidResponse("pull request commits response was not an array");
+        }
+        return body.map(remotePullCommit);
       },
     );
   }

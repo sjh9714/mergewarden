@@ -78,6 +78,57 @@ describe("user-facing Markdown rule snapshots", () => {
     );
   });
 
+  it("snapshots commit/trailer-missing", async () => {
+    const config = parseConfig(
+      [
+        "version: 1",
+        "mode: block",
+        "commit_trailers:",
+        "  required:",
+        "    - any_of:",
+        "        - Assisted-by",
+        "      applies_to: all",
+        "      severity: error",
+        "",
+      ].join("\n"),
+    );
+
+    const result = await analyze({
+      ...createAnalysisInput({ config }),
+      commits: [{ sha: PINNED_SHA, message: "Add retry budget" }],
+    });
+
+    expectRuleSnapshot(result, "commit/trailer-missing", "commit-trailer-missing.md");
+  });
+
+  it("snapshots commit/trailer-forbidden", async () => {
+    const config = parseConfig(
+      [
+        "version: 1",
+        "mode: block",
+        "commit_trailers:",
+        "  forbidden:",
+        "    - name: Co-authored-by",
+        "      value_patterns:",
+        '        - "*claude*"',
+        "      severity: error",
+        "",
+      ].join("\n"),
+    );
+
+    const result = await analyze({
+      ...createAnalysisInput({ config }),
+      commits: [
+        {
+          sha: PINNED_SHA,
+          message: "Add retry budget\n\nCo-authored-by: Claude <noreply@anthropic.com>",
+        },
+      ],
+    });
+
+    expectRuleSnapshot(result, "commit/trailer-forbidden", "commit-trailer-forbidden.md");
+  });
+
   it("snapshots analysis/content-unavailable", async () => {
     const result = await analyze(
       createAnalysisInput({

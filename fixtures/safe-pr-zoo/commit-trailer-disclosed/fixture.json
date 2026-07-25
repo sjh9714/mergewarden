@@ -1,0 +1,32 @@
+{
+  "repo": {
+    "baseSha": "base-commit-trailers-safe",
+    "headSha": "head-commit-trailers-safe"
+  },
+  "pr": {
+    "number": 142,
+    "title": "Add retry budget",
+    "branchName": "codex/retry-budget",
+    "author": "codex"
+  },
+  "files": [
+    {
+      "path": "src/retry.ts",
+      "status": "modified",
+      "additions": 12,
+      "deletions": 2
+    }
+  ],
+  "commits": [
+    {
+      "sha": "3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d",
+      "message": "Add retry budget\n\nAssisted-by: Codex"
+    },
+    {
+      "sha": "4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e",
+      "message": "Tighten the backoff ceiling\n\nCo-authored-by: Ada Lovelace <ada@example.com>\nGenerated-by: Codex"
+    }
+  ],
+  "now": "2026-07-25T00:00:00.000Z",
+  "version": "0.0.0-demo"
+}

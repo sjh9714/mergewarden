@@ -79,6 +79,11 @@ export interface ChangeSet {
   };
 }
 
+export interface CommitContext {
+  sha: string;
+  message: string;
+}
+
 export interface ReviewEvidence {
   reviewer: string;
   state: "APPROVED" | "CHANGES_REQUESTED" | "COMMENTED" | "DISMISSED" | "PENDING";
@@ -107,6 +112,13 @@ export interface AnalysisInput {
   config: MergeWardenConfig;
   contract: ParseContractResult;
   changes: ChangeSet;
+  /**
+   * Commits belonging to the pull request, when the collector could enumerate all of them.
+   * Optional so that callers predating commit collection remain source compatible. Commit
+   * trailer rules stay inert when this is undefined: a partial commit list would under-report
+   * violations, so MergeWarden declines to decide rather than decide on incomplete evidence.
+   */
+  commits?: CommitContext[];
   reviews: ReviewEvidence[];
   checks: CheckEvidence[];
   now: string;

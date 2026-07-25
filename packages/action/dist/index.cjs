@@ -11228,7 +11228,7 @@ var require_mock_agent = __commonJS({
       }
       pendingInterceptors() {
         const mockAgentClients = this[kClients];
-        return Array.from(mockAgentClients.entries()).flatMap(([origin, scope]) => scope[kDispatches].map((dispatch) => ({ ...dispatch, origin }))).filter(({ pending }) => pending);
+        return Array.from(mockAgentClients.entries()).flatMap(([origin, scope2]) => scope2[kDispatches].map((dispatch) => ({ ...dispatch, origin }))).filter(({ pending }) => pending);
       }
       assertNoPendingInterceptors({ pendingInterceptorsFormatter = new PendingInterceptorsFormatter() } = {}) {
         const pending = this.pendingInterceptors();
@@ -32693,7 +32693,7 @@ var endpoints_default = Endpoints;
 
 // ../../node_modules/.pnpm/@octokit+plugin-rest-endpoint-methods@17.0.0_@octokit+core@7.0.6/node_modules/@octokit/plugin-rest-endpoint-methods/dist-src/endpoints-to-methods.js
 var endpointMethodsMap = /* @__PURE__ */ new Map();
-for (const [scope, endpoints] of Object.entries(endpoints_default)) {
+for (const [scope2, endpoints] of Object.entries(endpoints_default)) {
   for (const [methodName, endpoint2] of Object.entries(endpoints)) {
     const [route, defaults2, decorations] = endpoint2;
     const [method, url2] = route.split(/ /);
@@ -32704,11 +32704,11 @@ for (const [scope, endpoints] of Object.entries(endpoints_default)) {
       },
       defaults2
     );
-    if (!endpointMethodsMap.has(scope)) {
-      endpointMethodsMap.set(scope, /* @__PURE__ */ new Map());
+    if (!endpointMethodsMap.has(scope2)) {
+      endpointMethodsMap.set(scope2, /* @__PURE__ */ new Map());
     }
-    endpointMethodsMap.get(scope).set(methodName, {
-      scope,
+    endpointMethodsMap.get(scope2).set(methodName, {
+      scope: scope2,
       methodName,
       endpointDefaults,
       decorations
@@ -32716,8 +32716,8 @@ for (const [scope, endpoints] of Object.entries(endpoints_default)) {
   }
 }
 var handler = {
-  has({ scope }, methodName) {
-    return endpointMethodsMap.get(scope).has(methodName);
+  has({ scope: scope2 }, methodName) {
+    return endpointMethodsMap.get(scope2).has(methodName);
   },
   getOwnPropertyDescriptor(target, methodName) {
     return {
@@ -32736,17 +32736,17 @@ var handler = {
     delete target.cache[methodName];
     return true;
   },
-  ownKeys({ scope }) {
-    return [...endpointMethodsMap.get(scope).keys()];
+  ownKeys({ scope: scope2 }) {
+    return [...endpointMethodsMap.get(scope2).keys()];
   },
   set(target, methodName, value) {
     return target.cache[methodName] = value;
   },
-  get({ octokit, scope, cache }, methodName) {
+  get({ octokit, scope: scope2, cache }, methodName) {
     if (cache[methodName]) {
       return cache[methodName];
     }
-    const method = endpointMethodsMap.get(scope).get(methodName);
+    const method = endpointMethodsMap.get(scope2).get(methodName);
     if (!method) {
       return void 0;
     }
@@ -32754,7 +32754,7 @@ var handler = {
     if (decorations) {
       cache[methodName] = decorate(
         octokit,
-        scope,
+        scope2,
         methodName,
         endpointDefaults,
         decorations
@@ -32767,12 +32767,12 @@ var handler = {
 };
 function endpointsToMethods(octokit) {
   const newMethods = {};
-  for (const scope of endpointMethodsMap.keys()) {
-    newMethods[scope] = new Proxy({ octokit, scope, cache: {} }, handler);
+  for (const scope2 of endpointMethodsMap.keys()) {
+    newMethods[scope2] = new Proxy({ octokit, scope: scope2, cache: {} }, handler);
   }
   return newMethods;
 }
-function decorate(octokit, scope, methodName, defaults2, decorations) {
+function decorate(octokit, scope2, methodName, defaults2, decorations) {
   const requestWithDefaults = octokit.request.defaults(defaults2);
   function withDecorations(...args) {
     let options = requestWithDefaults.endpoint.merge(...args);
@@ -32786,7 +32786,7 @@ function decorate(octokit, scope, methodName, defaults2, decorations) {
     if (decorations.renamed) {
       const [newScope, newMethodName] = decorations.renamed;
       octokit.log.warn(
-        `octokit.${scope}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`
+        `octokit.${scope2}.${methodName}() has been renamed to octokit.${newScope}.${newMethodName}()`
       );
     }
     if (decorations.deprecated) {
@@ -32799,7 +32799,7 @@ function decorate(octokit, scope, methodName, defaults2, decorations) {
       )) {
         if (name in options2) {
           octokit.log.warn(
-            `"${name}" parameter is deprecated for "octokit.${scope}.${methodName}()". Use "${alias}" instead`
+            `"${name}" parameter is deprecated for "octokit.${scope2}.${methodName}()". Use "${alias}" instead`
           );
           if (!(alias in options2)) {
             options2[alias] = options2[name];
@@ -47746,10 +47746,10 @@ function findPermissionEscalations(before, after) {
     ];
   });
 }
-function findScopedPermissionEscalations(before, after, scope) {
+function findScopedPermissionEscalations(before, after, scope2) {
   return findPermissionEscalations(before, after).map((escalation) => ({
     ...escalation,
-    scope
+    scope: scope2
   }));
 }
 function canonicalizeExpressionReferences(value) {
@@ -47951,7 +47951,7 @@ function findSecretReferences(content) {
   }
   return [...references].sort();
 }
-function unknownWritePermissions(permissions, scope, job) {
+function unknownWritePermissions(permissions, scope2, job) {
   if (!isRecord2(permissions)) {
     return [];
   }
@@ -47960,7 +47960,7 @@ function unknownWritePermissions(permissions, scope, job) {
     if (known.has(permission) || typeof value !== "string" || value.toLowerCase() !== "write") {
       return [];
     }
-    return [{ permission, scope, ...job ? { job } : {} }];
+    return [{ permission, scope: scope2, ...job ? { job } : {} }];
   });
 }
 function findUnknownWritePermissions(workflow) {
@@ -48400,6 +48400,173 @@ var contractBlockedPathRule = {
       finding2.remediation.push("Remove the blocked-path change from this PR.");
       return finding2;
     });
+  }
+};
+var TRAILER_LINE = /^([A-Za-z][A-Za-z0-9-]*):[ \t]*(.*)$/;
+function shortSha(sha) {
+  return sha.length > 12 ? sha.slice(0, 12) : sha;
+}
+function truncate(value, maxLength = 120) {
+  const compact = value.replace(/\s+/g, " ").trim();
+  if (compact.length <= maxLength) {
+    return compact;
+  }
+  return `${compact.slice(0, maxLength - 3)}...`;
+}
+function parseCommitTrailers(message) {
+  const lines = message.replace(/\r\n/g, "\n").split("\n");
+  let end = lines.length;
+  while (end > 0 && lines[end - 1]?.trim() === "") {
+    end -= 1;
+  }
+  if (end === 0) {
+    return [];
+  }
+  let start = end;
+  while (start > 0 && lines[start - 1]?.trim() !== "") {
+    start -= 1;
+  }
+  if (start === 0) {
+    return [];
+  }
+  const trailers = [];
+  for (const line of lines.slice(start, end)) {
+    if (/^[ \t]/.test(line)) {
+      const previous = trailers.at(-1);
+      if (!previous) {
+        return [];
+      }
+      previous.value = `${previous.value} ${line.trim()}`.trim();
+      continue;
+    }
+    const match = TRAILER_LINE.exec(line);
+    if (!match) {
+      return [];
+    }
+    trailers.push({ name: match[1] ?? "", value: (match[2] ?? "").trim() });
+  }
+  return trailers;
+}
+function wildcardToRegExp(pattern) {
+  const escaped = pattern.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*");
+  return new RegExp(`^${escaped}$`, "i");
+}
+function valueMatchesAny(value, patterns) {
+  for (const pattern of patterns) {
+    if (wildcardToRegExp(pattern).test(value)) {
+      return pattern;
+    }
+  }
+  return void 0;
+}
+function hasTrailer(trailers, name) {
+  const normalized = name.toLowerCase();
+  return trailers.some((trailer) => trailer.name.toLowerCase() === normalized);
+}
+function presentTrailerNames(trailers) {
+  if (trailers.length === 0) {
+    return "none";
+  }
+  const unique = [...new Set(trailers.map((trailer) => trailer.name))];
+  return unique.join(", ");
+}
+function scope(ctx) {
+  const config2 = ctx.input.config.commit_trailers;
+  if (!config2.enabled) {
+    return void 0;
+  }
+  const commits = ctx.input.commits;
+  if (commits === void 0) {
+    return void 0;
+  }
+  return { commits, agentDetected: ctx.helpers.getAgentOrigin().detected };
+}
+var commitTrailerMissingRule = {
+  id: "commit/trailer-missing",
+  title: "Required commit trailer missing",
+  run(ctx) {
+    const active = scope(ctx);
+    if (!active) {
+      return [];
+    }
+    const findings = [];
+    for (const requirement of ctx.input.config.commit_trailers.required) {
+      if (requirement.applies_to === "agent" && !active.agentDetected) {
+        continue;
+      }
+      const expected = requirement.any_of.join(" or ");
+      for (const commit of active.commits) {
+        const trailers = parseCommitTrailers(commit.message);
+        if (requirement.any_of.some((name) => hasTrailer(trailers, name))) {
+          continue;
+        }
+        findings.push({
+          ruleId: "commit/trailer-missing",
+          severity: requirement.severity,
+          title: "Required commit trailer missing",
+          message: `Commit ${shortSha(commit.sha)} does not carry a ${expected} trailer.`,
+          evidence: [
+            { label: "commit", value: shortSha(commit.sha) },
+            { label: "expected_trailer", value: expected },
+            { label: "applies_to", value: requirement.applies_to },
+            { label: "present_trailers", value: presentTrailerNames(trailers) },
+            { label: "subject", value: truncate(commit.message.split("\n")[0] ?? "") }
+          ],
+          remediation: [
+            `Add a "${requirement.any_of[0]}: <tool>" trailer to the commit message, then force-push the amended commit.`
+          ],
+          tags: ["commit-trailer", "disclosure"],
+          confidence: "high"
+        });
+      }
+    }
+    return findings;
+  }
+};
+var commitTrailerForbiddenRule = {
+  id: "commit/trailer-forbidden",
+  title: "Forbidden commit trailer present",
+  run(ctx) {
+    const active = scope(ctx);
+    if (!active) {
+      return [];
+    }
+    const findings = [];
+    for (const prohibition of ctx.input.config.commit_trailers.forbidden) {
+      const normalized = prohibition.name.toLowerCase();
+      for (const commit of active.commits) {
+        for (const trailer of parseCommitTrailers(commit.message)) {
+          if (trailer.name.toLowerCase() !== normalized) {
+            continue;
+          }
+          const matchedPattern = prohibition.value_patterns.length === 0 ? void 0 : valueMatchesAny(trailer.value, prohibition.value_patterns);
+          if (prohibition.value_patterns.length > 0 && matchedPattern === void 0) {
+            continue;
+          }
+          const evidence = [
+            { label: "commit", value: shortSha(commit.sha) },
+            { label: "trailer", value: trailer.name },
+            { label: "value", value: truncate(trailer.value) }
+          ];
+          if (matchedPattern !== void 0) {
+            evidence.push({ label: "matched_pattern", value: matchedPattern });
+          }
+          findings.push({
+            ruleId: "commit/trailer-forbidden",
+            severity: prohibition.severity,
+            title: "Forbidden commit trailer present",
+            message: `Commit ${shortSha(commit.sha)} carries a ${trailer.name} trailer this repository does not accept.`,
+            evidence,
+            remediation: [
+              `Remove the "${trailer.name}" trailer from the commit message, then force-push the amended commit.`
+            ],
+            tags: ["commit-trailer", "attribution"],
+            confidence: "high"
+          });
+        }
+      }
+    }
+    return findings;
   }
 };
 function isWorkflowFile(ctx, path) {
@@ -49147,6 +49314,8 @@ var builtInRules = [
   missingTestEvidenceRule,
   contentUnavailableRule,
   packageScriptDriftRule,
+  commitTrailerMissingRule,
+  commitTrailerForbiddenRule,
   workflowPermissionEscalationRule,
   workflowDangerousPatternRule,
   agenticWorkflowInjectionRule
@@ -49610,6 +49779,21 @@ var AgenticWorkflowsSchema = external_exports.object({
   privileged_severity: SeveritySettingSchema.default("error"),
   additional_actions: external_exports.array(AgenticActionSchema).default([])
 }).strict();
+var CommitTrailerRequirementSchema = external_exports.object({
+  any_of: external_exports.array(NonEmptyStringSchema).min(1),
+  applies_to: external_exports.enum(["agent", "all"]).default("agent"),
+  severity: SeveritySettingSchema.default("warn")
+}).strict();
+var CommitTrailerProhibitionSchema = external_exports.object({
+  name: NonEmptyStringSchema,
+  value_patterns: external_exports.array(NonEmptyStringSchema).default([]),
+  severity: SeveritySettingSchema.default("error")
+}).strict();
+var CommitTrailersConfigSchema = external_exports.object({
+  enabled: external_exports.boolean().default(true),
+  required: external_exports.array(CommitTrailerRequirementSchema).default([]),
+  forbidden: external_exports.array(CommitTrailerProhibitionSchema).default([])
+}).strict();
 var PackageScriptsConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
   paths: external_exports.array(NonEmptyStringSchema).default(DEFAULT_PACKAGE_SCRIPT_PATHS),
@@ -49654,6 +49838,11 @@ var MergeWardenConfigSchema = external_exports.object({
     paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
     lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
     severity: "warn"
+  }),
+  commit_trailers: CommitTrailersConfigSchema.default({
+    enabled: true,
+    required: [],
+    forbidden: []
   })
 }).strict().superRefine((value, ctx) => {
   const seen = /* @__PURE__ */ new Set();
@@ -50273,6 +50462,31 @@ function createOctokitGitHubApi(octokit, getPullRequest) {
         );
       }
     },
+    async listPullRequestCommitsPage(target, page, perPage) {
+      const listCommits = octokit.rest.pulls.listCommits;
+      if (listCommits === void 0) {
+        return [];
+      }
+      try {
+        const response = await listCommits({
+          owner: target.owner,
+          repo: target.repo,
+          pull_number: target.number,
+          page,
+          per_page: perPage,
+          ...requestOptions()
+        });
+        return response.data.map((commit) => ({
+          sha: commit.sha,
+          message: commit.commit.message
+        }));
+      } catch (error52) {
+        throw toGitHubApiError(
+          error52,
+          `List commits for ${target.owner}/${target.repo}#${target.number} page ${page}`
+        );
+      }
+    },
     async getTextFile(repository, path, sha) {
       try {
         const response = await octokit.rest.repos.getContent({
@@ -50393,6 +50607,9 @@ async function withGitHubRetry(operation, budget, callback) {
 var FILES_PER_PAGE = 100;
 var MAX_FILE_PAGES = 30;
 var MAX_CHANGED_FILES = FILES_PER_PAGE * MAX_FILE_PAGES;
+var COMMITS_PER_PAGE = 100;
+var MAX_COMMIT_PAGES = 3;
+var MAX_COMMITS = 250;
 var MAX_TEXT_BYTES = 1024 * 1024;
 var MAX_TOTAL_CONTENT_BYTES = 64 * 1024 * 1024;
 var CONTENT_CONCURRENCY = 8;
@@ -50597,6 +50814,40 @@ async function listPullFiles(api, target, expected, retryBudget) {
   }
   return files;
 }
+async function listPullCommits(api, target, pullRequest, retryBudget, warning2) {
+  const expected = pullRequest.commitCount;
+  if (api.listPullRequestCommitsPage === void 0 || !Number.isInteger(expected)) {
+    return void 0;
+  }
+  if (expected === 0) {
+    return [];
+  }
+  if (expected > MAX_COMMITS) {
+    warning2?.(
+      `Pull request has ${String(expected)} commits, above the ${String(MAX_COMMITS)} MergeWarden collects; commit trailer checks were skipped.`
+    );
+    return void 0;
+  }
+  const commits = [];
+  for (let page = 1; page <= MAX_COMMIT_PAGES && commits.length < expected; page += 1) {
+    const pageCommits = await withGitHubRetry(
+      `List pull request commits page ${page}`,
+      retryBudget,
+      () => api.listPullRequestCommitsPage?.(target, page, COMMITS_PER_PAGE) ?? Promise.resolve([])
+    );
+    commits.push(...pageCommits);
+    if (pageCommits.length < COMMITS_PER_PAGE) {
+      break;
+    }
+  }
+  if (commits.length !== expected) {
+    warning2?.(
+      `Collected ${String(commits.length)} of ${String(expected)} commits; commit trailer checks were skipped.`
+    );
+    return void 0;
+  }
+  return commits.map((commit) => ({ sha: commit.sha, message: commit.message }));
+}
 function pullRequestContext(pullRequest) {
   return {
     number: pullRequest.number,
@@ -50646,6 +50897,7 @@ async function loadGitHubAnalysis(api, target, options) {
       gaps.push(...loadedContent.gaps);
     }
   }
+  const commits = await listPullCommits(api, target, pullRequest, retryBudget, options.warning);
   const analysis = {
     complete: gaps.length === 0,
     expectedFileCount: expected,
@@ -50675,6 +50927,7 @@ async function loadGitHubAnalysis(api, target, options) {
         deletions: files.reduce((sum, file2) => sum + file2.deletions, 0)
       }
     },
+    ...commits === void 0 ? {} : { commits },
     reviews: [],
     checks: [],
     now: options.now,
@@ -50759,6 +51012,7 @@ function remotePullRequest(context3, pr) {
     labels: labelsFromPullRequest(pr),
     draft: Boolean(pr.draft),
     changedFiles: pr.changed_files ?? 0,
+    ...Number.isInteger(pr.commits) ? { commitCount: pr.commits } : {},
     head: {
       ref: pr.head.ref,
       sha: pr.head.sha,

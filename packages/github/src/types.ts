@@ -20,6 +20,12 @@ export interface RemotePullRequest {
   labels: string[];
   draft: boolean;
   changedFiles: number;
+  /**
+   * Number of commits GitHub reports for the pull request. Optional so that callers predating
+   * commit collection keep compiling; when it is absent the collector skips commit trailer
+   * evidence rather than guessing.
+   */
+  commitCount?: number;
   head: {
     ref: string;
     sha: string;
@@ -42,6 +48,11 @@ export interface RemotePullFile {
   previousFilename?: string;
 }
 
+export interface RemotePullCommit {
+  sha: string;
+  message: string;
+}
+
 export type TextFileResult = { kind: "found"; text: string } | { kind: "not-found" };
 
 export interface GitHubApi {
@@ -51,6 +62,15 @@ export interface GitHubApi {
     page: number,
     perPage: 100,
   ): Promise<RemotePullFile[]>;
+  /**
+   * Optional so that existing GitHubApi implementations remain source compatible. When it is not
+   * provided the collector omits commits entirely and commit trailer rules stay inert.
+   */
+  listPullRequestCommitsPage?(
+    target: PullRequestLocator,
+    page: number,
+    perPage: 100,
+  ): Promise<RemotePullCommit[]>;
   getTextFile(repository: RemoteRepository, path: string, sha: string): Promise<TextFileResult>;
 }
 

@@ -9,6 +9,7 @@ import {
   contractMissingRule,
   contractOutOfScopeRule,
 } from "./contractRules.js";
+import { commitTrailerForbiddenRule, commitTrailerMissingRule } from "./commitTrailers.js";
 import { contentUnavailableRule } from "./contentUnavailable.js";
 import { highRiskPathRule } from "./highRiskPath.js";
 import { packageScriptDriftRule } from "./packageScripts.js";
@@ -28,6 +29,8 @@ export const builtInRules: Rule[] = [
   missingTestEvidenceRule,
   contentUnavailableRule,
   packageScriptDriftRule,
+  commitTrailerMissingRule,
+  commitTrailerForbiddenRule,
   workflowPermissionEscalationRule,
   workflowDangerousPatternRule,
   agenticWorkflowInjectionRule,

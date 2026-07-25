@@ -39,6 +39,7 @@ export interface ActionPullRequest {
   title?: string | null;
   body?: string | null;
   changed_files?: number;
+  commits?: number;
   user?: { login?: string | null } | null;
   labels?: Array<string | { name?: string | null }>;
   draft?: boolean | null;
@@ -248,6 +249,7 @@ function remotePullRequest(context: ActionContext, pr: ActionPullRequest): Remot
     labels: labelsFromPullRequest(pr),
     draft: Boolean(pr.draft),
     changedFiles: pr.changed_files ?? 0,
+    ...(Number.isInteger(pr.commits) ? { commitCount: pr.commits } : {}),
     head: {
       ref: pr.head.ref,
       sha: pr.head.sha,
