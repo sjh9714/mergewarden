@@ -26,6 +26,26 @@ Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
+## v0.4.1 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30156230619
+- Action ref: `sjh9714/mergewarden@ccef99499b5932864decf24656dc6b4aefd2e6a8`
+- Checkout step: not used
+- Base-branch policy: repository `mergewarden.yml`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: 9 error, 2 warning, 1 info
+- Managed PR comment: posted by the run, with the detailed findings behind a
+  `<details>` fold added in v0.4.1
+
+The same pull request re-run against the v0.4.1 release commit. Rule outcomes
+are identical to the v0.4.0 run below — same decision, same finding counts —
+which is the point: the v0.4.1 changes are a new opt-in rule family and a
+report-surface change, not a change in what the engine decides. The policy
+digest differs because the configuration schema gained the `commit_trailers`
+key; finding IDs did not change.
+
 ## v0.4.0 Public Composite Proof
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17

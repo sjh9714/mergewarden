@@ -101,11 +101,11 @@ jobs:
           fail-on-block: false
 ```
 
-For an immutable, commit-addressed install, pin the exact v0.4.0 release
+For an immutable, commit-addressed install, pin the exact v0.4.1 release
 commit:
 
 ```yaml
-- uses: sjh9714/mergewarden@21982fe53cec6d465777bc853de097da8f74708d
+- uses: sjh9714/mergewarden@ccef99499b5932864decf24656dc6b4aefd2e6a8
 ```
 
 No checkout step is needed.
@@ -117,7 +117,7 @@ errors never fall back silently.
 
 Verified checkout-free Action evidence is available in
 [sandbox PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17).
-Its public run downloads the exact SHA-pinned v0.4.0 release commit and
+Its public run downloads the exact SHA-pinned v0.4.1 release commit and
 reports contract scope escapes, workflow permission escalation, and
 agent-control-plane drift.
 
