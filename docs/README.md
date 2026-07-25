@@ -21,6 +21,8 @@ requests. Start with the shortest path for your task:
   AGENTS.md wiring.
 - [Gating Cursor background agent PRs](integrations/cursor.md): detection,
   contracts, and project-rule wiring.
+- [Gating GitHub Copilot coding agent PRs](integrations/copilot.md): bot,
+  branch, and label detection with custom-instruction wiring.
 - [Roadmap](roadmap.md): current product direction without date promises.
 - [Agentic workflow injection rule](rules/agentic-workflow-injection.md): exact
   sources, sinks, severity, and limits.
