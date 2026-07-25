@@ -638,4 +638,46 @@ describe("report renderers", () => {
     expect(plainText).not.toContain("Snapshot:");
     expect(plainText).not.toContain("evidenceSnapshot");
   });
+  it("collapses detailed findings only when asked, without dropping any content", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md"), fileChange("CLAUDE.md")],
+      }),
+    );
+
+    const flat = renderMarkdownReport(result);
+    const collapsed = renderMarkdownReport(result, { collapseFindings: true });
+
+    expect(flat).not.toContain("<details>");
+    expect(collapsed).toContain("<details>");
+    expect(collapsed).toContain("</details>");
+    expect(collapsed).toContain("<summary>Detailed findings (2 findings)");
+
+    // The collapsed surface pushes far less into the conversation, but hides nothing.
+    const visibleBeforeDetails = collapsed.split("<details>")[0] ?? "";
+    expect(visibleBeforeDetails.split("\n").length).toBeLessThan(flat.split("\n").length / 2);
+
+    for (const finding of result.findings) {
+      expect(collapsed).toContain(finding.findingId);
+      expect(collapsed).toContain(finding.ruleId);
+    }
+
+    expect(collapsed).toContain("Snapshot:");
+    expect(collapsed).toContain("Remediation:");
+  });
+
+  it("labels the collapsed summary with waived counts", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const collapsed = renderMarkdownReport(result, { collapseFindings: true });
+
+    expect(collapsed).toContain("<summary>Detailed findings (1 finding)");
+    expect(collapsed).not.toContain("waived)");
+  });
 });

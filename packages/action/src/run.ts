@@ -464,6 +464,7 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
         maxFindings: 50,
         maxBytes: COMMENT_MAX_BYTES - COMMENT_WRAPPER_RESERVE_BYTES,
         fullReportPath: reportMarkdownPath,
+        collapseFindings: true,
       });
       await upsertPullRequestComment(runtime.octokit, context.repo, pr.number, commentReport);
     } catch (error) {

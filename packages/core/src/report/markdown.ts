@@ -11,6 +11,14 @@ export interface MarkdownReportOptions {
   maxFindings?: number;
   maxBytes?: number;
   fullReportPath?: string;
+  /**
+   * Wrap the detailed finding sections in a collapsed `<details>` element.
+   *
+   * Used for the pull request comment, where a full listing buries every other conversation on the
+   * page. Nothing is removed — the same findings, evidence snapshots and remediation are inside,
+   * one click away. Off by default so report files and job summaries stay flat.
+   */
+  collapseFindings?: boolean;
 }
 
 const severityRank: Record<Finding["severity"], number> = {
@@ -129,11 +137,25 @@ type MarkdownReportItem =
   | { finding: Finding; waived: false }
   | { finding: WaivedFinding; waived: true };
 
+function detailSummaryLabel(activeCount: number, waivedCount: number): string {
+  if (activeCount === 0 && waivedCount === 0) {
+    return "Detailed findings";
+  }
+
+  const parts = [
+    ...(activeCount > 0 ? [`${activeCount} finding${activeCount === 1 ? "" : "s"}`] : []),
+    ...(waivedCount > 0 ? [`${waivedCount} waived`] : []),
+  ];
+
+  return `Detailed findings (${parts.join(", ")}) — evidence, finding IDs, remediation`;
+}
+
 function buildMarkdownReport(
   result: AnalysisResult,
   combined: MarkdownReportItem[],
   visibleCount: number,
   fullReportPath: string | undefined,
+  collapseFindings: boolean,
 ): string {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
@@ -168,31 +190,42 @@ function buildMarkdownReport(
     `- Waived: ${result.summary.waivedCount}`,
     `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
     "",
-    "## Detailed Findings",
-    "",
   ];
 
   const activeVisible = visible.filter((item) => !item.waived);
+  const waivedVisible = visible.filter((item) => item.waived);
+  const detail: string[] = ["## Detailed Findings", ""];
 
   if (activeVisible.length === 0) {
-    lines.push(
+    detail.push(
       result.findings.length === 0 ? "No active findings." : "Active findings omitted.",
       "",
     );
   } else {
     for (const item of activeVisible) {
-      pushFinding(lines, item.finding);
+      pushFinding(detail, item.finding);
     }
   }
 
-  const waivedVisible = visible.filter((item) => item.waived);
-
   if (waivedVisible.length > 0) {
-    lines.push("## Waived Findings", "");
+    detail.push("## Waived Findings", "");
 
     for (const item of waivedVisible) {
-      pushWaivedFinding(lines, item.finding);
+      pushWaivedFinding(detail, item.finding);
     }
+  }
+
+  if (collapseFindings) {
+    lines.push(
+      "<details>",
+      `<summary>${detailSummaryLabel(activeVisible.length, waivedVisible.length)}</summary>`,
+      "",
+      ...detail,
+      "</details>",
+      "",
+    );
+  } else {
+    lines.push(...detail);
   }
 
   const omitted = result.metadata.omittedFindingCount + surfaceOmitted;
@@ -231,7 +264,13 @@ export function renderMarkdownReport(
 
   while (low <= high) {
     const visibleCount = Math.floor((low + high) / 2);
-    const candidate = buildMarkdownReport(result, combined, visibleCount, options.fullReportPath);
+    const candidate = buildMarkdownReport(
+      result,
+      combined,
+      visibleCount,
+      options.fullReportPath,
+      options.collapseFindings ?? false,
+    );
 
     if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
       best = candidate;

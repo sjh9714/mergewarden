@@ -8,6 +8,16 @@ This project follows the spirit of
 
 ## Unreleased
 
+### Changed
+
+- Collapse the detailed findings in the pull request comment behind a `<details>`
+  element. On a 12-finding report the comment drops from 371 rendered lines to 33
+  before the fold, while the findings, evidence snapshots, finding IDs and
+  remediation stay exactly where they were, one click away. Report files and job
+  summaries are unchanged. Reported by a maintainer evaluating MergeWarden on
+  [microcks/.github#86](https://github.com/microcks/.github/issues/86): a bot
+  comment that long buries every other conversation on the page.
+
 ### Added
 
 - Commit trailer rules: `commit/trailer-missing` and `commit/trailer-forbidden`,

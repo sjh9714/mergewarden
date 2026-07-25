@@ -50179,7 +50179,17 @@ function pushWaivedFinding(lines, finding2) {
     ""
   );
 }
-function buildMarkdownReport(result, combined, visibleCount, fullReportPath) {
+function detailSummaryLabel(activeCount, waivedCount) {
+  if (activeCount === 0 && waivedCount === 0) {
+    return "Detailed findings";
+  }
+  const parts = [
+    ...activeCount > 0 ? [`${activeCount} finding${activeCount === 1 ? "" : "s"}`] : [],
+    ...waivedCount > 0 ? [`${waivedCount} waived`] : []
+  ];
+  return `Detailed findings (${parts.join(", ")}) \u2014 evidence, finding IDs, remediation`;
+}
+function buildMarkdownReport(result, combined, visibleCount, fullReportPath, collapseFindings) {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
   const lines = [
@@ -50212,27 +50222,38 @@ function buildMarkdownReport(result, combined, visibleCount, fullReportPath) {
     `- Info: ${result.summary.infoCount}`,
     `- Waived: ${result.summary.waivedCount}`,
     `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
-    "",
-    "## Detailed Findings",
     ""
   ];
   const activeVisible = visible.filter((item) => !item.waived);
+  const waivedVisible = visible.filter((item) => item.waived);
+  const detail = ["## Detailed Findings", ""];
   if (activeVisible.length === 0) {
-    lines.push(
+    detail.push(
       result.findings.length === 0 ? "No active findings." : "Active findings omitted.",
       ""
     );
   } else {
     for (const item of activeVisible) {
-      pushFinding(lines, item.finding);
+      pushFinding(detail, item.finding);
     }
   }
-  const waivedVisible = visible.filter((item) => item.waived);
   if (waivedVisible.length > 0) {
-    lines.push("## Waived Findings", "");
+    detail.push("## Waived Findings", "");
     for (const item of waivedVisible) {
-      pushWaivedFinding(lines, item.finding);
+      pushWaivedFinding(detail, item.finding);
     }
+  }
+  if (collapseFindings) {
+    lines.push(
+      "<details>",
+      `<summary>${detailSummaryLabel(activeVisible.length, waivedVisible.length)}</summary>`,
+      "",
+      ...detail,
+      "</details>",
+      ""
+    );
+  } else {
+    lines.push(...detail);
   }
   const omitted = result.metadata.omittedFindingCount + surfaceOmitted;
   if (omitted > 0) {
@@ -50259,7 +50280,13 @@ function renderMarkdownReport(result, options = {}) {
   let best;
   while (low <= high) {
     const visibleCount = Math.floor((low + high) / 2);
-    const candidate = buildMarkdownReport(result, combined, visibleCount, options.fullReportPath);
+    const candidate = buildMarkdownReport(
+      result,
+      combined,
+      visibleCount,
+      options.fullReportPath,
+      options.collapseFindings ?? false
+    );
     if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
       best = candidate;
       low = visibleCount + 1;
@@ -51181,7 +51208,8 @@ async function runActionInner(runtime) {
       const commentReport = renderMarkdownReport(result, {
         maxFindings: 50,
         maxBytes: COMMENT_MAX_BYTES - COMMENT_WRAPPER_RESERVE_BYTES,
-        fullReportPath: reportMarkdownPath
+        fullReportPath: reportMarkdownPath,
+        collapseFindings: true
       });
       await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport);
     } catch (error52) {
