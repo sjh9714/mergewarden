@@ -36,3 +36,6 @@ report formats, finding IDs, and the policy schema are unchanged from v0.3.1.
 - Policy schema (`version: 1`), rule IDs, severities, and decisions.
 - Finding IDs (still `agf_` + evidence hash), so existing waivers stay valid.
 - The trust boundary: checkout-free, base-branch policy only, no runtime LLM.
+
+Proofs, screenshots, and Action refs recorded before v0.4.0 keep the former
+Agent Gate name. Old repository URLs redirect to `sjh9714/mergewarden`.

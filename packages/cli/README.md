@@ -7,7 +7,7 @@ The npm package is `mergewarden`; the installed executable remains `mergewarden`
 ## Try a public pull request
 
 ```console
-npx mergewarden@0.4.0 scan owner/repository#123
+npx mergewarden@0.4.1 scan owner/repository#123
 ```
 
 Full GitHub pull request URLs are also accepted. Authentication is optional for public repositories. For private repositories or higher API limits, set `GH_TOKEN` (preferred) or `GITHUB_TOKEN` in the environment.
@@ -22,10 +22,10 @@ Exit codes are stable: `0` for a complete pass or warning, `1` for a complete bl
 ## Replay a local fixture
 
 ```console
-mergewarden replay ./fixtures/example
+mergewarden replay path/to/fixture
 ```
 
-A fixture contains `mergewarden.yml`, `fixture.json`, and optionally `pr-body.md`. Replay remains local and deterministic.
+A fixture directory contains `mergewarden.yml`, `fixture.json`, and optionally `pr-body.md`. Replay is fully local and deterministic — no network, no token. The repository's own fixtures live under [`fixtures/`](https://github.com/sjh9714/mergewarden/tree/main/fixtures) and are not bundled in this package.
 
 Run `mergewarden --help` for the complete command reference.
 

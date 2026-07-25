@@ -27,7 +27,6 @@ Every decision includes deterministic evidence that can be replayed locally.
 
 MergeWarden gates its own pull requests — the `MergeWarden` badge above is that
 live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)).
-Formerly named Agent Gate; old links redirect and pre-v0.4.0 proofs use that name.
 
 [What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
 
@@ -41,7 +40,7 @@ We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
 agent, Codex, Claude Code, Cursor) on public repositories with the default
 policy:
 
-- **0 of 2,204** declared a machine-readable scope for the change.
+- **0 of 2,204** declared their intended scope in any machine-checkable form.
 - Of the 349 PRs that touched workflows or package manifests, **12.9%**
   escalated workflow permissions and **17.5%** introduced unpinned actions.
 - **3.9%** changed agent control-plane files (`AGENTS.md`, `.mcp.json`, and
@@ -291,8 +290,9 @@ assertions, and a Markdown snapshot for user-facing findings. Start with a
 - [Documentation index](docs/README.md) — full list of guides and references
 - [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
 
-If MergeWarden catches a real boundary crossing in your repository, a GitHub
-Star is a simple way to tell us the project is useful.
+If MergeWarden reports a boundary crossing your team decided was fine, that is
+the most useful bug report this project can get — open an issue with the
+`npx mergewarden scan` output.
 
 ## License
 
