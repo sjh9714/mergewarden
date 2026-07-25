@@ -13,6 +13,7 @@ import {
   type PullRequestLocator,
 } from "@mergewarden/github";
 
+import { runDemoCli } from "./demo.js";
 import { NativeGitHubApi } from "./githubApi.js";
 import {
   exitCodeForResult,
@@ -58,11 +59,13 @@ const DEFAULT_DEPENDENCIES: CliDependencies = {
 export const HELP_TEXT = `MergeWarden — checkout-free policy scanning for AI-generated pull requests
 
 Usage:
+  mergewarden demo [--format human|json|markdown]
   mergewarden scan <owner/repository#number> [options]
   mergewarden scan <github-pull-request-url> [options]
   mergewarden replay <fixture-dir> [--format json]
 
 Commands:
+  demo     Scan a bundled example pull request. No token, no network.
   scan     Analyze a GitHub pull request through the GitHub API only.
   replay   Analyze a deterministic local fixture.
 
@@ -236,7 +239,7 @@ export async function runCli(
   },
   dependencies: CliDependencies = DEFAULT_DEPENDENCIES,
 ): Promise<number> {
-  const knownCommand = argv[0] === "scan" || argv[0] === "replay";
+  const knownCommand = argv[0] === "scan" || argv[0] === "replay" || argv[0] === "demo";
   const commandArguments = argv.slice(1);
 
   if (isHelp(argv) || (knownCommand && isHelp(commandArguments))) {
@@ -253,10 +256,14 @@ export async function runCli(
     return runReplayCli(argv, io);
   }
 
+  if (argv[0] === "demo") {
+    return runDemoCli(argv.slice(1), io);
+  }
+
   try {
     if (argv[0] !== "scan") {
       throw new CliUsageError(
-        "Expected a command: scan or replay. Run mergewarden --help for usage.",
+        "Expected a command: demo, scan, or replay. Run mergewarden --help for usage.",
       );
     }
 

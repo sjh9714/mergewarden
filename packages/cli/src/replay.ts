@@ -12,6 +12,7 @@ import {
   type AnalysisResult,
   type CheckEvidence,
   type CommitContext,
+  type Finding,
   type ChangeSet,
   type FileChange,
   type PullRequestContext,
@@ -354,6 +355,47 @@ export function safeTerminalValue(value: string): string {
   return `${byteLimitedPrefix(normalized, TERMINAL_PREVIEW_BYTES)}… [sha256:${digest}]`;
 }
 
+const SEVERITY_RANK = { error: 0, warn: 1, info: 2 } as const;
+
+/**
+ * Findings that explain the rest of the report rather than standing on their own.
+ *
+ * `agent/origin-detected` is only `info`, but it is why a contract was demanded at all —
+ * truncating it away leaves `contract/missing` on screen with nothing to justify it.
+ */
+const CONTEXT_RULE_IDS = new Set(["agent/origin-detected"]);
+
+/**
+ * The terminal surface shows at most `limit` findings. Choose which ones by severity rather
+ * than by position, so a report with more findings than fit never hides its errors behind
+ * warnings that happened to be evaluated first. Ties keep evaluation order, and the chosen
+ * findings are rendered in evaluation order so the surface stays stable and groupable by file.
+ */
+function mostSevereFindings(findings: readonly Finding[], limit: number): Finding[] {
+  if (findings.length <= limit) {
+    return [...findings];
+  }
+
+  return findings
+    .map((finding, index) => ({ finding, index }))
+    .sort((left, right) => {
+      const byContext =
+        Number(CONTEXT_RULE_IDS.has(right.finding.ruleId)) -
+        Number(CONTEXT_RULE_IDS.has(left.finding.ruleId));
+
+      if (byContext !== 0) {
+        return byContext;
+      }
+
+      const bySeverity =
+        SEVERITY_RANK[left.finding.severity] - SEVERITY_RANK[right.finding.severity];
+      return bySeverity === 0 ? left.index - right.index : bySeverity;
+    })
+    .slice(0, limit)
+    .sort((left, right) => left.index - right.index)
+    .map((entry) => entry.finding);
+}
+
 export function renderHumanReport(result: AnalysisResult): string {
   const lines = [
     `MergeWarden: ${statusLabel(result)}`,
@@ -373,7 +415,7 @@ export function renderHumanReport(result: AnalysisResult): string {
 
   lines.push("");
 
-  const visibleFindings = result.findings.slice(0, 10);
+  const visibleFindings = mostSevereFindings(result.findings, 10);
 
   if (visibleFindings.length === 0) {
     lines.push("No retained findings.");

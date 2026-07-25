@@ -8,6 +8,19 @@ This project follows the spirit of
 
 ## Unreleased
 
+### Added
+
+- **`mergewarden demo`** — analyzes an example pull request bundled inside the CLI,
+  with no network call, no token and no repository. It runs the **default** policy,
+  so the 13 findings it reports are a verifiable statement about what a
+  zero-configuration install does rather than a showcase arranged by a bespoke
+  fixture config. The example is an agent pull request that declares
+  `allowed_paths: docs/**` and then edits a release workflow, `AGENTS.md` and
+  `package.json`, which is enough to demonstrate contract scope, control-plane
+  drift, workflow permission escalation, prompt injection into an agentic workflow,
+  and an added lifecycle script in a single report. Accepts
+  `--format human|json|markdown`.
+
 ### Changed
 
 - **Agent detection now ships working defaults.** `agent_detection.authors`,
@@ -46,6 +59,14 @@ This project follows the spirit of
   [microcks/.github#86](https://github.com/microcks/.github/issues/86), who
   pointed out that the first fix hid the findings but left the header
   restating the decision four times.
+
+- The CLI's terminal report bounds itself to 10 findings; it now chooses those 10
+  by severity instead of by evaluation order, so a report with more findings than
+  fit can no longer hide every `error` behind warnings that happened to run first.
+  `agent/origin-detected` is retained regardless of its `info` severity because it
+  is what explains why the contract rules fired at all. The selected findings are
+  still printed in evaluation order, and `--format json` and `--format markdown`
+  are unaffected.
 
 ## v0.4.1 - 2026-07-25
 

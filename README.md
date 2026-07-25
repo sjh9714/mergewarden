@@ -52,15 +52,16 @@ Every number reproduces from published queries: [study methodology](docs/study/m
 
 ## Try It in 60 Seconds
 
-Scan any public GitHub pull request without installing the Action:
+See what MergeWarden catches — no token, no repository, no network:
+
+```bash
+npx --yes mergewarden@0.4.1 demo
+```
+
+Then scan a real pull request, by `owner/repo#number` or by URL:
 
 ```bash
 npx --yes mergewarden@0.4.1 scan owner/repository#123
-```
-
-A full pull-request URL works too:
-
-```bash
 npx --yes mergewarden@0.4.1 scan https://github.com/owner/repository/pull/123
 ```
 
@@ -69,10 +70,9 @@ npx --yes mergewarden@0.4.1 scan https://github.com/owner/repository/pull/123
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
 limits. MergeWarden intentionally has no token command-line flag.
 
-The default output is concise. Use `--format json` or `--format markdown` for
-the complete machine-readable report. See the [CLI reference](docs/cli.md).
-The recording above is an actual `npx` execution of the published package; no
-simulated CLI output is used.
+The default output is concise; `--format json` or `--format markdown` gives the
+complete machine-readable report ([CLI reference](docs/cli.md)). The recording
+above is a real `npx` run of the published package, not simulated output.
 
 ## Install in 30 Seconds
 

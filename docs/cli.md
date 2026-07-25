@@ -6,6 +6,7 @@ target repository.
 ## Commands
 
 ```text
+mergewarden demo
 mergewarden scan OWNER/REPO#NUMBER
 mergewarden scan https://github.com/OWNER/REPO/pull/NUMBER
 mergewarden replay FIXTURE_DIR
@@ -18,6 +19,18 @@ Run without installing:
 ```bash
 npx --yes mergewarden@0.4.1 scan owner/repository#123
 ```
+
+## Demo
+
+`mergewarden demo` analyzes an example pull request that ships inside the CLI.
+It makes no network calls, needs no token, and uses the **default** policy, so
+its output is a statement about what a zero-configuration install actually
+reports. It accepts `--format human|json|markdown`.
+
+The example is an agent pull request that declares `allowed_paths: docs/**` and
+then edits a release workflow, `AGENTS.md`, and `package.json` — producing
+contract-scope, control-plane drift, workflow permission, prompt-injection, and
+lifecycle-script findings in one report.
 
 ## Scan Options
 
