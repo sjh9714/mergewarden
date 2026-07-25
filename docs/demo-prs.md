@@ -26,6 +26,27 @@ Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
+## v0.5.0 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30160399530
+- Action ref: `sjh9714/mergewarden@d4892fa234498032a1e1bea6ff3882e76506722b`
+- Checkout step: not used
+- Base-branch policy: repository `mergewarden.yml`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: 9 error, 2 warning, 1 info
+- Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
+
+The same pull request re-run against the v0.5.0 release commit. Decision and
+finding counts are identical to the v0.4.1 run below, which is worth stating
+plainly: v0.5.0's headline change is that agent detection works without
+configuration, and this sandbox already configured `agent_detection` explicitly,
+so the new defaults have nothing to add here. The evidence that the defaults
+changed anything is in the release notes' 14-repository measurement, not in this
+proof. The policy digest differs because the default control-plane path list
+gained `GEMINI.md` and `QWEN.md`; finding IDs did not change.
+
 ## v0.4.1 Public Composite Proof
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
