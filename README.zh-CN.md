@@ -31,6 +31,10 @@ npx --yes mergewarden@0.5.1 demo
 
 这条命令会分析一个内置在 CLI 里的示例 PR，用的是**默认策略**——也就是说，它输出的 13 条检查结果，就是零配置安装时你实际会得到的东西。
 
+![mergewarden demo 的真实运行结果](docs/assets/mergewarden-demo-head.png)
+
+_上图是真实的 `npx` 执行（用 `head` 截断以便完整显示开头），不是示意图。你可以直接复制那条命令自己跑一遍。_
+
 然后扫描一个真实的 PR，用 `owner/repo#number` 或完整 URL 都可以：
 
 ```bash

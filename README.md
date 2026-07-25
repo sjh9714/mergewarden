@@ -30,9 +30,9 @@ live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-
 
 [What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md) · [简体中文](README.zh-CN.md)
 
-![Report from a real v0.4.0 scan of a public composite PR](docs/assets/mergewarden-report-v0.4.0.png)
+![Real npx run of mergewarden demo, reporting 7 errors and 5 warnings on an example agent pull request](docs/assets/mergewarden-demo-head.png)
 
-_Real checkout-free report from [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29817195616)._
+_A real `npx` run, bounded with `head` so the framing stays on screen. Run that exact command yourself — nothing here is simulated. Checkout-free Action evidence: [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17)._
 
 ## What 2,204 Real Agent PRs Showed
 
@@ -65,14 +65,14 @@ npx --yes mergewarden@0.5.1 scan owner/repository#123
 npx --yes mergewarden@0.5.1 scan https://github.com/owner/repository/pull/123
 ```
 
-![Real npx execution of mergewarden@0.4.0 scanning a public PR](docs/assets/mergewarden-cli-v0.4.0.gif)
+![The full mergewarden demo report scrolling past in a terminal](docs/assets/mergewarden-demo.gif)
 
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
 limits. MergeWarden intentionally has no token command-line flag.
 
 The default output is concise; `--format json` or `--format markdown` gives the
-complete machine-readable report ([CLI reference](docs/cli.md)). The recording
-above is a real `npx` run of the published package, not simulated output.
+complete machine-readable report ([CLI reference](docs/cli.md)). Both recordings
+are real `npx` runs; re-record with `vhs docs/assets/demo.tape`.
 
 ## Install in 30 Seconds
 
