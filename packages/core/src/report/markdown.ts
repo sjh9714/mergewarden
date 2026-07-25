@@ -43,6 +43,30 @@ function policySource(source: AnalysisResult["metadata"]["configSource"]): strin
   return "local fixture";
 }
 
+function whyLine(result: AnalysisResult): string {
+  const finding = highestActionableFinding(result.findings);
+
+  if (!finding) {
+    return result.waivedFindings.length > 0
+      ? "All detected findings are covered by active base-policy waivers."
+      : "No active warning or blocking findings were detected.";
+  }
+
+  const message = safeReportValue(finding.message);
+  return finding.path ? `${message} (\`${safeReportValue(finding.path)}\`)` : message;
+}
+
+function countsLine(result: AnalysisResult): string {
+  const parts = [
+    `${result.summary.errorCount} error`,
+    `${result.summary.warnCount} warning`,
+    `${result.summary.infoCount} info`,
+    ...(result.summary.waivedCount > 0 ? [`${result.summary.waivedCount} waived`] : []),
+  ];
+
+  return parts.join(" \u00b7 ");
+}
+
 function whyLines(result: AnalysisResult): string[] {
   const finding = highestActionableFinding(result.findings);
 
@@ -159,24 +183,10 @@ function buildMarkdownReport(
 ): string {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
-  const lines = [
-    `# MergeWarden: ${humanDecisionLabel(result)}`,
-    "",
-    `Decision: ${result.decision}`,
-    `Status: ${result.status}`,
-    "",
-    "## Why",
-    "",
-    ...whyLines(result),
-    "",
-    "## Recommended Next Step",
-    "",
-    recommendedNextStep(result),
-    "",
-    "## Policy Status",
-    "",
-    policyStatus(result),
-    "",
+  // The full run metadata. Visible in report files and job summaries, which are surfaces a reader
+  // opens deliberately; folded away in the pull request comment, which is pushed into everyone's
+  // conversation. Same content either way.
+  const runSummary = [
     "## Summary",
     "",
     `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
@@ -191,6 +201,39 @@ function buildMarkdownReport(
     `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
     "",
   ];
+
+  const lines = collapseFindings
+    ? [
+        // Four lines: what was decided, why, what to do, how much. Everything a reviewer needs to
+        // know without expanding, and nothing repeated. The heading already states the decision,
+        // so `Decision:`/`Status:`/`Policy Status:` do not restate it above the fold.
+        `# MergeWarden: ${humanDecisionLabel(result)}`,
+        "",
+        `**Why:** ${whyLine(result)}`,
+        `**Next:** ${recommendedNextStep(result)}`,
+        `**Findings:** ${countsLine(result)} — ${policyStatus(result)}`,
+        "",
+      ]
+    : [
+        `# MergeWarden: ${humanDecisionLabel(result)}`,
+        "",
+        `Decision: ${result.decision}`,
+        `Status: ${result.status}`,
+        "",
+        "## Why",
+        "",
+        ...whyLines(result),
+        "",
+        "## Recommended Next Step",
+        "",
+        recommendedNextStep(result),
+        "",
+        "## Policy Status",
+        "",
+        policyStatus(result),
+        "",
+        ...runSummary,
+      ];
 
   const activeVisible = visible.filter((item) => !item.waived);
   const waivedVisible = visible.filter((item) => item.waived);
@@ -220,6 +263,7 @@ function buildMarkdownReport(
       "<details>",
       `<summary>${detailSummaryLabel(activeVisible.length, waivedVisible.length)}</summary>`,
       "",
+      ...runSummary,
       ...detail,
       "</details>",
       "",

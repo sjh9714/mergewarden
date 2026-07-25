@@ -654,9 +654,28 @@ describe("report renderers", () => {
     expect(collapsed).toContain("</details>");
     expect(collapsed).toContain("<summary>Detailed findings (2 findings)");
 
-    // The collapsed surface pushes far less into the conversation, but hides nothing.
+    // The collapsed surface pushes very little into the conversation, but hides nothing.
     const visibleBeforeDetails = collapsed.split("<details>")[0] ?? "";
-    expect(visibleBeforeDetails.split("\n").length).toBeLessThan(flat.split("\n").length / 2);
+    expect(visibleBeforeDetails.trim().split("\n").length).toBeLessThanOrEqual(6);
+
+    // The four things a reviewer needs above the fold, each stated once.
+    expect(visibleBeforeDetails).toContain("# MergeWarden:");
+    expect(visibleBeforeDetails).toContain("**Why:**");
+    expect(visibleBeforeDetails).toContain("**Next:**");
+    expect(visibleBeforeDetails).toContain("**Findings:**");
+
+    // Run metadata moves inside the fold rather than being dropped.
+    expect(visibleBeforeDetails).not.toContain("Policy digest");
+    expect(visibleBeforeDetails).not.toContain("## Summary");
+    expect(collapsed).toContain("Policy digest");
+    expect(collapsed).toContain("## Summary");
+
+    // The flat report keeps its existing shape.
+    expect(flat).toContain("## Why");
+    expect(flat).toContain("## Recommended Next Step");
+    expect(flat).toContain("## Policy Status");
+    expect(flat).toContain("## Summary");
+    expect(flat).not.toContain("**Why:**");
 
     for (const finding of result.findings) {
       expect(collapsed).toContain(finding.findingId);

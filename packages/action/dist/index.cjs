@@ -50111,6 +50111,23 @@ function policySource(source) {
   }
   return "local fixture";
 }
+function whyLine(result) {
+  const finding2 = highestActionableFinding(result.findings);
+  if (!finding2) {
+    return result.waivedFindings.length > 0 ? "All detected findings are covered by active base-policy waivers." : "No active warning or blocking findings were detected.";
+  }
+  const message = safeReportValue(finding2.message);
+  return finding2.path ? `${message} (\`${safeReportValue(finding2.path)}\`)` : message;
+}
+function countsLine(result) {
+  const parts = [
+    `${result.summary.errorCount} error`,
+    `${result.summary.warnCount} warning`,
+    `${result.summary.infoCount} info`,
+    ...result.summary.waivedCount > 0 ? [`${result.summary.waivedCount} waived`] : []
+  ];
+  return parts.join(" \xB7 ");
+}
 function whyLines(result) {
   const finding2 = highestActionableFinding(result.findings);
   if (!finding2) {
@@ -50192,7 +50209,32 @@ function detailSummaryLabel(activeCount, waivedCount) {
 function buildMarkdownReport(result, combined, visibleCount, fullReportPath, collapseFindings) {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
-  const lines = [
+  const runSummary = [
+    "## Summary",
+    "",
+    `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
+    `- PR-declared contract present: ${yesNo(result.summary.contractPresent)}`,
+    `- Policy source: ${policySource(result.metadata.configSource)}`,
+    `- Analysis complete: ${yesNo(result.metadata.analysisComplete)}`,
+    `- Files analyzed: ${result.metadata.analyzedFileCount} / ${result.metadata.expectedFileCount}`,
+    `- Errors: ${result.summary.errorCount}`,
+    `- Warnings: ${result.summary.warnCount}`,
+    `- Info: ${result.summary.infoCount}`,
+    `- Waived: ${result.summary.waivedCount}`,
+    `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
+    ""
+  ];
+  const lines = collapseFindings ? [
+    // Four lines: what was decided, why, what to do, how much. Everything a reviewer needs to
+    // know without expanding, and nothing repeated. The heading already states the decision,
+    // so `Decision:`/`Status:`/`Policy Status:` do not restate it above the fold.
+    `# MergeWarden: ${humanDecisionLabel(result)}`,
+    "",
+    `**Why:** ${whyLine(result)}`,
+    `**Next:** ${recommendedNextStep(result)}`,
+    `**Findings:** ${countsLine(result)} \u2014 ${policyStatus(result)}`,
+    ""
+  ] : [
     `# MergeWarden: ${humanDecisionLabel(result)}`,
     "",
     `Decision: ${result.decision}`,
@@ -50210,19 +50252,7 @@ function buildMarkdownReport(result, combined, visibleCount, fullReportPath, col
     "",
     policyStatus(result),
     "",
-    "## Summary",
-    "",
-    `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
-    `- PR-declared contract present: ${yesNo(result.summary.contractPresent)}`,
-    `- Policy source: ${policySource(result.metadata.configSource)}`,
-    `- Analysis complete: ${yesNo(result.metadata.analysisComplete)}`,
-    `- Files analyzed: ${result.metadata.analyzedFileCount} / ${result.metadata.expectedFileCount}`,
-    `- Errors: ${result.summary.errorCount}`,
-    `- Warnings: ${result.summary.warnCount}`,
-    `- Info: ${result.summary.infoCount}`,
-    `- Waived: ${result.summary.waivedCount}`,
-    `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
-    ""
+    ...runSummary
   ];
   const activeVisible = visible.filter((item) => !item.waived);
   const waivedVisible = visible.filter((item) => item.waived);
@@ -50248,6 +50278,7 @@ function buildMarkdownReport(result, combined, visibleCount, fullReportPath, col
       "<details>",
       `<summary>${detailSummaryLabel(activeVisible.length, waivedVisible.length)}</summary>`,
       "",
+      ...runSummary,
       ...detail,
       "</details>",
       ""

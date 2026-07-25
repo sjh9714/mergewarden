@@ -6,6 +6,22 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Changed
+
+- Cut the pull request comment down to what a reviewer needs above the fold:
+  the decision heading, one `Why` line with the path inline, one `Next` line,
+  and one `Findings` line with the counts and policy status. A 12-finding
+  report now shows 5 lines before the fold instead of 30. The run summary —
+  agent detection, contract presence, policy source, file counts, policy
+  digest — moves inside the `<details>` element rather than being dropped, and
+  report files, job summaries and the CLI keep the full flat layout. Second
+  round of feedback from the same maintainer evaluating MergeWarden on
+  [microcks/.github#86](https://github.com/microcks/.github/issues/86), who
+  pointed out that the first fix hid the findings but left the header
+  restating the decision four times.
+
 ## v0.4.1 - 2026-07-25
 
 ### Added
