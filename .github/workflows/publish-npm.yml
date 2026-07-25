@@ -6,7 +6,7 @@ on:
       ref:
         description: "Signed release tag to publish"
         required: true
-        default: "v0.5.0"
+        default: "v0.5.1"
         type: string
       confirmation:
         description: "Type PUBLISH to confirm the external release action"

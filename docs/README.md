@@ -32,6 +32,8 @@ requests. Start with the shortest path for your task:
   policy clauses mapped to what is decidable, and what MergeWarden covers.
 - [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.
 - [v0.3.0 migration](migration-v0.3.0.md): compatibility changes.
+- [v0.5.1 release notes](release-notes-v0.5.1.md): the Claude Code body marker
+  fix and the study's engine-version scope note.
 - [v0.5.0 release notes](release-notes-v0.5.0.md): working agent-detection
   defaults, `mergewarden demo`, Gemini and Qwen control planes.
 - [v0.4.1 release notes](release-notes-v0.4.1.md): commit trailer rules and a

@@ -26,7 +26,7 @@ MergeWarden 也用自己来把关自己的 PR —— 上面那枚 `MergeWarden` 
 不需要令牌、不需要仓库、不联网，先看看它能抓到什么：
 
 ```bash
-npx --yes mergewarden@0.5.0 demo
+npx --yes mergewarden@0.5.1 demo
 ```
 
 这条命令会分析一个内置在 CLI 里的示例 PR，用的是**默认策略**——也就是说，它输出的 13 条检查结果，就是零配置安装时你实际会得到的东西。
@@ -34,8 +34,8 @@ npx --yes mergewarden@0.5.0 demo
 然后扫描一个真实的 PR，用 `owner/repo#number` 或完整 URL 都可以：
 
 ```bash
-npx --yes mergewarden@0.5.0 scan owner/repository#123
-npx --yes mergewarden@0.5.0 scan https://github.com/owner/repository/pull/123
+npx --yes mergewarden@0.5.1 scan owner/repository#123
+npx --yes mergewarden@0.5.1 scan https://github.com/owner/repository/pull/123
 ```
 
 私有仓库或需要更高 API 速率限制时，用 `GH_TOKEN` 或 `GITHUB_TOKEN` 环境变量。MergeWarden 有意不提供传令牌的命令行参数。
@@ -61,7 +61,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.5.0
+      - uses: sjh9714/mergewarden@v0.5.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn

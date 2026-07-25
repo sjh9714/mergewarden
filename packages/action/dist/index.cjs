@@ -51017,7 +51017,7 @@ async function loadGitHubAnalysis(api, target, options) {
 }
 
 // src/version.ts
-var MERGEWARDEN_VERSION = "0.5.0";
+var MERGEWARDEN_VERSION = "0.5.1";
 
 // src/run.ts
 var MERGEWARDEN_COMMENT_MARKER = "<!-- mergewarden-report -->";
