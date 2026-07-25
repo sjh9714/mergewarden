@@ -122,17 +122,17 @@ agent-control-plane drift.
 
 ## What It Catches
 
-| Boundary                   | Deterministic evidence                                              |
-| -------------------------- | ------------------------------------------------------------------- |
-| Declared PR scope          | Files outside `allowed_paths` or inside `blocked_paths`             |
-| Agent control plane        | Changes to `AGENTS.md`, `.mcp.json`, `.codex/**`, and related files |
-| Agentic workflow injection | Untrusted GitHub text flowing into registered agent prompts         |
-| Workflow privilege         | Permission escalation, new write-all or OIDC access                 |
-| Dangerous triggers         | `pull_request_target` use of attacker-controlled PR head refs       |
-| Workflow supply chain      | Unpinned actions, reusable workflows, and containers                |
-| Package execution          | Added or changed install/prepare lifecycle scripts                  |
-| Test evidence              | High-risk source changes without matching test-file changes         |
-| Analysis integrity         | Missing content, incomplete file lists, or report limits            |
+| Boundary                   | Deterministic evidence                                                      |
+| -------------------------- | --------------------------------------------------------------------------- |
+| Declared PR scope          | Files outside `allowed_paths` or inside `blocked_paths`                     |
+| Agent control plane        | Changes to `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.mcp.json`, `.cursor/**` |
+| Agentic workflow injection | Untrusted GitHub text flowing into registered agent prompts                 |
+| Workflow privilege         | Permission escalation, new write-all or OIDC access                         |
+| Dangerous triggers         | `pull_request_target` use of attacker-controlled PR head refs               |
+| Workflow supply chain      | Unpinned actions, reusable workflows, and containers                        |
+| Package execution          | Added or changed install/prepare lifecycle scripts                          |
+| Test evidence              | High-risk source changes without matching test-file changes                 |
+| Analysis integrity         | Missing content, incomplete file lists, or report limits                    |
 
 MergeWarden evaluates changes rather than re-reporting every pre-existing
 workflow condition. Findings show the rule, severity, path, canonical evidence,

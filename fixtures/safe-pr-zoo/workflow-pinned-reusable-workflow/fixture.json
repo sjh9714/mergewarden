@@ -6,8 +6,8 @@
   "pr": {
     "number": 110,
     "title": "Add workflow with a pinned reusable workflow",
-    "branchName": "codex/workflow-pinned-reusable-workflow",
-    "author": "codex"
+    "branchName": "demo/workflow-pinned-reusable-workflow",
+    "author": "octocat"
   },
   "files": [
     {

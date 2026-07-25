@@ -10,6 +10,31 @@ This project follows the spirit of
 
 ### Changed
 
+- **Agent detection now ships working defaults.** `agent_detection.authors`,
+  `branch_patterns` and `body_patterns` previously defaulted to empty arrays, which
+  meant a zero-config install could never detect an agent pull request — and because
+  `contract.required_for` defaults to `[agent]`, the project's headline check
+  ("did the PR stay inside its declared scope?") was unreachable without configuration.
+  Measured before this change: 14 of 14 recent merged pull requests from well-known
+  public repositories returned `0 error, 0 warning, 0 info`. The defaults are now the
+  cohort definitions from the [2,204-PR study](docs/study/methodology.md):
+  `devin-ai-integration[bot]` and `copilot-swe-agent[bot]` authors, `codex/**`,
+  `claude/**`, `cursor/**`, `copilot/**` and `devin/**` branches, and the
+  `Generated with Claude Code` body marker.
+
+  **This is a behaviour change.** A repository that relied on the empty defaults will
+  now see `agent/origin-detected` (info) and, on agent pull requests without a declared
+  contract, `contract/missing`. In the default `warn` mode that produces a
+  `needs-review` decision, not a block. Pull requests from humans are unaffected. To
+  restore the previous behaviour, set the keys explicitly to `[]`.
+
+- **Agent control-plane defaults now cover Gemini and Qwen.** Added `GEMINI.md`,
+  `**/GEMINI.md`, `QWEN.md`, `**/QWEN.md` and `.gemini/**` to
+  `DEFAULT_AGENT_CONTROL_PLANE_PATHS`. GitHub indexes 8,208 `GEMINI.md` and 1,376
+  `QWEN.md` files, so this was a real coverage hole: a pull request steering every
+  future Gemini run was invisible. **This is a behaviour change** — these paths carry
+  the `error` severity the rest of the control-plane list uses.
+
 - Cut the pull request comment down to what a reviewer needs above the fold:
   the decision heading, one `Why` line with the path inline, one `Next` line,
   and one `Findings` line with the counts and policy status. A 12-finding

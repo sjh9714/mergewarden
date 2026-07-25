@@ -45,6 +45,36 @@ function validContractBody() {
   ].join("\n");
 }
 
+/**
+ * A pull request that is deliberately NOT agent-authored.
+ *
+ * Agent detection ships defaults, so a `codex/**` branch with no contract now correctly
+ * produces `contract/missing`. Tests that exercise content fetching or comment bounding
+ * rather than agent policy use this so the behaviour they assert is the one they mean.
+ */
+function humanPrContext(
+  overrides: Partial<ActionContext["payload"]["pull_request"]> = {},
+): ActionContext {
+  const base = prContext(overrides);
+  const pr = base.payload.pull_request;
+
+  if (!pr) {
+    return base;
+  }
+
+  return {
+    ...base,
+    payload: {
+      pull_request: {
+        ...pr,
+        user: { login: "octocat" },
+        labels: [],
+        head: { ...pr.head, ref: "demo/content-fetching" },
+      },
+    },
+  };
+}
+
 function prContext(
   overrides: Partial<ActionContext["payload"]["pull_request"]> = {},
 ): ActionContext {
@@ -532,7 +562,7 @@ describe("runAction", () => {
         [`${HEAD_SHA}:src/new.ts`]: "export const after = true;\n",
       },
     });
-    const harness = createHarness({ context: prContext({ body: "" }), octokit });
+    const harness = createHarness({ context: humanPrContext({ body: "" }), octokit });
 
     await runAction(harness.runtime);
 
@@ -637,7 +667,7 @@ describe("runAction", () => {
       },
     });
     const harness = createHarness({
-      context: prContext({ body: "", changed_files: 2 }),
+      context: humanPrContext({ body: "", changed_files: 2 }),
       octokit,
     });
 
@@ -661,7 +691,7 @@ describe("runAction", () => {
         [`${BASE_SHA}:src/app.ts`]: new Error("not found"),
       },
     });
-    const harness = createHarness({ context: prContext({ body: "" }), octokit });
+    const harness = createHarness({ context: humanPrContext({ body: "" }), octokit });
 
     await runAction(harness.runtime);
 
@@ -924,7 +954,7 @@ describe("runAction", () => {
       },
     });
     const harness = createHarness({
-      context: prContext({ changed_files: files.length }),
+      context: humanPrContext({ changed_files: files.length }),
       octokit,
       inputs: { comment: "true" },
     });

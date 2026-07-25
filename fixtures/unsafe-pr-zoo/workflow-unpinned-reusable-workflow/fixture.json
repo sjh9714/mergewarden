@@ -6,8 +6,8 @@
   "pr": {
     "number": 109,
     "title": "Add workflow with an unpinned reusable workflow",
-    "branchName": "codex/workflow-unpinned-reusable-workflow",
-    "author": "codex"
+    "branchName": "demo/workflow-unpinned-reusable-workflow",
+    "author": "octocat"
   },
   "files": [
     {

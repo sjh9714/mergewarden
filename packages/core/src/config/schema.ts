@@ -11,7 +11,12 @@ export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "**/AGENTS.override.md",
   "CLAUDE.md",
   "**/CLAUDE.md",
+  "GEMINI.md",
+  "**/GEMINI.md",
+  "QWEN.md",
+  "**/QWEN.md",
   ".cursor/**",
+  ".gemini/**",
   ".github/copilot-instructions.md",
   ".mcp.json",
   "claude_desktop_config.json",
@@ -21,15 +26,35 @@ export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
 export const DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 export const DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
 
+/**
+ * Agent signatures this project has actually observed in the wild.
+ *
+ * These are the cohort definitions from the 2,204-PR scan study (docs/study/methodology.md),
+ * not guesses: the bot accounts and branch prefixes that Devin, GitHub Copilot's coding agent,
+ * Codex, Claude Code and Cursor really use when they open pull requests. Shipping them as the
+ * default is what lets a zero-config install recognise an agent pull request at all.
+ *
+ * Labels stay empty because label conventions are per-repository and cannot be guessed.
+ */
+export const DEFAULT_AGENT_AUTHORS = ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"];
+export const DEFAULT_AGENT_BRANCH_PATTERNS = [
+  "codex/**",
+  "claude/**",
+  "cursor/**",
+  "copilot/**",
+  "devin/**",
+];
+export const DEFAULT_AGENT_BODY_PATTERNS = ["Generated with Claude Code"];
+
 const SeveritySettingSchema = z.enum(["warn", "error"]);
 const CheckSettingSchema = z.enum(["off", "warn", "error"]);
 
 const AgentDetectionSchema = z
   .object({
-    authors: z.array(NonEmptyStringSchema).default([]),
+    authors: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_AUTHORS),
     labels: z.array(NonEmptyStringSchema).default([]),
-    branch_patterns: z.array(NonEmptyStringSchema).default([]),
-    body_patterns: z.array(NonEmptyStringSchema).default([]),
+    branch_patterns: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BRANCH_PATTERNS),
+    body_patterns: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BODY_PATTERNS),
   })
   .strict();
 
@@ -244,10 +269,10 @@ export const MergeWardenConfigSchema = z
     version: z.literal(1),
     mode: z.enum(["observe", "warn", "block"]).default("warn"),
     agent_detection: AgentDetectionSchema.default({
-      authors: [],
+      authors: DEFAULT_AGENT_AUTHORS,
       labels: [],
-      branch_patterns: [],
-      body_patterns: [],
+      branch_patterns: DEFAULT_AGENT_BRANCH_PATTERNS,
+      body_patterns: DEFAULT_AGENT_BODY_PATTERNS,
     }),
     contract: ContractConfigSchema.default({
       required_for: ["agent"],

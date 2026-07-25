@@ -49642,7 +49642,12 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "**/AGENTS.override.md",
   "CLAUDE.md",
   "**/CLAUDE.md",
+  "GEMINI.md",
+  "**/GEMINI.md",
+  "QWEN.md",
+  "**/QWEN.md",
   ".cursor/**",
+  ".gemini/**",
   ".github/copilot-instructions.md",
   ".mcp.json",
   "claude_desktop_config.json",
@@ -49650,13 +49655,22 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
 ];
 var DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 var DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
+var DEFAULT_AGENT_AUTHORS = ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"];
+var DEFAULT_AGENT_BRANCH_PATTERNS = [
+  "codex/**",
+  "claude/**",
+  "cursor/**",
+  "copilot/**",
+  "devin/**"
+];
+var DEFAULT_AGENT_BODY_PATTERNS = ["Generated with Claude Code"];
 var SeveritySettingSchema = external_exports.enum(["warn", "error"]);
 var CheckSettingSchema = external_exports.enum(["off", "warn", "error"]);
 var AgentDetectionSchema = external_exports.object({
-  authors: external_exports.array(NonEmptyStringSchema).default([]),
+  authors: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_AUTHORS),
   labels: external_exports.array(NonEmptyStringSchema).default([]),
-  branch_patterns: external_exports.array(NonEmptyStringSchema).default([]),
-  body_patterns: external_exports.array(NonEmptyStringSchema).default([])
+  branch_patterns: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BRANCH_PATTERNS),
+  body_patterns: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BODY_PATTERNS)
 }).strict();
 var ContractConfigSchema = external_exports.object({
   required_for: external_exports.array(external_exports.enum(["agent", "all"])).default(["agent"]),
@@ -49804,10 +49818,10 @@ var MergeWardenConfigSchema = external_exports.object({
   version: external_exports.literal(1),
   mode: external_exports.enum(["observe", "warn", "block"]).default("warn"),
   agent_detection: AgentDetectionSchema.default({
-    authors: [],
+    authors: DEFAULT_AGENT_AUTHORS,
     labels: [],
-    branch_patterns: [],
-    body_patterns: []
+    branch_patterns: DEFAULT_AGENT_BRANCH_PATTERNS,
+    body_patterns: DEFAULT_AGENT_BODY_PATTERNS
   }),
   contract: ContractConfigSchema.default({
     required_for: ["agent"],

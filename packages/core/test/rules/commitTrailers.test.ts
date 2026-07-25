@@ -105,6 +105,7 @@ describe("commit/trailer-missing", () => {
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig(AGENT_CONFIG),
+        pr: { branchName: "codex/retry-budget" },
         commits: [commit("1111111111111111111111111111111111111111", "Add retry budget")],
       }),
     );
@@ -128,6 +129,7 @@ describe("commit/trailer-missing", () => {
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig(AGENT_CONFIG),
+        pr: { branchName: "codex/retry-budget" },
         commits: [
           commit(
             "2222222222222222222222222222222222222222",

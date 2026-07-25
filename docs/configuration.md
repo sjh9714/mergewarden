@@ -16,15 +16,21 @@ mode: warn
 
 ```yaml
 agent_detection:
-  authors: []
-  labels: [ai, agent]
-  branch_patterns: ["codex/**", "ai/**"]
-  body_patterns: []
+  authors: ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"]
+  labels: [] # label conventions are per-repository; add your own
+  branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"]
+  body_patterns: ["Generated with Claude Code"]
 
 contract:
   required_for: [agent]
   allow_missing_in_observe_mode: true
 ```
+
+Those are the **defaults**, not a suggestion — they are the cohort definitions from the
+[2,204-PR study](study/methodology.md), so a zero-config install recognises an agent pull
+request out of the box. Setting any of these keys replaces the default list for that key
+rather than adding to it. Detection is a heuristic for deciding which pull requests must
+carry a contract; it is not proof of authorship.
 
 PR contracts are comment blocks in the PR body:
 
@@ -121,7 +127,10 @@ waivers:
 
 ```yaml
 agent_control_plane:
-  paths: ["AGENTS.md", "**/AGENTS.md", ".mcp.json", ".codex/**"]
+  # Defaults cover AGENTS.md, CLAUDE.md, GEMINI.md, QWEN.md (and **/ variants),
+  # .cursor/**, .gemini/**, .codex/**, .github/copilot-instructions.md, .mcp.json,
+  # and claude_desktop_config.json.
+  paths: ["AGENTS.md", "**/AGENTS.md", "GEMINI.md", ".mcp.json", ".codex/**"]
   severity: error
 
 package_scripts:
