@@ -74,4 +74,11 @@ reviewer could check against it.
 That is the gap this closes. The scope is stated while it is still known, and
 the block it emits is the same one `contract/out-of-scope` parses back out later.
 
+## Publishing
+
+`server.json` is the MCP registry manifest. Its `name` must stay identical to
+`mcpName` in `package.json` — the registry verifies npm ownership by comparing
+them, and a mismatch only surfaces at registry-publish time, after the npm
+release is already out. A test enforces the match.
+
 MIT. Part of [MergeWarden](https://github.com/sjh9714/mergewarden).

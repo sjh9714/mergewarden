@@ -25,5 +25,20 @@
   },
   "engines": {
     "node": ">=20.0.0"
-  }
+  },
+  "mcpName": "io.github.sjh9714/mergewarden",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sjh9714/mergewarden.git",
+    "directory": "packages/mcp"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "code-review",
+    "pull-request",
+    "scope",
+    "policy"
+  ]
 }
