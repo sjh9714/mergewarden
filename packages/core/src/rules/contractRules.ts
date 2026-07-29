@@ -60,11 +60,11 @@ export const contractMissingRule: Rule = {
       return [];
     }
 
-    const configured = ctx.input.config.contract.missing_severity;
-    const severity =
-      ctx.input.config.mode === "observe" && ctx.input.config.contract.allow_missing_in_observe_mode
-        ? "warn"
-        : configured;
+    // `allow_missing_in_observe_mode` used to downgrade this to `warn` in observe mode. That
+    // only mattered when the default was `error`; now that the default is `info`, downgrading
+    // would mean *raising* the severity for a repository that had opted into `error`. The
+    // configured severity is used as written, in every mode.
+    const severity = ctx.input.config.contract.missing_severity;
 
     const finding = baseFinding(
       "contract/missing",

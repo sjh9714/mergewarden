@@ -189,6 +189,35 @@ function parseBooleanInput(name: string, value: string, fallback: boolean): bool
   throw new Error(`Invalid boolean input ${name}: ${value}. Expected true or false.`);
 }
 
+const COMMENT_MODES = ["auto", "always", "never"] as const;
+
+type CommentMode = (typeof COMMENT_MODES)[number];
+
+/**
+ * `comment` was a boolean before v0.9.0, so `true`/`false` keep working and mean what they
+ * always did. `auto` is the new value: comment when the pull request needs attention, and
+ * otherwise stay out of the way.
+ */
+function parseCommentMode(value: string): CommentMode {
+  const trimmed = value.trim().toLowerCase();
+
+  if (trimmed === "" || trimmed === "false") {
+    return "never";
+  }
+
+  if (trimmed === "true") {
+    return "always";
+  }
+
+  const mode = COMMENT_MODES.find((candidate) => candidate === trimmed);
+
+  if (mode) {
+    return mode;
+  }
+
+  throw new Error(`Invalid comment input: ${value}. Expected auto, always, or never.`);
+}
+
 function parseModeOverride(value: string): Mode | undefined {
   const trimmed = value.trim();
 
@@ -352,10 +381,19 @@ async function upsertPullRequestComment(
   repository: RepositoryRef,
   issueNumber: number,
   markdownReport: string,
+  options: { onlyUpdateExisting: boolean } = { onlyUpdateExisting: false },
 ): Promise<void> {
   const comments = await listIssueComments(octokit, repository, issueNumber);
-  const body = markedCommentBody(markdownReport);
   const existingComment = latestMarkedComment(comments);
+
+  // Nothing to report and nothing already said: leave the pull request alone. An existing
+  // comment is still updated, so a finding that was fixed visibly resolves instead of
+  // going stale — the comment is never deleted.
+  if (!existingComment && options.onlyUpdateExisting) {
+    return;
+  }
+
+  const body = markedCommentBody(markdownReport);
 
   if (existingComment) {
     const updateComment = octokit.rest.issues?.updateComment;
@@ -423,7 +461,7 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
     runtime.getInput("report-markdown"),
     "mergewarden-report.md",
   );
-  const comment = parseBooleanInput("comment", runtime.getInput("comment"), false);
+  const commentMode = parseCommentMode(runtime.getInput("comment"));
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
   const modeOverride = parseModeOverride(runtime.getInput("mode"));
   const target: PullRequestLocator = {
@@ -458,15 +496,23 @@ async function runActionInner(runtime: ActionRuntime): Promise<AnalysisResult> {
   await runtime.summary.addRaw(summaryReport).write();
   runtime.info(plainTextReportSummary);
 
-  if (comment) {
+  if (commentMode !== "never") {
     try {
+      // Info findings are context, not a request to act on anything, so they do not earn a
+      // comment on their own — the job summary records them either way.
+      const needsAttention =
+        !result.metadata.analysisComplete ||
+        result.summary.errorCount > 0 ||
+        result.summary.warnCount > 0;
       const commentReport = renderMarkdownReport(result, {
         maxFindings: 50,
         maxBytes: COMMENT_MAX_BYTES - COMMENT_WRAPPER_RESERVE_BYTES,
         fullReportPath: reportMarkdownPath,
         collapseFindings: true,
       });
-      await upsertPullRequestComment(runtime.octokit, context.repo, pr.number, commentReport);
+      await upsertPullRequestComment(runtime.octokit, context.repo, pr.number, commentReport, {
+        onlyUpdateExisting: commentMode === "auto" && !needsAttention,
+      });
     } catch (error) {
       runtime.warning(`MergeWarden could not upsert PR comment: ${errorMessage(error)}`);
     }

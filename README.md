@@ -34,22 +34,6 @@ live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-
 
 _A real `npx` run, bounded with `head` so the framing stays on screen. Run that exact command yourself — nothing here is simulated. Checkout-free Action evidence: [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17)._
 
-## What 2,204 Real Agent PRs Showed
-
-We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
-agent, Codex, Claude Code, Cursor) on public repositories with the default
-policy:
-
-- **0 of 2,204** declared their intended scope in any machine-checkable form.
-- Of the 349 PRs that touched workflows or package manifests, **12.9%**
-  escalated workflow permissions and **17.5%** introduced unpinned actions.
-- **3.9%** changed agent control-plane files (`AGENTS.md`, `.mcp.json`, and
-  similar) — the files that steer every future agent PR.
-- Repositories with 10k+ stars showed roughly **half** the boundary-crossing
-  rate of the long tail.
-
-Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
-
 ## Try It in 60 Seconds
 
 See what MergeWarden catches — no token, no repository, no network:
@@ -71,8 +55,7 @@ Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
 limits. MergeWarden intentionally has no token command-line flag.
 
 The default output is concise; `--format json` or `--format markdown` gives the
-complete machine-readable report ([CLI reference](docs/cli.md)). Both recordings
-are real `npx` runs; re-record with `vhs docs/assets/demo.tape`.
+complete machine-readable report ([CLI reference](docs/cli.md)).
 
 ## Install in 30 Seconds
 
@@ -87,7 +70,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   mergewarden:
@@ -98,27 +81,36 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
+          comment: auto
 ```
 
-For an immutable, commit-addressed install, pin the exact v0.6.0 release
-commit:
+No checkout step is needed, and MergeWarden
+does not publish or recommend a mutable `v0` tag.
+For an immutable install, pin the exact v0.6.0 release commit:
 
 ```yaml
 - uses: sjh9714/mergewarden@ec38a1dd467d04fa69a983a3b54ae6fb70f5aba6
 ```
 
-No checkout step is needed.
-MergeWarden does not publish or recommend a mutable `v0` tag.
-
 The first run works without `mergewarden.yml`: a confirmed 404 on the PR base
 branch selects the built-in warn policy. Authentication, rate-limit, and server
 errors never fall back silently.
 
-Verified checkout-free Action evidence is available in
-[sandbox PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17).
-Its public run downloads the exact SHA-pinned v0.6.0 release commit and
-reports contract scope escapes, workflow permission escalation, and
-agent-control-plane drift.
+## What You'll See
+
+Most agent pull requests cross no boundary, and those get a `pass` and no
+comment — `comment: auto` speaks only when there is an error or a warning.
+Everything else is recorded in the Actions job summary. When a boundary
+is crossed you get one comment:
+
+```
+ERROR contract/out-of-scope: src/billing/invoice.ts changed outside the allowed contract scope.
+```
+
+Push a fix and that same comment updates itself to PASSED. It is never
+deleted, so a stale "NEEDS REVIEW" cannot outlive the problem it described.
+Fork pull requests get a read-only token from GitHub and so are never
+commented on. New here? [Start here](docs/start-here.md) is the one-page version.
 
 ## What It Catches
 
@@ -137,6 +129,18 @@ agent-control-plane drift.
 MergeWarden evaluates changes rather than re-reporting every pre-existing
 workflow condition. Findings show the rule, severity, path, canonical evidence,
 and a stable finding ID.
+
+## What 2,204 Real Agent PRs Showed
+
+We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
+agent, Codex, Claude Code, Cursor) on public repositories with the default
+policy. **0 of 2,204** declared their intended scope in any machine-checkable
+form. Of the 349 that touched workflows or package manifests, **12.9%**
+escalated workflow permissions and **17.5%** introduced unpinned actions;
+**3.9%** changed agent control-plane files. Repositories with 10k+ stars showed
+roughly **half** the boundary-crossing rate of the long tail.
+
+Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
 
 ## Minimal Policy
 
@@ -274,11 +278,7 @@ Inputs and failure behavior are documented in the
 
 ```bash
 pnpm install
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm format:check
+pnpm test && pnpm typecheck && pnpm lint && pnpm build && pnpm format:check
 ```
 
 Every rule requires passing and failing fixtures, exact rule/severity/decision
@@ -288,7 +288,7 @@ assertions, and a Markdown snapshot for user-facing findings. Start with a
 ## Documentation
 
 - [Documentation index](docs/README.md) — full list of guides and references
-- [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
+- [Start here](docs/start-here.md) · [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
 
 Will it be noisy? It [said nothing on 44 of 46 merged human PRs](docs/study/what-a-zero-config-install-reports.md);
 both findings were correct. If it flags one your team decided was fine, open an

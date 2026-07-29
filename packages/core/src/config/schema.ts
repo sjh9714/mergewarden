@@ -112,6 +112,15 @@ export const DEFAULT_AGENT_BODY_PATTERNS = [
 ];
 
 const SeveritySettingSchema = z.enum(["warn", "error"]);
+
+/**
+ * Severity for `contract/missing` only.
+ *
+ * This is the one rule that can sensibly be `info`, so it gets its own enum rather than
+ * widening `SeveritySettingSchema` — every other rule fires on something a pull request did,
+ * and none of them should be able to declare itself informational.
+ */
+const ContractMissingSeveritySchema = z.enum(["info", "warn", "error"]);
 const CheckSettingSchema = z.enum(["off", "warn", "error"]);
 
 const AgentDetectionSchema = z
@@ -130,18 +139,24 @@ const ContractConfigSchema = z
     /**
      * Severity of `contract/missing` only — not of the other contract rules.
      *
-     * It defaults to `warn` rather than `error` because it is the one rule that fires on the
-     * absence of a convention instead of on something a pull request did. The scan study found
-     * 0 of 2,204 merged agent pull requests declaring a scope, so on `mode: block` an `error`
-     * default would reject essentially every agent pull request on the day it is switched on,
-     * for a condition the repository cannot fix by reviewing the change. Teams that do want
-     * declaration enforced set this to `error` deliberately.
+     * Defaults to `info`, which is the end of a line this project has walked twice. v0.6.0
+     * stopped this rule from *blocking*, because the scan study found 0 of 2,204 merged agent
+     * pull requests declaring a scope and an `error` default would have rejected essentially
+     * every agent pull request on the day `mode: block` was switched on. v0.9.0 stops it
+     * *warning* for the same reason taken one step further: a rule that fires on 100% of a
+     * population, for the absence of a convention nobody has adopted, carries no information.
+     * Reported on every routine pull request it trains maintainers to ignore the comment, and
+     * the findings that matter — permission escalation, control-plane drift — go with it.
+     *
+     * The principle is the one v0.6.0 established: speak about what a pull request did, not
+     * about a convention it did not follow. A repository that actually asks contributors for a
+     * declared scope opts in with `warn` or `error`.
      *
      * `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay `error`:
      * each of those fires on something the pull request actually did against its own
      * declaration.
      */
-    missing_severity: SeveritySettingSchema.default("warn"),
+    missing_severity: ContractMissingSeveritySchema.default("info"),
   })
   .strict();
 
@@ -370,7 +385,7 @@ export const MergeWardenConfigSchema = z
     contract: ContractConfigSchema.default({
       required_for: ["agent"],
       allow_missing_in_observe_mode: true,
-      missing_severity: "warn",
+      missing_severity: "info",
     }),
     high_risk_paths: z.record(z.string(), HighRiskPathAreaSchema).default({}),
     agent_control_plane: AgentControlPlaneSchema.default({

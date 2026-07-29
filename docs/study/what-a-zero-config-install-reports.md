@@ -114,6 +114,14 @@ That every agent pull request produces `contract/missing` is expected and is the
 study's central finding restated: no coding agent declares its intended scope by
 default. It is a disclosure-adoption signal, not an accusation about the change.
 
+> **Update, 2026-07-30.** The numbers above were measured on **v0.6.0**, where
+> `contract/missing` defaulted to `warn`. That default is `info` as of
+> [v0.9.0](../release-notes-v0.9.0.md), which is a direct consequence of this
+> result: if the rule fires on every agent pull request and none of them are
+> wrong, labelling all of them "needs review" is not information. Re-run today,
+> the same 34 pull requests would produce the same two findings and resolve to
+> **`pass`**. The measurement is unchanged; what the tool does with it is not.
+
 ## Limits
 
 - 90 pull requests over a 7-day window is enough to say the default policy is

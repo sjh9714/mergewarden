@@ -3,6 +3,8 @@
 MergeWarden is a checkout-free change-control layer for AI-generated pull
 requests. Start with the shortest path for your task:
 
+- [Start here](start-here.md): install, what the first pull request looks like,
+  and what each finding means. One page.
 - [Getting started](getting-started.md): install, first run, and safe rollout.
 - [CLI reference](cli.md): scan a public or private GitHub pull request.
 - [Action reference](action-reference.md): inputs, outputs, permissions, and failures.
@@ -38,6 +40,8 @@ requests. Start with the shortest path for your task:
   policy clauses mapped to what is decidable, and what MergeWarden covers.
 - [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.
 - [v0.3.0 migration](migration-v0.3.0.md): compatibility changes.
+- [v0.9.0 release notes](release-notes-v0.9.0.md): a missing contract is
+  informational, and the Action comments only when there is something to say.
 - [v0.7.0 release notes](release-notes-v0.7.0.md): nine missing coding-agent
   accounts, including Google Jules.
 - [v0.6.0 release notes](release-notes-v0.6.0.md): a missing contract warns

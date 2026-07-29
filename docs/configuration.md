@@ -26,7 +26,7 @@ agent_detection:
 contract:
   required_for: [agent]
   allow_missing_in_observe_mode: true
-  missing_severity: warn
+  missing_severity: info
 ```
 
 Those are the **defaults**, not a suggestion — they are the cohort definitions from the
@@ -52,12 +52,21 @@ blocked_paths:
 The contract is an untrusted declaration. `required_evidence` was removed in
 v0.3.0 because it had no enforceable deterministic semantics.
 
-`missing_severity` applies to `contract/missing` only. It defaults to `warn`
-because that rule fires on the _absence_ of a convention rather than on
-something a pull request did, and the [scan study](study/methodology.md) found
-0 of 2,204 merged agent pull requests declaring a scope — so an `error` default
-would make `mode: block` reject essentially every agent pull request the day it
-is switched on. Set it to `error` once your contributors do declare scope.
+`missing_severity` applies to `contract/missing` only, and is the one rule that
+accepts `info` as well as `warn` and `error`. It defaults to **`info`** because
+that rule fires on the _absence_ of a convention rather than on something a pull
+request did, and the [scan study](study/methodology.md) found 0 of 2,204 merged
+agent pull requests declaring a scope. At `error` a `mode: block` install would
+reject essentially every agent pull request on day one; at `warn` it would label
+every one of them for review. `info` records the fact and leaves the decision
+alone. Raise it to `warn` once you have asked your contributors to declare
+scope, and to `error` once they do.
+
+`allow_missing_in_observe_mode` is a **no-op since v0.9.0**. It existed to
+downgrade `contract/missing` to `warn` in observe mode, which only made sense
+while the default was `error`; against an `info` default the same code would
+_raise_ the severity a repository had deliberately configured. The key is still
+accepted so existing config files keep parsing.
 
 `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay
 `error` regardless: each fires on something the pull request did against its

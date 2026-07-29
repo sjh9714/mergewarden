@@ -48317,8 +48317,7 @@ var contractMissingRule = {
     if (ctx.input.contract.kind !== "missing" || !contractRequired(ctx)) {
       return [];
     }
-    const configured = ctx.input.config.contract.missing_severity;
-    const severity = ctx.input.config.mode === "observe" && ctx.input.config.contract.allow_missing_in_observe_mode ? "warn" : configured;
+    const severity = ctx.input.config.contract.missing_severity;
     const finding2 = baseFinding(
       "contract/missing",
       severity,
@@ -49772,6 +49771,7 @@ var DEFAULT_AGENT_BODY_PATTERNS = [
   "Generated with Claude Code"
 ];
 var SeveritySettingSchema = external_exports.enum(["warn", "error"]);
+var ContractMissingSeveritySchema = external_exports.enum(["info", "warn", "error"]);
 var CheckSettingSchema = external_exports.enum(["off", "warn", "error"]);
 var AgentDetectionSchema = external_exports.object({
   authors: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_AUTHORS),
@@ -49785,18 +49785,24 @@ var ContractConfigSchema = external_exports.object({
   /**
    * Severity of `contract/missing` only — not of the other contract rules.
    *
-   * It defaults to `warn` rather than `error` because it is the one rule that fires on the
-   * absence of a convention instead of on something a pull request did. The scan study found
-   * 0 of 2,204 merged agent pull requests declaring a scope, so on `mode: block` an `error`
-   * default would reject essentially every agent pull request on the day it is switched on,
-   * for a condition the repository cannot fix by reviewing the change. Teams that do want
-   * declaration enforced set this to `error` deliberately.
+   * Defaults to `info`, which is the end of a line this project has walked twice. v0.6.0
+   * stopped this rule from *blocking*, because the scan study found 0 of 2,204 merged agent
+   * pull requests declaring a scope and an `error` default would have rejected essentially
+   * every agent pull request on the day `mode: block` was switched on. v0.9.0 stops it
+   * *warning* for the same reason taken one step further: a rule that fires on 100% of a
+   * population, for the absence of a convention nobody has adopted, carries no information.
+   * Reported on every routine pull request it trains maintainers to ignore the comment, and
+   * the findings that matter — permission escalation, control-plane drift — go with it.
+   *
+   * The principle is the one v0.6.0 established: speak about what a pull request did, not
+   * about a convention it did not follow. A repository that actually asks contributors for a
+   * declared scope opts in with `warn` or `error`.
    *
    * `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay `error`:
    * each of those fires on something the pull request actually did against its own
    * declaration.
    */
-  missing_severity: SeveritySettingSchema.default("warn")
+  missing_severity: ContractMissingSeveritySchema.default("info")
 }).strict();
 var HighRiskPathAreaSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).min(1),
@@ -49961,7 +49967,7 @@ var MergeWardenConfigSchema = external_exports.object({
   contract: ContractConfigSchema.default({
     required_for: ["agent"],
     allow_missing_in_observe_mode: true,
-    missing_severity: "warn"
+    missing_severity: "info"
   }),
   high_risk_paths: external_exports.record(external_exports.string(), HighRiskPathAreaSchema).default({}),
   agent_control_plane: AgentControlPlaneSchema.default({
@@ -51184,6 +51190,21 @@ function parseBooleanInput(name, value, fallback) {
   }
   throw new Error(`Invalid boolean input ${name}: ${value}. Expected true or false.`);
 }
+var COMMENT_MODES = ["auto", "always", "never"];
+function parseCommentMode(value) {
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed === "" || trimmed === "false") {
+    return "never";
+  }
+  if (trimmed === "true") {
+    return "always";
+  }
+  const mode = COMMENT_MODES.find((candidate) => candidate === trimmed);
+  if (mode) {
+    return mode;
+  }
+  throw new Error(`Invalid comment input: ${value}. Expected auto, always, or never.`);
+}
 function parseModeOverride(value) {
   const trimmed = value.trim();
   if (trimmed === "") {
@@ -51298,10 +51319,13 @@ function isMergeWardenManagedComment(comment) {
 function latestMarkedComment(comments) {
   return comments.filter(isMergeWardenManagedComment).sort((left, right) => right.id - left.id)[0];
 }
-async function upsertPullRequestComment(octokit, repository, issueNumber, markdownReport) {
+async function upsertPullRequestComment(octokit, repository, issueNumber, markdownReport, options = { onlyUpdateExisting: false }) {
   const comments = await listIssueComments(octokit, repository, issueNumber);
-  const body = markedCommentBody(markdownReport);
   const existingComment = latestMarkedComment(comments);
+  if (!existingComment && options.onlyUpdateExisting) {
+    return;
+  }
+  const body = markedCommentBody(markdownReport);
   if (existingComment) {
     const updateComment = octokit.rest.issues?.updateComment;
     if (!updateComment) {
@@ -51354,7 +51378,7 @@ async function runActionInner(runtime) {
     runtime.getInput("report-markdown"),
     "mergewarden-report.md"
   );
-  const comment = parseBooleanInput("comment", runtime.getInput("comment"), false);
+  const commentMode = parseCommentMode(runtime.getInput("comment"));
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
   const modeOverride = parseModeOverride(runtime.getInput("mode"));
   const target = {
@@ -51388,15 +51412,18 @@ async function runActionInner(runtime) {
   setResultOutputs(runtime, result, reportJsonPath, reportMarkdownPath);
   await runtime.summary.addRaw(summaryReport).write();
   runtime.info(plainTextReportSummary);
-  if (comment) {
+  if (commentMode !== "never") {
     try {
+      const needsAttention = !result.metadata.analysisComplete || result.summary.errorCount > 0 || result.summary.warnCount > 0;
       const commentReport = renderMarkdownReport(result, {
         maxFindings: 50,
         maxBytes: COMMENT_MAX_BYTES - COMMENT_WRAPPER_RESERVE_BYTES,
         fullReportPath: reportMarkdownPath,
         collapseFindings: true
       });
-      await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport);
+      await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport, {
+        onlyUpdateExisting: commentMode === "auto" && !needsAttention
+      });
     } catch (error52) {
       runtime.warning(`MergeWarden could not upsert PR comment: ${errorMessage(error52)}`);
     }

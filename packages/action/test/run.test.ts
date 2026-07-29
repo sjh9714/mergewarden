@@ -832,6 +832,78 @@ describe("runAction", () => {
     expect(octokit.rest.issues?.updateComment).not.toHaveBeenCalled();
   });
 
+  it("stays silent in auto mode when nothing needs attention", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:mergewarden.yml`]: "version: 1\nmode: block\n",
+      },
+      comments: [{ id: 3, body: "unrelated" }],
+    });
+    const harness = createHarness({ octokit, inputs: { comment: "auto" } });
+
+    const result = await runAction(harness.runtime);
+
+    // The findings are info only, so they are recorded in the job summary and nowhere else.
+    expect(result?.decision).toBe("pass");
+    expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+    expect(octokit.rest.issues?.updateComment).not.toHaveBeenCalled();
+  });
+
+  it("comments in auto mode when a finding needs attention", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:mergewarden.yml`]:
+          "version: 1\nmode: block\ncontract:\n  missing_severity: warn\n",
+      },
+    });
+    const harness = createHarness({
+      octokit,
+      inputs: { comment: "auto" },
+      context: prContext({ body: "Bumps the parser. No contract block here.", changed_files: 0 }),
+    });
+
+    const result = await runAction(harness.runtime);
+
+    expect(result?.summary.warnCount).toBeGreaterThan(0);
+    expect(octokit.rest.issues?.createComment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issue_number: 5,
+        body: expect.stringContaining("<!-- mergewarden-report -->"),
+      }),
+    );
+  });
+
+  it("updates an existing comment in auto mode once the findings are resolved", async () => {
+    const octokit = createOctokit({
+      files: [],
+      contents: {
+        [`${BASE_SHA}:mergewarden.yml`]: "version: 1\nmode: block\n",
+      },
+      comments: [
+        {
+          id: 11,
+          body: "<!-- mergewarden-report -->\n# MergeWarden: NEEDS REVIEW",
+          user: { login: "github-actions[bot]", type: "Bot" },
+        },
+      ],
+    });
+    const harness = createHarness({ octokit, inputs: { comment: "auto" } });
+
+    await runAction(harness.runtime);
+
+    // A stale "NEEDS REVIEW" is worse than no comment at all, so auto still resolves one it
+    // already posted rather than deleting it or leaving it behind.
+    expect(octokit.rest.issues?.updateComment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        comment_id: 11,
+        body: expect.stringContaining("# MergeWarden: PASSED"),
+      }),
+    );
+    expect(octokit.rest.issues?.createComment).not.toHaveBeenCalled();
+  });
+
   it("creates a marked PR comment when comment is true and none exists", async () => {
     const octokit = createOctokit({
       files: [],
@@ -1170,7 +1242,7 @@ describe("runAction", () => {
     await runAction(harness.runtime);
 
     expect(harness.failures).toEqual([
-      "Invalid boolean input comment: nope. Expected true or false.",
+      "Invalid comment input: nope. Expected auto, always, or never.",
     ]);
   });
 });

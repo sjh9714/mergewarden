@@ -10,6 +10,22 @@ This project follows the spirit of
 
 ### Added
 
+- **`comment: auto`** on the Action — post a pull-request comment only when there is an
+  error, a warning, or an incomplete analysis. `always` and `never` are the other values;
+  `true` and `false` keep working and mean `always` and `never`.
+
+  The Action previously posted on every run it was enabled for, including a passing one, so
+  a repository that turned comments on got a `PASSED` comment on every pull request forever.
+  Under `auto`, info findings are recorded in the job summary and nowhere else. A comment
+  that was posted and later resolved is **updated** to the passing report rather than
+  deleted, so a stale `NEEDS REVIEW` cannot outlive the problem it described.
+
+  The default stays `never`: the install documented in the README grants `pull-requests: read`
+  and commenting needs `write`. The README now recommends `comment: auto` with `write`.
+
+- **`docs/start-here.md`** — a one-page introduction: install, what the first pull request
+  will look like, and one line for each finding. There were 38 documents and no front door.
+
 - **`mergewarden-mcp`** — an MCP server exposing one tool, `check_change_scope`, which
   compares the files a change actually touched against the paths it was asked to touch.
 
@@ -35,6 +51,26 @@ This project follows the spirit of
   against a mock.
 
 ### Changed
+
+- **`contract/missing` now defaults to `info`** instead of `warn`, and `info` is a value
+  `contract.missing_severity` accepts. A routine agent pull request — in scope, nothing
+  dangerous — now resolves to `pass` rather than `needs-review`.
+
+  v0.6.0 stopped this rule from blocking a pull request over a convention nobody has
+  adopted; this stops it from labelling one. The scan study measured **0 of 2,204** merged
+  agent pull requests declaring a scope, so at `warn` the rule fired on essentially every
+  agent pull request, essentially always. A signal that fires on everything is not a signal,
+  and `workflow/permission-escalation` and `agent-control-plane/drift` were being learned
+  away alongside it. Raise it to `warn`, then `error`, as your contributors adopt contracts.
+
+  `info` is accepted for this key only. Every other rule fires on something a pull request
+  did, and none of them should be able to declare itself informational.
+
+- **`contract.allow_missing_in_observe_mode` is now a no-op.** It downgraded
+  `contract/missing` to `warn` in observe mode, which made sense against an `error` default;
+  against an `info` default the same code would _raise_ the severity a repository had
+  deliberately configured. The key is still accepted so existing configuration keeps parsing.
+  Observe-mode decisions are `pass` regardless, so no gate changes.
 
 - The publish workflow now packs and publishes both `mergewarden` and `mergewarden-mcp`, and
   resolves each tarball by exact filename. The previous wildcard on the CLI name also matched

@@ -13,7 +13,7 @@ const validAuthContract: ParseContractResult = {
 };
 
 describe("contract rules", () => {
-  it("emits contract/missing for agent PRs without contracts, warning rather than blocking", async () => {
+  it("reports a missing contract without changing the decision", async () => {
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig(
@@ -23,15 +23,18 @@ describe("contract rules", () => {
       }),
     );
 
-    // Deliberately not "block". This is the one rule that fires on the absence of a
-    // convention rather than on something the PR did, and the scan study measured 0 of
-    // 2,204 agent PRs declaring a scope — so blocking by default would reject every agent
-    // PR the day a repository switches to block mode. Opt in with contract.missing_severity.
-    expect(result.decision).toBe("warn");
+    // Not "block", and since v0.9.0 not "warn" either — on block mode this is still `pass`.
+    // The rule fires on the absence of a convention rather than on anything the PR did, and
+    // the scan study measured 0 of 2,204 agent PRs declaring a scope. A finding that fires on
+    // an entire population carries no information, and reported on every routine PR it trains
+    // maintainers to ignore the report. It stays visible as `info`; repositories that actually
+    // ask for declared scope opt in with contract.missing_severity.
+    expect(result.decision).toBe("pass");
     expect(result.findings.map((finding) => finding.ruleId)).toEqual([
       "agent/origin-detected",
       "contract/missing",
     ]);
+    expect(result.findings.map((finding) => finding.severity)).toEqual(["info", "info"]);
   });
 
   it("blocks a missing contract when the repository opts in with missing_severity", async () => {
@@ -92,7 +95,7 @@ describe("contract rules", () => {
       }),
     );
 
-    expect(result.decision).toBe("warn");
+    expect(result.decision).toBe("pass");
     expect(result.findings.map((finding) => finding.ruleId)).toEqual(["contract/missing"]);
   });
 
@@ -261,11 +264,25 @@ describe("contract rules", () => {
     expect(result.findings).toEqual([]);
   });
 
-  it("downgrades missing contracts in observe mode when configured", async () => {
+  it("uses the configured severity in observe mode rather than overriding it", async () => {
+    // allow_missing_in_observe_mode used to force this to "warn" in observe mode. That made
+    // sense while the default was "error"; against an "info" default the same override would
+    // *raise* the severity a repository had deliberately chosen. The key is still accepted so
+    // existing configs parse, but it no longer changes anything.
     const result = await analyze(
       createAnalysisInput({
         config: parseConfig(
-          "version: 1\nmode: observe\nagent_detection:\n  labels:\n    - ai-generated\n",
+          [
+            "version: 1",
+            "mode: observe",
+            "agent_detection:",
+            "  labels:",
+            "    - ai-generated",
+            "contract:",
+            "  missing_severity: error",
+            "  allow_missing_in_observe_mode: true",
+            "",
+          ].join("\n"),
         ),
         pr: { labels: ["ai-generated"] },
       }),
@@ -273,10 +290,7 @@ describe("contract rules", () => {
 
     expect(result.decision).toBe("pass");
     expect(result.findings).toContainEqual(
-      expect.objectContaining({
-        ruleId: "contract/missing",
-        severity: "warn",
-      }),
+      expect.objectContaining({ ruleId: "contract/missing", severity: "error" }),
     );
   });
 });
