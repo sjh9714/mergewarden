@@ -18,7 +18,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.8.0
+      - uses: sjh9714/mergewarden@v0.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn

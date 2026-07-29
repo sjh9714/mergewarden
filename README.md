@@ -39,14 +39,14 @@ _A real `npx` run, bounded with `head` so the framing stays on screen. Run that 
 See what MergeWarden catches — no token, no repository, no network:
 
 ```bash
-npx --yes mergewarden@0.8.0 demo
+npx --yes mergewarden@0.9.0 demo
 ```
 
 Then scan a real pull request, by `owner/repo#number` or by URL:
 
 ```bash
-npx --yes mergewarden@0.8.0 scan owner/repository#123
-npx --yes mergewarden@0.8.0 scan https://github.com/owner/repository/pull/123
+npx --yes mergewarden@0.9.0 scan owner/repository#123
+npx --yes mergewarden@0.9.0 scan https://github.com/owner/repository/pull/123
 ```
 
 ![The full mergewarden demo report scrolling past in a terminal](docs/assets/mergewarden-demo.gif)
@@ -76,7 +76,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.8.0
+      - uses: sjh9714/mergewarden@v0.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
