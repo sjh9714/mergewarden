@@ -210,10 +210,17 @@ triage:
   template_unused: info
   oversized_change: info
   unverified_author: info
+  exclude_authors: [dependabot[bot], renovate[bot], github-actions[bot]]
   min_description_characters: 80
   max_files: 50
   max_lines: 1500
 ```
+
+`exclude_authors` is maintenance automation these rules should not describe: a release bot does
+not fill in a template and a dependency bump has no issue to link. Coding agents are
+deliberately absent from the default — `Copilot` and `devin-ai-integration[bot]` are bot
+accounts too, and their pull requests are the ones a maintainer most wants triaged, which is
+why this is a list of accounts rather than a test for `type: Bot`.
 
 `no_linked_issue` is the one that ships `off`: most pull requests in most repositories
 reference no issue, so at `info` it would attach a finding to nearly every report.

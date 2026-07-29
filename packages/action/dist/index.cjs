@@ -49412,6 +49412,10 @@ function proseOf(body) {
   return body.replace(/<!--[\s\S]*?-->/g, " ").replace(/^#{1,6}\s.*$/gm, " ").replace(/^\s*[-*]\s*\[[ xX]\]\s*/gm, " ").replace(/```[\s\S]*?```/g, " ").replace(/\s+/g, " ").trim();
 }
 function severityOf(ctx, key) {
+  const author = ctx.input.pr.author.toLowerCase();
+  if (ctx.input.config.triage.exclude_authors.some((entry) => entry.toLowerCase() === author)) {
+    return "off";
+  }
   return ctx.input.config.triage[key];
 }
 var triageNoLinkedIssueRule = {
@@ -50253,6 +50257,18 @@ var TriageConfigSchema = external_exports.object({
   // every contributor starts, and defaulting it to a warning turns the tool into something
   // that greets newcomers with a complaint.
   unverified_author: TriageSettingSchema.default("info"),
+  /**
+   * Maintenance automation whose pull requests these rules should not describe.
+   *
+   * A release bot does not fill in a template and a dependency bump has no issue to link;
+   * reporting that is the noise this file exists to avoid. Every entry was observed opening
+   * pull requests in the repositories used to calibrate these rules.
+   *
+   * Coding agents are deliberately **not** here. `Copilot` and `devin-ai-integration[bot]`
+   * are bot accounts too, and their pull requests are exactly the ones a maintainer wants
+   * triaged — which is why this is a list of accounts rather than a test for `type: Bot`.
+   */
+  exclude_authors: external_exports.array(NonEmptyStringSchema).default(["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]),
   min_description_characters: external_exports.number().int().min(0).default(80),
   max_files: external_exports.number().int().min(1).default(50),
   max_lines: external_exports.number().int().min(1).default(1500)
@@ -50315,6 +50331,7 @@ var MergeWardenConfigSchema = external_exports.object({
     template_unused: "info",
     oversized_change: "info",
     unverified_author: "info",
+    exclude_authors: ["dependabot[bot]", "renovate[bot]", "github-actions[bot]"],
     min_description_characters: 80,
     max_files: 50,
     max_lines: 1500

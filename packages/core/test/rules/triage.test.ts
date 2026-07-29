@@ -219,3 +219,35 @@ describe("triage configuration", () => {
     expect(result.decision).toBe("warn");
   });
 });
+
+describe("triage automation exclusion", () => {
+  it("says nothing about maintenance automation", async () => {
+    // Observed opening pull requests in the repositories used to calibrate these rules:
+    // starship#7607 is github-actions[bot], starship#7636 is renovate[bot].
+    for (const author of ["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]) {
+      const result = await analyze(
+        createAnalysisInput({
+          config: parseConfig(ALL_ON),
+          pr: { author, body: "", authorAssociation: "NONE" },
+          files: Array.from({ length: 60 }, (_, index) => fileChange(`deps/${index}.lock`)),
+          repoDocs: { pullRequestTemplate: "## Summary" },
+        }),
+      );
+
+      expect(
+        ruleIds(result.findings).filter((id) => id.startsWith("triage/")),
+        author,
+      ).toEqual([]);
+    }
+  });
+
+  it("still triages coding agents, which are bot accounts too", async () => {
+    for (const author of ["Copilot", "devin-ai-integration[bot]"]) {
+      const result = await analyze(
+        createAnalysisInput({ config: parseConfig(ALL_ON), pr: { author, body: "" } }),
+      );
+
+      expect(ruleIds(result.findings), author).toContain("triage/empty-description");
+    }
+  });
+});

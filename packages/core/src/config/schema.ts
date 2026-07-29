@@ -387,6 +387,20 @@ const TriageConfigSchema = z
     // every contributor starts, and defaulting it to a warning turns the tool into something
     // that greets newcomers with a complaint.
     unverified_author: TriageSettingSchema.default("info"),
+    /**
+     * Maintenance automation whose pull requests these rules should not describe.
+     *
+     * A release bot does not fill in a template and a dependency bump has no issue to link;
+     * reporting that is the noise this file exists to avoid. Every entry was observed opening
+     * pull requests in the repositories used to calibrate these rules.
+     *
+     * Coding agents are deliberately **not** here. `Copilot` and `devin-ai-integration[bot]`
+     * are bot accounts too, and their pull requests are exactly the ones a maintainer wants
+     * triaged — which is why this is a list of accounts rather than a test for `type: Bot`.
+     */
+    exclude_authors: z
+      .array(NonEmptyStringSchema)
+      .default(["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]),
     min_description_characters: z.number().int().min(0).default(80),
     max_files: z.number().int().min(1).default(50),
     max_lines: z.number().int().min(1).default(1500),
@@ -458,6 +472,7 @@ export const MergeWardenConfigSchema = z
       template_unused: "info",
       oversized_change: "info",
       unverified_author: "info",
+      exclude_authors: ["dependabot[bot]", "renovate[bot]", "github-actions[bot]"],
       min_description_characters: 80,
       max_files: 50,
       max_lines: 1500,

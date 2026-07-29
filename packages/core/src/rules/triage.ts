@@ -36,6 +36,14 @@ type TriageSeverityKey = {
 }[keyof TriageConfig];
 
 function severityOf(ctx: RuleContext, key: TriageSeverityKey): TriageConfig[TriageSeverityKey] {
+  // Maintenance automation is excluded here rather than in each rule, so a new rule cannot
+  // forget to. `off` is returned so every rule's existing early exit handles it.
+  const author = ctx.input.pr.author.toLowerCase();
+
+  if (ctx.input.config.triage.exclude_authors.some((entry) => entry.toLowerCase() === author)) {
+    return "off";
+  }
+
   return ctx.input.config.triage[key];
 }
 

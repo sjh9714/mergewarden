@@ -42,6 +42,10 @@ the same data for scripting.
 Boundary findings — `outside declared scope`, `agent instructions changed`,
 `workflow permissions` — appear here too when the change crossed one.
 
+Maintenance automation is skipped: `dependabot[bot]`, `renovate[bot]` and
+`github-actions[bot]` by default, configurable through `triage.exclude_authors`. Coding agents
+are not skipped, because their pull requests are the ones this is for.
+
 ## What it does not do
 
 **It never closes, labels, or comments.** There is no `--close` flag, and a test asserts there

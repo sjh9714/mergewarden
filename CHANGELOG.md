@@ -44,6 +44,14 @@ This project follows the spirit of
   contributor, and Next.js's template is entirely comment — counting them flagged every pull
   request in the repository until this was fixed.
 
+- `triage.exclude_authors` — maintenance automation these rules say nothing about, defaulting
+  to `dependabot[bot]`, `renovate[bot]` and `github-actions[bot]`. Found by running the command
+  against real repositories: it was reporting starship's own release bot for not following the
+  pull-request template and renovate for not linking an issue, which is the complaint on the
+  competing tool's issue tracker. Coding agents are deliberately not excluded — `Copilot` and
+  `devin-ai-integration[bot]` are bot accounts too, and theirs are the pull requests a
+  maintainer wants triaged.
+
 - **`docs/triage.md`** — what the command reports, and why it does not act.
 
 ### Changed
