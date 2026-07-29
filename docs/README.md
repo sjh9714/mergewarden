@@ -16,6 +16,9 @@ requests. Start with the shortest path for your task:
 - [Security model](security-model.md): trust boundaries and known limitations.
 - [Enforce an AI-contribution policy](enforce-ai-contribution-policy.md): a
   copy-paste preset for the checkable clauses of your policy.
+- [What AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md):
+  the trailer coding tools write about themselves, measured across 1,029
+  repositories — and a correction to an earlier claim about policy effects.
 - [What 2,204 agent PRs showed](study/what-2204-agent-prs-showed.md): the scan
   study narrative; [methodology](study/methodology.md) has every query.
 - [Demo PRs](demo-prs.md): verified external Action runs.

@@ -1,4 +1,5 @@
 import type { CommitContext, RawFinding } from "../types.js";
+import { aiCoauthorTool, coauthorDisplayName } from "./aiCoauthors.js";
 import type { Rule, RuleContext } from "./types.js";
 
 export interface CommitTrailer {
@@ -244,5 +245,84 @@ export const commitTrailerForbiddenRule: Rule = {
     }
 
     return findings;
+  },
+};
+
+export const commitAiDisclosedRule: Rule = {
+  id: "commit/ai-assistance-disclosed",
+  title: "AI assistance disclosed in commit trailers",
+  run(ctx) {
+    const active = scope(ctx);
+    const severity = ctx.input.config.commit_trailers.ai_disclosure;
+
+    if (!active || severity === "off") {
+      return [];
+    }
+
+    // Tools write this trailer themselves, and it survives a squash merge into the permanent
+    // history. That makes it the one agent signal a contributor does not have to opt into and
+    // cannot erase by renaming a branch — the signals we had before were all human-chosen.
+    const tools = new Map<string, Set<string>>();
+    const commits: string[] = [];
+
+    for (const commit of active.commits) {
+      let disclosed = false;
+
+      for (const trailer of parseCommitTrailers(commit.message)) {
+        if (trailer.name.toLowerCase() !== "co-authored-by") {
+          continue;
+        }
+
+        const tool = aiCoauthorTool(trailer.value);
+
+        if (!tool) {
+          continue;
+        }
+
+        disclosed = true;
+        const names = tools.get(tool) ?? new Set<string>();
+        const display = coauthorDisplayName(trailer.value);
+
+        if (display) {
+          names.add(display);
+        }
+
+        tools.set(tool, names);
+      }
+
+      if (disclosed) {
+        commits.push(shortSha(commit.sha));
+      }
+    }
+
+    if (tools.size === 0) {
+      return [];
+    }
+
+    const toolList = [...tools.keys()].sort().join(", ");
+    const detail = [...tools.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([tool, names]) => (names.size > 0 ? `${tool} (${[...names].sort().join(", ")})` : tool))
+      .join("; ");
+
+    return [
+      {
+        ruleId: "commit/ai-assistance-disclosed",
+        severity,
+        title: "AI assistance disclosed in commit trailers",
+        message: `${commits.length} of ${active.commits.length} commit(s) disclose AI assistance: ${toolList}.`,
+        evidence: [
+          { label: "tools", value: detail },
+          { label: "commits", value: commits.slice(0, 10).join(", ") },
+          { label: "disclosed_commits", value: String(commits.length) },
+          { label: "total_commits", value: String(active.commits.length) },
+        ],
+        remediation: [
+          "No action is required. This records a disclosure the tool made; it is not a finding against the change.",
+        ],
+        tags: ["commit-trailer", "disclosure", "agent"],
+        confidence: "high",
+      },
+    ];
   },
 };

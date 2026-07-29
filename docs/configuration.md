@@ -180,6 +180,7 @@ default, so this changes nothing until you add an entry.
 ```yaml
 commit_trailers:
   enabled: true
+  ai_disclosure: info # off | info | warn | error
   required:
     - any_of: [Assisted-by, Generated-by]
       applies_to: agent # agent | all
@@ -196,6 +197,20 @@ A `required` entry is satisfied by **any** of its `any_of` trailers.
 `Signed-off-by:` requirement needs. A `forbidden` entry without
 `value_patterns` rejects the trailer outright; with them, only matching values
 are rejected.
+
+`ai_disclosure` controls `commit/ai-assistance-disclosed`, which reports the
+`Co-authored-by:` trailers coding tools write about themselves — Claude Code,
+Cursor, GitHub Copilot, Devin, Codex and Google Jules — including the model
+name where the tool records one. It is `info` by default because it describes a
+disclosure the tool made, not something the pull request did wrong, so it must
+not move the decision. Raise it if your policy requires disclosure; set `off` to
+drop it.
+
+Tools are matched on the co-author **address**, never the domain and never the
+display name. `mdangelo@openai.com` belongs to a person, and the same tool
+writes `Claude`, `Claude Opus 4.8` and `Claude Opus 4.8 (1M context)` across
+commits — the addresses were read out of real merged history, and the counts are
+in [what AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md).
 
 These rules stay inert when MergeWarden could not enumerate every commit — see
 [the commit trailer rule guide](rules/commit-trailers.md) for the limits and

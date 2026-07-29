@@ -48402,6 +48402,49 @@ var contractBlockedPathRule = {
     });
   }
 };
+function githubBotAddress(login) {
+  const suffix = `+${login.toLowerCase()}@users.noreply.github.com`;
+  return (email3) => {
+    if (!email3.endsWith(suffix)) {
+      return false;
+    }
+    const prefix = email3.slice(0, email3.length - suffix.length);
+    return prefix.length > 0 && /^\d+$/.test(prefix);
+  };
+}
+function exactAddress(address) {
+  const normalized = address.toLowerCase();
+  return (email3) => email3 === normalized;
+}
+var AI_COAUTHOR_IDENTITIES = [
+  { tool: "Claude Code", match: exactAddress("noreply@anthropic.com") },
+  { tool: "Cursor", match: exactAddress("cursoragent@cursor.com") },
+  { tool: "GitHub Copilot", match: exactAddress("copilot@github.com") },
+  { tool: "GitHub Copilot", match: githubBotAddress("copilot") },
+  { tool: "Devin", match: githubBotAddress("devin-ai-integration[bot]") },
+  { tool: "Google Jules", match: githubBotAddress("google-labs-jules[bot]") },
+  { tool: "Codex", match: exactAddress("codex@openai.com") }
+];
+var ADDRESS = /<([^>]+)>\s*$/;
+function aiCoauthorTool(trailerValue) {
+  const match = ADDRESS.exec(trailerValue.trim());
+  if (!match) {
+    return void 0;
+  }
+  const email3 = (match[1] ?? "").trim().toLowerCase();
+  for (const identity of AI_COAUTHOR_IDENTITIES) {
+    if (identity.match(email3)) {
+      return identity.tool;
+    }
+  }
+  return void 0;
+}
+function coauthorDisplayName(trailerValue) {
+  const trimmed = trailerValue.trim();
+  const index = trimmed.lastIndexOf("<");
+  const name = index === -1 ? "" : trimmed.slice(0, index).trim();
+  return name.length > 0 ? name : void 0;
+}
 var TRAILER_LINE = /^([A-Za-z][A-Za-z0-9-]*):[ \t]*(.*)$/;
 function shortSha(sha) {
   return sha.length > 12 ? sha.slice(0, 12) : sha;
@@ -48567,6 +48610,65 @@ var commitTrailerForbiddenRule = {
       }
     }
     return findings;
+  }
+};
+var commitAiDisclosedRule = {
+  id: "commit/ai-assistance-disclosed",
+  title: "AI assistance disclosed in commit trailers",
+  run(ctx) {
+    const active = scope(ctx);
+    const severity = ctx.input.config.commit_trailers.ai_disclosure;
+    if (!active || severity === "off") {
+      return [];
+    }
+    const tools = /* @__PURE__ */ new Map();
+    const commits = [];
+    for (const commit of active.commits) {
+      let disclosed = false;
+      for (const trailer of parseCommitTrailers(commit.message)) {
+        if (trailer.name.toLowerCase() !== "co-authored-by") {
+          continue;
+        }
+        const tool = aiCoauthorTool(trailer.value);
+        if (!tool) {
+          continue;
+        }
+        disclosed = true;
+        const names = tools.get(tool) ?? /* @__PURE__ */ new Set();
+        const display = coauthorDisplayName(trailer.value);
+        if (display) {
+          names.add(display);
+        }
+        tools.set(tool, names);
+      }
+      if (disclosed) {
+        commits.push(shortSha(commit.sha));
+      }
+    }
+    if (tools.size === 0) {
+      return [];
+    }
+    const toolList = [...tools.keys()].sort().join(", ");
+    const detail = [...tools.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([tool, names]) => names.size > 0 ? `${tool} (${[...names].sort().join(", ")})` : tool).join("; ");
+    return [
+      {
+        ruleId: "commit/ai-assistance-disclosed",
+        severity,
+        title: "AI assistance disclosed in commit trailers",
+        message: `${commits.length} of ${active.commits.length} commit(s) disclose AI assistance: ${toolList}.`,
+        evidence: [
+          { label: "tools", value: detail },
+          { label: "commits", value: commits.slice(0, 10).join(", ") },
+          { label: "disclosed_commits", value: String(commits.length) },
+          { label: "total_commits", value: String(active.commits.length) }
+        ],
+        remediation: [
+          "No action is required. This records a disclosure the tool made; it is not a finding against the change."
+        ],
+        tags: ["commit-trailer", "disclosure", "agent"],
+        confidence: "high"
+      }
+    ];
   }
 };
 function isWorkflowFile(ctx, path) {
@@ -49406,6 +49508,7 @@ var builtInRules = [
   packageScriptDriftRule,
   commitTrailerMissingRule,
   commitTrailerForbiddenRule,
+  commitAiDisclosedRule,
   workflowPermissionEscalationRule,
   workflowTriggerRemovedRule,
   workflowDangerousPatternRule,
@@ -49944,10 +50047,12 @@ var CommitTrailerProhibitionSchema = external_exports.object({
   value_patterns: external_exports.array(NonEmptyStringSchema).default([]),
   severity: SeveritySettingSchema.default("error")
 }).strict();
+var AiDisclosureSettingSchema = external_exports.enum(["off", "info", "warn", "error"]);
 var CommitTrailersConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
   required: external_exports.array(CommitTrailerRequirementSchema).default([]),
-  forbidden: external_exports.array(CommitTrailerProhibitionSchema).default([])
+  forbidden: external_exports.array(CommitTrailerProhibitionSchema).default([]),
+  ai_disclosure: AiDisclosureSettingSchema.default("info")
 }).strict();
 var PackageScriptsConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
@@ -49998,7 +50103,8 @@ var MergeWardenConfigSchema = external_exports.object({
   commit_trailers: CommitTrailersConfigSchema.default({
     enabled: true,
     required: [],
-    forbidden: []
+    forbidden: [],
+    ai_disclosure: "info"
   })
 }).strict().superRefine((value, ctx) => {
   const seen = /* @__PURE__ */ new Set();

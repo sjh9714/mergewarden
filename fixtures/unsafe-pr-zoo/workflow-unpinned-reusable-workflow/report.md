@@ -28,7 +28,7 @@ Policy status: warning today; eligible to become a merge gate after tuning.
 - Warnings: 1
 - Info: 0
 - Waived: 0
-- Policy digest: 5e1e547566c277b7337645cc3675757bf1353e0ba321ccb6b3c421e6d2c4ed28
+- Policy digest: 299366e9fee77d2804b1277a7079942311a9d21989e6f03c55ae2c1a9238f68a
 
 ## Detailed Findings
 

@@ -355,11 +355,21 @@ const CommitTrailerProhibitionSchema = z
   })
   .strict();
 
+/**
+ * Severity for `commit/ai-assistance-disclosed`, plus `off`.
+ *
+ * `info` by default: the rule records a disclosure a tool wrote about itself, not something the
+ * pull request did wrong, so it must not move the decision. Repositories whose policy requires
+ * disclosure can raise it; `off` removes it entirely.
+ */
+const AiDisclosureSettingSchema = z.enum(["off", "info", "warn", "error"]);
+
 const CommitTrailersConfigSchema = z
   .object({
     enabled: z.boolean().default(true),
     required: z.array(CommitTrailerRequirementSchema).default([]),
     forbidden: z.array(CommitTrailerProhibitionSchema).default([]),
+    ai_disclosure: AiDisclosureSettingSchema.default("info"),
   })
   .strict();
 
@@ -417,6 +427,7 @@ export const MergeWardenConfigSchema = z
       enabled: true,
       required: [],
       forbidden: [],
+      ai_disclosure: "info",
     }),
   })
   .strict()

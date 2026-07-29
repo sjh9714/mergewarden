@@ -6,6 +6,36 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **`commit/ai-assistance-disclosed`** — reports the `Co-authored-by:` trailers coding tools
+  write about themselves (Claude Code, Cursor, GitHub Copilot, Devin, Codex, Google Jules),
+  including the model name where the tool records one. `info` by default via
+  `commit_trailers.ai_disclosure`, so it never moves the decision; raise it if your policy
+  requires disclosure.
+
+  Every signal MergeWarden had until now was human-chosen — an author account, a branch prefix,
+  a label, a body marker — and a branch prefix disappears the moment the branch is renamed. This
+  one the tool writes itself, and it survives a squash merge into permanent history. The rule
+  reuses the commit enumeration and Git-trailer parsing shipped in v0.4.1, which were already
+  collecting the data without reading it.
+
+  Tools are matched on the co-author **address**. Not the domain: `mdangelo@openai.com` and
+  `etraut@openai.com` appear as co-authors in the scanned corpus and belong to people who work
+  at OpenAI, so an `@openai.com` rule reports humans as AI. Not the display name either: the same
+  tool writes `Claude`, `Claude Opus 4.8` and `Claude Opus 4.8 (1M context)`, and a person can
+  type any of them. Addresses and counts come from real merged history, not vendor docs.
+
+- **`docs/study/what-ai-disclosure-looks-like.md`** — 1,029 repositories read from cloned git
+  history. Includes a **correction**: an earlier pass of this measurement found AI-banning
+  projects at 0% and read it as evidence that policy changes behaviour. It was confounded by
+  language — every repository in that list is C or C++, and the median C/C++ repository is at 0%
+  regardless of policy. Stratified by language the effect disappears. The same data found that
+  only **three of the 355 most popular repositories** actually prohibit AI-written code, while
+  the common requirement is comprehension, which no checker can verify.
+
 ## v0.9.0 - 2026-07-30
 
 ### Added
