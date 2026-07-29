@@ -86,10 +86,10 @@ jobs:
 
 No checkout step is needed, and MergeWarden
 does not publish or recommend a mutable `v0` tag.
-For an immutable install, pin the exact v0.6.0 release commit:
+For an immutable install, pin the exact v0.9.0 release commit:
 
 ```yaml
-- uses: sjh9714/mergewarden@ec38a1dd467d04fa69a983a3b54ae6fb70f5aba6
+- uses: sjh9714/mergewarden@e97f47b59dcda0eb48ba88275c176fc734325659
 ```
 
 The first run works without `mergewarden.yml`: a confirmed 404 on the PR base

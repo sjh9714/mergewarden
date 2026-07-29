@@ -26,6 +26,40 @@ Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
+## v0.9.0: What the Action Says, and When
+
+v0.9.0 changed the daily experience rather than a rule's logic, so the proof is
+three pull requests in the same sandbox, on the same commit-pinned Action
+(`sjh9714/mergewarden@e97f47b59dcda0eb48ba88275c176fc734325659`), differing only
+in what the change did.
+
+| Pull request                                                                | Change                                         | Decision        | Comment                           |
+| --------------------------------------------------------------------------- | ---------------------------------------------- | --------------- | --------------------------------- |
+| [#19](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/19) | Agent branch, no contract, README only         | `pass`          | **none**                          |
+| [#18](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/18) | Agent branch, no contract, edits `src/auth/**` | `warn`          | posted                            |
+| [#20](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/20) | Declares `docs/**`, edits `README.md`          | `warn` → `pass` | posted, then **updated in place** |
+
+**[#19](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/19) is
+the one that matters.** It is a routine agent pull request — detected as
+agent-authored, no declared contract — and it reports `agent/origin-detected`
+and `contract/missing`, both `info`, and says nothing on the pull request. The
+[run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30474857695)
+records both findings in the job summary. Before v0.9.0 this exact pull request
+resolved to `needs-review` and, with comments enabled, posted one.
+
+**[#18](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/18)**
+shows `auto` is not "quieter about everything". The sandbox policy marks
+`src/auth/**` as a high-risk area, the change lands there, and the
+[run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30474761421)
+comments. Same Action, same input, different change.
+
+**[#20](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/20)**
+declared a scope of `docs/**` and edited `README.md`, so `contract/out-of-scope`
+fired and comment `5121230270` said `NEEDS REVIEW`. The contract was then
+corrected in the pull-request body. Comment `5121230270` — the same comment, by
+id — now reads `PASSED`. It was updated, not deleted: the record of what was
+flagged and how it was resolved stays on the pull request.
+
 ## v0.6.0 Public Composite Proof
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
