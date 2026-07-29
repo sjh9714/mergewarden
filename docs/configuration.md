@@ -93,7 +93,15 @@ github_actions:
     added_secret_reference: warn
     workflow_deleted: warn
     malformed_workflow: error
+    trigger_removed: warn
 ```
+
+`trigger_removed` fires when a workflow stops firing on an event it used to —
+the case GitHub's review guidance calls out as "confirm workflow still runs on
+forks and pull requests". It defaults to `warn` because consolidating workflows
+is ordinary and the artifact cannot tell that apart from a pull request removing
+the check that would have gated it. See
+[GitHub's review guidance mapped to rules](github-review-guidance.md).
 
 Every check accepts `off`, `warn`, or `error`. Legacy
 `block_permission_escalation`, `block_pull_request_target_checkout`,

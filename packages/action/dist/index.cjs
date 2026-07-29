@@ -49304,6 +49304,96 @@ var workflowPermissionEscalationRule = {
     return findings;
   }
 };
+function isRecord6(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isWorkflowFile4(ctx, path) {
+  return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
+}
+function wasWorkflowFile3(ctx, file2) {
+  return isWorkflowFile4(ctx, file2.previousPath ?? file2.path);
+}
+function workflowEventNames(workflow) {
+  const on = workflow.on;
+  if (typeof on === "string") {
+    return [on];
+  }
+  if (Array.isArray(on)) {
+    return on.filter((entry) => typeof entry === "string");
+  }
+  return isRecord6(on) ? Object.keys(on) : [];
+}
+function removedWorkflowEvents(base, head) {
+  if (!base) {
+    return [];
+  }
+  const headEvents = new Set(workflowEventNames(head));
+  return workflowEventNames(base).filter((event) => !headEvents.has(event));
+}
+function eventConsequence(event) {
+  switch (event) {
+    case "pull_request":
+    case "pull_request_target":
+      return "this workflow no longer runs on pull requests, including the one removing it";
+    case "push":
+      return "this workflow no longer runs on pushes";
+    case "merge_group":
+      return "this workflow no longer runs in the merge queue";
+    case "schedule":
+      return "this workflow no longer runs on its schedule";
+    case "workflow_call":
+      return "this workflow can no longer be called by other workflows";
+    default:
+      return `this workflow no longer runs on ${event}`;
+  }
+}
+var workflowTriggerRemovedRule = {
+  id: "workflow/trigger-removed",
+  title: "Workflow trigger removed",
+  run(ctx) {
+    const setting = ctx.input.config.github_actions.checks.trigger_removed;
+    if (setting === "off") {
+      return [];
+    }
+    const findings = [];
+    for (const file2 of ctx.helpers.changedFiles()) {
+      const treatAsAdded = file2.status === "added" || !wasWorkflowFile3(ctx, file2);
+      if (!isWorkflowFile4(ctx, file2.path) || file2.status === "removed" || treatAsAdded || !file2.headContent || !file2.baseContent) {
+        continue;
+      }
+      const base = parseWorkflow(file2.baseContent);
+      const head = parseWorkflow(file2.headContent);
+      if (base.kind !== "valid" || head.kind !== "valid") {
+        continue;
+      }
+      for (const event of removedWorkflowEvents(base.workflow, head.workflow)) {
+        findings.push({
+          ruleId: "workflow/trigger-removed",
+          severity: setting,
+          title: "Workflow trigger removed",
+          message: `${file2.path} no longer triggers on ${event}; ${eventConsequence(event)}. Confirm this reduction in coverage is intended.`,
+          path: file2.path,
+          evidence: [
+            { label: "changed_file", value: file2.path },
+            { label: "removed_event", value: event },
+            { label: "events_before", value: workflowEventNames(base.workflow).join(", ") },
+            {
+              label: "events_after",
+              value: workflowEventNames(head.workflow).join(", ") || "none"
+            }
+          ],
+          remediation: [
+            "Confirm the workflow is still expected to run in the situations it stopped covering.",
+            "If coverage moved to another workflow, say so in the pull request description."
+          ],
+          tags: ["workflow", "ci-coverage"],
+          confidence: "high"
+        });
+      }
+    }
+    return findings;
+  }
+};
 var builtInRules = [
   agentOriginRule,
   contractInvalidRule,
@@ -49318,6 +49408,7 @@ var builtInRules = [
   commitTrailerMissingRule,
   commitTrailerForbiddenRule,
   workflowPermissionEscalationRule,
+  workflowTriggerRemovedRule,
   workflowDangerousPatternRule,
   agenticWorkflowInjectionRule
 ];
@@ -49728,7 +49819,18 @@ var DEFAULT_GITHUB_ACTION_CHECKS = {
   unknown_write_permission: "warn",
   added_secret_reference: "warn",
   workflow_deleted: "warn",
-  malformed_workflow: "error"
+  malformed_workflow: "error",
+  /**
+   * A workflow that stops firing on an event it used to fire on.
+   *
+   * GitHub's own review guidance treats weakening CI as a blocker outright ("Confirm workflow
+   * still runs on forks and pull requests"), but that instruction is aimed at a human deciding
+   * one case. As a machine default `warn` is the honest setting: consolidating workflows and
+   * retiring a `schedule` are ordinary, and the artifact cannot tell those apart from a pull
+   * request quietly removing the check that would have gated it. Teams that want it enforced
+   * set this to `error`.
+   */
+  trigger_removed: "warn"
 };
 var GitHubActionsChecksSchema = external_exports.object({
   permission_escalation: CheckSettingSchema.default(
@@ -49754,7 +49856,8 @@ var GitHubActionsChecksSchema = external_exports.object({
     DEFAULT_GITHUB_ACTION_CHECKS.added_secret_reference
   ),
   workflow_deleted: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.workflow_deleted),
-  malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow)
+  malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow),
+  trigger_removed: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed)
 }).strict();
 function legacyChecks(config2) {
   return GitHubActionsChecksSchema.parse({
@@ -49766,7 +49869,8 @@ function legacyChecks(config2) {
     unpinned_action: config2.require_pinned_actions,
     unpinned_reusable_workflow: config2.require_pinned_actions,
     unpinned_container: config2.require_pinned_actions,
-    malformed_workflow: config2.severity
+    malformed_workflow: config2.severity,
+    trigger_removed: DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed
   });
 }
 function hasLegacyAndGranularChecks(value) {
@@ -49919,11 +50023,11 @@ function formatZodIssues(issues) {
 function formatYamlErrors(errors) {
   return errors.map((error52) => error52.message).join("; ");
 }
-function isRecord6(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function assertNoGitHubActionsConfigMixing(value) {
-  if (!isRecord6(value) || !isRecord6(value.github_actions)) {
+  if (!isRecord7(value) || !isRecord7(value.github_actions)) {
     return;
   }
   const githubActions = value.github_actions;
@@ -50519,11 +50623,11 @@ var REQUEST_TIMEOUT_MS = 3e4;
 function requestOptions() {
   return { request: { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) } };
 }
-function isRecord7(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function decodeTextFile(data, path) {
-  if (!isRecord7(data) || data.type !== "file" || data.encoding !== "base64" || typeof data.content !== "string") {
+  if (!isRecord8(data) || data.type !== "file" || data.encoding !== "base64" || typeof data.content !== "string") {
     throw new GitHubApiError(`Read ${path}: response was not base64 file content.`, {
       retryable: false
     });
@@ -51046,7 +51150,7 @@ async function loadGitHubAnalysis(api, target, options) {
 }
 
 // src/version.ts
-var MERGEWARDEN_VERSION = "0.7.0";
+var MERGEWARDEN_VERSION = "0.8.0";
 
 // src/run.ts
 var MERGEWARDEN_COMMENT_MARKER = "<!-- mergewarden-report -->";

@@ -17,6 +17,7 @@ import { missingTestEvidenceRule } from "./testEvidence.js";
 import type { Rule, RuleContext } from "./types.js";
 import { workflowDangerousPatternRule } from "./workflowDangerousPattern.js";
 import { workflowPermissionEscalationRule } from "./workflowPermissions.js";
+import { workflowTriggerRemovedRule } from "./workflowTriggers.js";
 
 export const builtInRules: Rule[] = [
   agentOriginRule,
@@ -32,6 +33,7 @@ export const builtInRules: Rule[] = [
   commitTrailerMissingRule,
   commitTrailerForbiddenRule,
   workflowPermissionEscalationRule,
+  workflowTriggerRemovedRule,
   workflowDangerousPatternRule,
   agenticWorkflowInjectionRule,
 ];

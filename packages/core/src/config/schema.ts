@@ -173,6 +173,17 @@ export const DEFAULT_GITHUB_ACTION_CHECKS = {
   added_secret_reference: "warn",
   workflow_deleted: "warn",
   malformed_workflow: "error",
+  /**
+   * A workflow that stops firing on an event it used to fire on.
+   *
+   * GitHub's own review guidance treats weakening CI as a blocker outright ("Confirm workflow
+   * still runs on forks and pull requests"), but that instruction is aimed at a human deciding
+   * one case. As a machine default `warn` is the honest setting: consolidating workflows and
+   * retiring a `schedule` are ordinary, and the artifact cannot tell those apart from a pull
+   * request quietly removing the check that would have gated it. Teams that want it enforced
+   * set this to `error`.
+   */
+  trigger_removed: "warn",
 } as const;
 
 const GitHubActionsChecksSchema = z
@@ -201,6 +212,7 @@ const GitHubActionsChecksSchema = z
     ),
     workflow_deleted: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.workflow_deleted),
     malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow),
+    trigger_removed: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed),
   })
   .strict();
 
@@ -220,6 +232,7 @@ function legacyChecks(config: {
     unpinned_reusable_workflow: config.require_pinned_actions,
     unpinned_container: config.require_pinned_actions,
     malformed_workflow: config.severity,
+    trigger_removed: DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed,
   });
 }
 

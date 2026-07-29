@@ -59,8 +59,12 @@ async function createFixture(
 const unsafePrZooFixtures = [
   {
     name: "workflow-permission-escalation",
-    expectedRuleIds: ["workflow/permission-escalation", "workflow/dangerous-pattern"],
-    expectedSeverities: ["error", "error"],
+    expectedRuleIds: [
+      "workflow/permission-escalation",
+      "workflow/trigger-removed",
+      "workflow/dangerous-pattern",
+    ],
+    expectedSeverities: ["error", "warn", "error"],
     expectedPath: ".github/workflows/release.yml",
     expectedDecision: "block",
   },
@@ -119,6 +123,7 @@ const unsafePrZooFixtures = [
       "dependency/lifecycle-script-added",
       "workflow/permission-escalation",
       "workflow/permission-escalation",
+      "workflow/trigger-removed",
       "workflow/dangerous-pattern",
       "workflow/dangerous-pattern",
       "workflow/dangerous-pattern",
@@ -136,6 +141,7 @@ const unsafePrZooFixtures = [
       "warn",
       "error",
       "error",
+      "warn",
       "error",
       "error",
       "error",

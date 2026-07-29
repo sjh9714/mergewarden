@@ -7,7 +7,7 @@ The npm package is `mergewarden`; the installed executable remains `mergewarden`
 ## Try a public pull request
 
 ```console
-npx mergewarden@0.7.0 scan owner/repository#123
+npx mergewarden@0.8.0 scan owner/repository#123
 ```
 
 Full GitHub pull request URLs are also accepted. Authentication is optional for public repositories. For private repositories or higher API limits, set `GH_TOKEN` (preferred) or `GITHUB_TOKEN` in the environment.

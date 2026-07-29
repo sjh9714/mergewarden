@@ -6,6 +6,38 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.8.0 - 2026-07-29
+
+### Added
+
+- **`workflow/trigger-removed`** — reports a workflow that stops firing on an event it used
+  to fire on. It compares the `on:` block at the base commit against the head and names each
+  event that disappeared, reading all three shapes GitHub Actions accepts (bare string,
+  sequence, mapping).
+
+  Added because it is the one thing [GitHub's own review guidance](docs/github-review-guidance.md)
+  puts first — _"Any change that weakens CI is a blocker. Full stop… Confirm workflow still
+  runs on forks and pull requests"_ — and it was the area this project covered least. We
+  checked workflow **permissions** thoroughly and workflow **coverage** not at all, so a pull
+  request that removed `pull_request` from a workflow silently disabled the check that would
+  have gated it.
+
+  It found a real case in this repository's own fixture zoo on the first run: the composite
+  fixture switches a release workflow from `push` to `issue_comment`, and we had been
+  reporting the dangerous addition while missing the safe removal.
+
+  Defaults to `warn`, not `error`. GitHub's guidance says blocker, but that is aimed at a
+  human judging one case; consolidating workflows and retiring a `schedule` are ordinary, and
+  the artifact cannot tell those apart from a quiet removal. Set
+  `github_actions.checks.trigger_removed: error` to enforce it.
+
+- `docs/github-review-guidance.md` — GitHub's five red flags mapped to whether each is
+  decidable from a pull request, which rule covers it, and how often it fired across the
+  2,204-PR scan. **Two of the five are not mechanically decidable and the page says so**,
+  along with the three CI-gaming checks that are decidable and still unimplemented. GitHub's
+  post gives no frequency data for four of its five flags; this supplies it where we measured
+  it.
+
 ## v0.7.0 - 2026-07-29
 
 ### Changed

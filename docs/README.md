@@ -30,6 +30,8 @@ requests. Start with the shortest path for your task:
   disclosure trailers, and what they cannot prove.
 - [What a zero-config install reports](study/what-a-zero-config-install-reports.md):
   measured false-positive check — silent on 44 of 46 human pull requests.
+- [GitHub's agent-PR review guidance](github-review-guidance.md): its five red
+  flags mapped to what is decidable, with our measured rates.
 - [What a checker can actually enforce](what-a-checker-can-enforce.md): real
   policy clauses mapped to what is decidable, and what MergeWarden covers.
 - [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.
