@@ -10,7 +10,7 @@ This project follows the spirit of
 
 ### Added
 
-- **`@mergewarden/mcp`** — an MCP server exposing one tool, `check_change_scope`, which
+- **`mergewarden-mcp`** — an MCP server exposing one tool, `check_change_scope`, which
   compares the files a change actually touched against the paths it was asked to touch.
 
   This inverts who the project talks to. Everything else here is for a maintainer gating
@@ -33,6 +33,13 @@ This project follows the spirit of
 
   Verified over the real MCP stdio protocol — `initialize`, `tools/list`, `tools/call` — not
   against a mock.
+
+### Changed
+
+- The publish workflow now packs and publishes both `mergewarden` and `mergewarden-mcp`, and
+  resolves each tarball by exact filename. The previous wildcard on the CLI name also matched
+  the MCP package's tarball, so `find -print -quit` could have published one package under the
+  other's name. A documentation test asserts the wildcard never comes back.
 
 ## v0.8.0 - 2026-07-29
 

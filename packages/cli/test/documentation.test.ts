@@ -108,6 +108,10 @@ describe("documentation contracts", () => {
     expect(workflow).not.toContain("NODE_AUTH_TOKEN");
     expect(workflow).toContain("git diff --exit-code -- packages/action/dist/index.cjs");
     expect(workflow).toContain('npm publish "$CLI_TARBALL" --provenance --access public');
+    expect(workflow).toContain('npm publish "$MCP_TARBALL" --provenance --access public');
+    // Both tarballs are resolved by exact filename. A 'mergewarden-*.tgz' glob also matches
+    // 'mergewarden-mcp-*.tgz', so a glob here could publish one package under the other's name.
+    expect(workflow).not.toContain("mergewarden-*.tgz");
     expect(actionUses.length).toBeGreaterThan(0);
     expect(actionUses.every((uses) => /@[0-9a-f]{40}$/.test(uses))).toBe(true);
   });

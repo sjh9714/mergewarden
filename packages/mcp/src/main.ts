@@ -3,10 +3,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 
 import { checkScope } from "./checkScope.js";
+import { MERGEWARDEN_VERSION } from "./version.js";
 
 const server = new McpServer({
   name: "mergewarden",
-  version: "0.8.0",
+  version: MERGEWARDEN_VERSION,
 });
 
 server.registerTool(

@@ -1,4 +1,4 @@
-# @mergewarden/mcp
+# mergewarden-mcp
 
 An MCP server that answers one question: **did this change stay inside the scope it was given?**
 
@@ -16,7 +16,7 @@ Claude Code reads `.mcp.json`; other clients use their own MCP config file.
   "mcpServers": {
     "mergewarden": {
       "command": "npx",
-      "args": ["-y", "@mergewarden/mcp"]
+      "args": ["-y", "mergewarden-mcp"]
     }
   }
 }
