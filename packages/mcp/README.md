@@ -74,11 +74,26 @@ reviewer could check against it.
 That is the gap this closes. The scope is stated while it is still known, and
 the block it emits is the same one `contract/out-of-scope` parses back out later.
 
+## Registry
+
+Listed as **`io.github.sjh9714/mergewarden`** in the
+[official MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=mergewarden).
+
 ## Publishing
 
-`server.json` is the MCP registry manifest. Its `name` must stay identical to
-`mcpName` in `package.json` — the registry verifies npm ownership by comparing
-them, and a mismatch only surfaces at registry-publish time, after the npm
-release is already out. A test enforces the match.
+`server.json` is the MCP registry manifest. Two constraints worth knowing before
+editing it:
+
+- Its `name` must stay identical to `mcpName` in `package.json`. The registry
+  verifies npm ownership by comparing them, and a mismatch only surfaces at
+  registry-publish time, after the npm release is already out. A test enforces
+  the match.
+- `description` is capped at **100 characters** by the registry. Nothing local
+  catches that; `mcp-publisher validate` does, so run it before publishing.
+
+Publishing is `mcp-publisher login github` (device flow) then
+`mcp-publisher publish`, using the official binary from the
+[registry releases](https://github.com/modelcontextprotocol/registry/releases) —
+the `mcp-publisher` package on npm is an unrelated project with the same name.
 
 MIT. Part of [MergeWarden](https://github.com/sjh9714/mergewarden).
