@@ -137,6 +137,50 @@ you used"; `polars` requires that "all AI usage in any form must be disclosed". 
 trailer check on commit metadata — and the trailer these tools already write is the disclosure
 those policies are asking for.
 
+## Disclosure happens in two places, and they do not overlap
+
+Measured 2026-07-30 over the 30 most recently updated open pull requests of each repository,
+excluding `dependabot[bot]`, `renovate[bot]` and `github-actions[bot]`. Three signals, counted
+separately: a `Co-authored-by:` trailer written by a tool, a disclosure section from the
+repository's pull-request template kept in the body, and a disclosure written in prose.
+
+| Repository            | pulls | trailer | template section | prose |
+| --------------------- | ----: | ------: | ---------------: | ----: |
+| `home-assistant/core` |    30 |  **19** |                — |     1 |
+| `go-gitea/gitea`      |    30 |       7 |                — |     5 |
+| `ghostty-org/ghostty` |    30 |       6 |                — |     6 |
+| `llvm/llvm-project`   |    30 |       3 |                — |    10 |
+| `denoland/deno`       |    30 |       2 |                — |     5 |
+| `caddyserver/caddy`   |    30 |       2 |           **24** |    12 |
+| `ggml-org/llama.cpp`  |    30 |       1 |                — |     7 |
+| `pola-rs/polars`      |    30 |       1 |                — |     4 |
+| `starship/starship`   |    28 |   **0** |           **15** |    15 |
+
+**The two projects that ship a disclosure section in their template are the two with almost no
+trailers.** Caddy's is `## Assistance Disclosure`, starship's is `#### AI-Assistance`, and both
+work: 24 of 30 and 15 of 28 pull requests keep the section. Neither project's contributors
+disclose through commit metadata, and reading their trailer counts as a compliance rate would
+report the two most disclosure-conscious repositories in the sample as the worst.
+
+The reverse holds too. Home Assistant has no disclosure section and the highest trailer rate in
+the sample — **19 of 30** — because Claude Code writes the trailer without being asked. Where a
+project provides a place to disclose, contributors use it; where it does not, disclosure happens
+only when the tool does it unprompted.
+
+That makes at least five incompatible conventions now in use: Fedora requires `Assisted-by:`,
+Kubernetes forbids it, Mesa requires `Generated-by:`, Caddy and starship want a template
+section, and everywhere else it is whatever the tool wrote. A schema that asks projects to
+declare an AI policy cannot assume where the disclosure will be — it has to let a project say
+which convention it uses.
+
+Two cautions on this table. "Template section" counts a section **kept**, not a section
+**filled**: Caddy retains it in 24 pull requests and 12 of those carry an actual statement.
+And the prose count is deliberately narrow — a body mentioning "AI" is not a disclosure, and
+starship has open pull requests about exposing a Claude Code session id that say nothing about
+authorship.
+
+Reproduce with `node tools/study/disclosure-conventions.mjs <owner/repo> [...]`.
+
 ## Limits
 
 - **The sample is the top 45 repositories per language.** Popular projects, not open source.
