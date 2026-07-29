@@ -34,13 +34,13 @@ pretend otherwise. That is the same line drawn in
 
 GitHub lists four checks under this. They are not equally decidable:
 
-| GitHub's check                                             | Decidable | Rule                                              |
-| ---------------------------------------------------------- | --------- | ------------------------------------------------- |
-| "Confirm workflow still runs on forks and pull requests"   | yes       | `workflow/trigger-removed`                        |
-| Workflow deleted outright                                  | yes       | `workflow/dangerous-pattern` (`workflow_deleted`) |
-| "Verify no tests were removed, renamed, or marked skipped" | partly    | **not implemented**                               |
-| "Check if coverage thresholds changed"                     | weakly    | **not implemented**                               |
-| "Ensure CI steps aren't newly gated behind conditions"     | yes       | **not implemented**                               |
+| GitHub's check                                             | Decidable          | Rule                                              |
+| ---------------------------------------------------------- | ------------------ | ------------------------------------------------- |
+| "Confirm workflow still runs on forks and pull requests"   | yes                | `workflow/trigger-removed`                        |
+| Workflow deleted outright                                  | yes                | `workflow/dangerous-pattern` (`workflow_deleted`) |
+| "Verify no tests were removed, renamed, or marked skipped" | yes, but see below | **measured, then declined**                       |
+| "Check if coverage thresholds changed"                     | weakly             | **not implemented**                               |
+| "Ensure CI steps aren't newly gated behind conditions"     | yes                | **not implemented**                               |
 
 `workflow/trigger-removed` was added in v0.8.0 specifically because this is
 GitHub's first red flag and it was the one we covered least. It compares the
@@ -54,12 +54,52 @@ and retiring a `schedule` are ordinary, and the artifact cannot distinguish them
 from a quiet removal. Set `github_actions.checks.trigger_removed: error` to
 enforce it.
 
-**What is still missing, honestly:** test removal, skip markers, and newly-gated
-steps. Test removal is decidable and worth doing; skip markers are
-language-specific pattern matching, and coverage thresholds live in a different
-config file in every ecosystem. Nothing here is claimed until it is measured
-against real pull requests — that discipline is why the default agent-detection
-list was wrong twice before it was right.
+### Test removal: measured, then declined
+
+The previous version of this page said test removal was "decidable and worth
+doing" and that nothing would be claimed until it was measured. It was measured,
+and the measurement argued against building it.
+
+**300 merged agent pull requests** (Copilot, Jules, Devin, and `codex/`,
+`claude/`, `cursor/` branches, merged 2026-07-20 to 07-28), 1,917 changed files:
+
+|                               | Naive test glob | After excluding build output |
+| ----------------------------- | --------------- | ---------------------------- |
+| Changed files matching "test" | 255 (13.3%)     | 198 (10.3%)                  |
+| **Deleted** files matching    | 4               | **1**                        |
+| Pull requests deleting one    | 3 (1.00%)       | **1 (0.33%)**                |
+
+Two things fall out of that.
+
+**The obvious glob is 75% wrong.** Of the four deletions a conventional pattern
+caught, two were `__pycache__/*.pyc` bytecode, one was a stray `test_out.txt`
+artifact, and one was a real test file. A rule shipped on that pattern would have
+spent three quarters of its findings telling maintainers that a compiled cache
+file disappeared.
+
+**The real rate is one pull request in three hundred.** A check that fires that
+rarely is not automatically worthless — plenty of security rules are rare and
+severe — but it cannot be calibrated. There were not enough true positives in
+this corpus to tune a default path list against, and shipping guessed defaults is
+the specific mistake this project already made twice, in
+[v0.5.0](../CHANGELOG.md) and [v0.5.1](release-notes-v0.5.1.md).
+
+So the rule is not implemented, and this is the reason rather than an oversight.
+Anyone who wants it today can express it directly, because the same measurement
+shows agent pull requests _touch_ tests constantly — 10.3% of every file they
+change — and simply never delete them:
+
+```yaml
+high_risk_paths:
+  tests:
+    paths: ["**/*.test.ts", "test/**", "tests/**"]
+    require_tests: ["**/*.test.ts", "test/**", "tests/**"]
+    severity: warn
+```
+
+**Still not implemented and not measured:** skip markers (`it.skip`,
+`pytest.mark.skip`, `@Ignore`) are language-specific patch-content matching, and
+coverage thresholds live in a different config file in every ecosystem.
 
 ## 2. Code reuse blindness
 
