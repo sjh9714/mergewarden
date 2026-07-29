@@ -42,6 +42,12 @@ the same data for scripting.
 Boundary findings — `outside declared scope`, `agent instructions changed`,
 `workflow permissions` — appear here too when the change crossed one.
 
+`AI disclosed` reads **commit trailers only**, so a project whose disclosure convention is
+something else reads as zero. starship asks every contributor to disclose AI assistance and its
+pull-request template carries an `#### AI-Assistance` section that contributors fill in — none
+of its open pull requests carries a trailer, and every one of those is still a disclosure. Read
+this row as "disclosed in commit metadata", never as "did not disclose".
+
 Maintenance automation is skipped: `dependabot[bot]`, `renovate[bot]` and
 `github-actions[bot]` by default, configurable through `triage.exclude_authors`. Coding agents
 are not skipped, because their pull requests are the ones this is for.

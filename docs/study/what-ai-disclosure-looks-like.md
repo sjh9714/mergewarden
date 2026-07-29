@@ -143,7 +143,12 @@ those policies are asking for.
 - **Only seven tools are identifiable.** A tool that writes no trailer, or a contributor who
   turns the trailer off, is invisible. This repository disables it, so this repository would
   measure as 0%.
-- **Zero trailers is not zero AI.** It means no AI disclosed _this way_.
+- **Zero trailers is not zero AI.** It means no AI disclosed _this way_, and conventions
+  differ by project. gitea's contributors disclose through commit trailers — 7 of its 30 most
+  recently updated open pull requests carry one. starship requires disclosure just as
+  explicitly, has zero trailers across the same window, and gets it instead through an
+  `#### AI-Assistance` section in its pull-request template, which contributors fill in. A
+  trailer count measures one convention, not compliance.
 - **Commit-unit counting interacts with merge strategy.** A squashing project records one
   trailered commit per pull request; a merging project records several.
 - **Policy classification is keyword-based** except where quoted above, and it is wrong in both
