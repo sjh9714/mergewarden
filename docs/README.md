@@ -28,6 +28,8 @@ requests. Start with the shortest path for your task:
   script change evidence.
 - [Commit trailer rules](rules/commit-trailers.md): required and forbidden
   disclosure trailers, and what they cannot prove.
+- [What a zero-config install reports](study/what-a-zero-config-install-reports.md):
+  measured false-positive check — silent on 54 of 56 human pull requests.
 - [What a checker can actually enforce](what-a-checker-can-enforce.md): real
   policy clauses mapped to what is decidable, and what MergeWarden covers.
 - [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.

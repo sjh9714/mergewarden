@@ -290,9 +290,9 @@ assertions, and a Markdown snapshot for user-facing findings. Start with a
 - [Documentation index](docs/README.md) — full list of guides and references
 - [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
 
-If MergeWarden reports a boundary crossing your team decided was fine, that is
-the most useful bug report this project can get — open an issue with the
-`npx mergewarden scan` output.
+Will it be noisy? It [said nothing on 54 of 56 merged human PRs](docs/study/what-a-zero-config-install-reports.md);
+both findings were correct. If it flags one your team decided was fine, open an
+issue with the scan output — the most useful bug report this project can get.
 
 ## License
 
