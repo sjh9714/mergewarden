@@ -14,6 +14,7 @@ import {
 } from "@mergewarden/github";
 
 import { runDemoCli } from "./demo.js";
+import { runTriageCli } from "./triage.js";
 import { NativeGitHubApi } from "./githubApi.js";
 import {
   exitCodeForResult,
@@ -60,12 +61,14 @@ export const HELP_TEXT = `MergeWarden — checkout-free policy scanning for AI-g
 
 Usage:
   mergewarden demo [--format human|json|markdown]
+  mergewarden triage <owner/repository> [--limit N] [--format human|json]
   mergewarden scan <owner/repository#number> [options]
   mergewarden scan <github-pull-request-url> [options]
   mergewarden replay <fixture-dir> [--format json]
 
 Commands:
   demo     Scan a bundled example pull request. No token, no network.
+  triage   Read a repository's open pull requests and report what each is missing.
   scan     Analyze a GitHub pull request through the GitHub API only.
   replay   Analyze a deterministic local fixture.
 
@@ -239,7 +242,8 @@ export async function runCli(
   },
   dependencies: CliDependencies = DEFAULT_DEPENDENCIES,
 ): Promise<number> {
-  const knownCommand = argv[0] === "scan" || argv[0] === "replay" || argv[0] === "demo";
+  const knownCommand =
+    argv[0] === "scan" || argv[0] === "replay" || argv[0] === "demo" || argv[0] === "triage";
   const commandArguments = argv.slice(1);
 
   if (isHelp(argv) || (knownCommand && isHelp(commandArguments))) {
@@ -260,10 +264,14 @@ export async function runCli(
     return runDemoCli(argv.slice(1), io);
   }
 
+  if (argv[0] === "triage") {
+    return runTriageCli(argv.slice(1), io, dependencies.environment);
+  }
+
   try {
     if (argv[0] !== "scan") {
       throw new CliUsageError(
-        "Expected a command: demo, scan, or replay. Run mergewarden --help for usage.",
+        "Expected a command: demo, triage, scan, or replay. Run mergewarden --help for usage.",
       );
     }
 

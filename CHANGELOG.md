@@ -10,6 +10,50 @@ This project follows the spirit of
 
 ### Added
 
+- **`mergewarden triage <owner/repository>`** — reads a repository's open pull requests and
+  reports, for each, the facts a maintainer normally checks by hand. Rows are ordered by how
+  many facts each pull request trips, so the top of the list is where attention goes first.
+  No installation, no configuration, no write access.
+
+  **It never closes, labels, or comments, and there is no flag that does** — a test asserts
+  that no option acts on a pull request. The tools that auto-close have to be right every
+  time, and the public record of the leading one is its own issue tracker: a username with two
+  consecutive digits read as spam, a maintainer's own merge flagged, and no way to reopen what
+  was closed by mistake.
+
+- **Five triage rules**, all `info` so none moves the decision: `triage/no-linked-issue`,
+  `triage/empty-description`, `triage/template-unused`, `triage/oversized-change` and
+  `triage/unverified-author`. Each reports a fact that can be checked and argued with, never a
+  judgement about quality — nothing scores a contributor or guesses from writing style.
+
+  `no_linked_issue` ships `off`: most pull requests in most repositories reference no issue, so
+  at `info` it would attach a finding to nearly every report, which is the noise v0.9.0 removed.
+  `mergewarden triage` turns it on, because ranking many open pull requests against each other
+  is a different question from gating one of them.
+
+  `unverified_author` is deliberately not raised by default. A first contribution is how every
+  contributor starts.
+
+  Thresholds were measured rather than guessed. The 80-character description floor fires on
+  **7% of 135 recently merged pull requests** across four large repositories, in the range
+  v0.5.0 established as acceptable for an informational rule.
+
+- The collector reads the repository's **pull-request template** from the base branch, and the
+  author's `author_association`. The template is not fetched when `triage.template_unused` is
+  `off`. Headings inside HTML comments are not counted as sections: they are instructions to the
+  contributor, and Next.js's template is entirely comment — counting them flagged every pull
+  request in the repository until this was fixed.
+
+- **`docs/triage.md`** — what the command reports, and why it does not act.
+
+### Changed
+
+- The README now leads with the triage question rather than with scope contracts. Contract scope
+  remains a rule and remains documented; it is no longer the first thing a reader is asked to
+  care about.
+
+### Added
+
 - **`commit/ai-assistance-disclosed`** — reports the `Co-authored-by:` trailers coding tools
   write about themselves (Claude Code, Cursor, GitHub Copilot, Devin, Codex, Google Jules),
   including the model name where the tool records one. `info` by default via

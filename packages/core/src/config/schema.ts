@@ -364,6 +364,35 @@ const CommitTrailerProhibitionSchema = z
  */
 const AiDisclosureSettingSchema = z.enum(["off", "info", "warn", "error"]);
 
+/**
+ * Severity for a triage rule, plus `off`.
+ *
+ * `info` throughout by default. Triage rules report a fact a maintainer would otherwise check
+ * by hand — they do not judge the change, and they must not move the decision until a
+ * repository decides one of them should.
+ */
+const TriageSettingSchema = z.enum(["off", "info", "warn", "error"]);
+
+const TriageConfigSchema = z
+  .object({
+    // `off` by default, unlike its siblings. Most pull requests in most repositories reference
+    // no issue, so at `info` this rule would attach a finding to nearly every report — the
+    // noise v0.9.0 removed. It is what `mergewarden triage` turns on to rank many open pull
+    // requests against each other, which is a different question from gating one of them.
+    no_linked_issue: TriageSettingSchema.default("off"),
+    empty_description: TriageSettingSchema.default("info"),
+    template_unused: TriageSettingSchema.default("info"),
+    oversized_change: TriageSettingSchema.default("info"),
+    // Deliberately `info` and deliberately not raised by default. A first contribution is how
+    // every contributor starts, and defaulting it to a warning turns the tool into something
+    // that greets newcomers with a complaint.
+    unverified_author: TriageSettingSchema.default("info"),
+    min_description_characters: z.number().int().min(0).default(80),
+    max_files: z.number().int().min(1).default(50),
+    max_lines: z.number().int().min(1).default(1500),
+  })
+  .strict();
+
 const CommitTrailersConfigSchema = z
   .object({
     enabled: z.boolean().default(true),
@@ -422,6 +451,16 @@ export const MergeWardenConfigSchema = z
       paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
       lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
       severity: "warn",
+    }),
+    triage: TriageConfigSchema.default({
+      no_linked_issue: "off",
+      empty_description: "info",
+      template_unused: "info",
+      oversized_change: "info",
+      unverified_author: "info",
+      min_description_characters: 80,
+      max_files: 50,
+      max_lines: 1500,
     }),
     commit_trailers: CommitTrailersConfigSchema.default({
       enabled: true,

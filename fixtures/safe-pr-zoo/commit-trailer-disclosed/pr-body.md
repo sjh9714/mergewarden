@@ -7,3 +7,5 @@ allowed_paths:
 -->
 
 Adds a retry budget to the GitHub client.
+
+Adds the retry budget helper. Tool assistance is disclosed in the commit trailer as this project's policy asks.

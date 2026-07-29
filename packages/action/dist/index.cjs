@@ -49405,6 +49405,194 @@ var workflowPermissionEscalationRule = {
     return findings;
   }
 };
+var ISSUE_REFERENCE = /(^|[^\w`])#\d+\b/;
+var CLOSING_KEYWORD = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\b\s*:?\s*(#\d+|https?:\/\/\S*\/issues\/\d+)/i;
+var ISSUE_URL = /https?:\/\/\S*\/issues\/\d+/;
+function proseOf(body) {
+  return body.replace(/<!--[\s\S]*?-->/g, " ").replace(/^#{1,6}\s.*$/gm, " ").replace(/^\s*[-*]\s*\[[ xX]\]\s*/gm, " ").replace(/```[\s\S]*?```/g, " ").replace(/\s+/g, " ").trim();
+}
+function severityOf(ctx, key) {
+  return ctx.input.config.triage[key];
+}
+var triageNoLinkedIssueRule = {
+  id: "triage/no-linked-issue",
+  title: "No linked issue",
+  run(ctx) {
+    const severity = severityOf(ctx, "no_linked_issue");
+    if (severity === "off") {
+      return [];
+    }
+    const body = ctx.input.pr.body ?? "";
+    if (CLOSING_KEYWORD.test(body) || ISSUE_REFERENCE.test(body) || ISSUE_URL.test(body)) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/no-linked-issue",
+        severity,
+        title: "No linked issue",
+        message: "The pull request body references no issue.",
+        evidence: [
+          { label: "body_length", value: String(body.length) },
+          { label: "checked_for", value: "#number, issue URL, or a closing keyword" }
+        ],
+        remediation: [
+          "If this change was discussed first, add the issue reference. If it was not, that is what this finding records."
+        ],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var triageEmptyDescriptionRule = {
+  id: "triage/empty-description",
+  title: "Pull request describes itself in almost nothing",
+  run(ctx) {
+    const severity = severityOf(ctx, "empty_description");
+    if (severity === "off") {
+      return [];
+    }
+    const body = ctx.input.pr.body ?? "";
+    const prose = proseOf(body);
+    const threshold = ctx.input.config.triage.min_description_characters;
+    if (prose.length >= threshold) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/empty-description",
+        severity,
+        title: "Pull request describes itself in almost nothing",
+        message: `The body carries ${prose.length} character(s) of prose, below the configured ${threshold}.`,
+        evidence: [
+          { label: "prose_characters", value: String(prose.length) },
+          { label: "raw_characters", value: String(body.length) },
+          { label: "threshold", value: String(threshold) },
+          { label: "counted", value: "template comments, headings and checkboxes excluded" }
+        ],
+        remediation: ["Describe what the change does and how it was verified."],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var triageTemplateUnusedRule = {
+  id: "triage/template-unused",
+  title: "Pull request template not followed",
+  run(ctx) {
+    const severity = severityOf(ctx, "template_unused");
+    const template = ctx.input.repoDocs?.pullRequestTemplate;
+    if (severity === "off" || template === void 0 || template === null) {
+      return [];
+    }
+    const visible = template.replace(/<!--[\s\S]*?-->/g, " ");
+    const headings = [...visible.matchAll(/^#{1,6}\s*(.+?)\s*$/gm)].map((match) => (match[1] ?? "").trim()).filter((heading) => heading.length > 0);
+    if (headings.length === 0) {
+      return [];
+    }
+    const body = (ctx.input.pr.body ?? "").toLowerCase();
+    const missing = headings.filter((heading) => !body.includes(heading.toLowerCase()));
+    if (missing.length < headings.length) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/template-unused",
+        severity,
+        title: "Pull request template not followed",
+        message: `The repository ships a pull request template with ${headings.length} section(s); the body keeps none of them.`,
+        evidence: [
+          { label: "template_sections", value: headings.slice(0, 8).join(", ") },
+          { label: "sections_present_in_body", value: "0" }
+        ],
+        remediation: [
+          "Fill in the template rather than replacing it, so reviewers find the sections where they expect them."
+        ],
+        tags: ["triage"],
+        confidence: "medium"
+      }
+    ];
+  }
+};
+var triageOversizedChangeRule = {
+  id: "triage/oversized-change",
+  title: "Change is larger than the review threshold",
+  run(ctx) {
+    const severity = severityOf(ctx, "oversized_change");
+    if (severity === "off") {
+      return [];
+    }
+    const { filesChanged, additions, deletions } = ctx.input.changes.totals;
+    const lines = additions + deletions;
+    const maxFiles = ctx.input.config.triage.max_files;
+    const maxLines = ctx.input.config.triage.max_lines;
+    const overFiles = filesChanged > maxFiles;
+    const overLines = lines > maxLines;
+    if (!overFiles && !overLines) {
+      return [];
+    }
+    const exceeded = [
+      overFiles ? `${filesChanged} files (limit ${maxFiles})` : void 0,
+      overLines ? `${lines} lines (limit ${maxLines})` : void 0
+    ].filter((part) => part !== void 0);
+    return [
+      {
+        ruleId: "triage/oversized-change",
+        severity,
+        title: "Change is larger than the review threshold",
+        message: `The change exceeds the configured review size: ${exceeded.join(" and ")}.`,
+        evidence: [
+          { label: "files_changed", value: String(filesChanged) },
+          { label: "lines_changed", value: String(lines) },
+          { label: "limits", value: `${maxFiles} files, ${maxLines} lines` }
+        ],
+        remediation: [
+          "Large changes are not wrong. This records that the change is past the size this repository chose to review in one pass."
+        ],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var UNVERIFIED_ASSOCIATIONS = /* @__PURE__ */ new Set(["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "NONE"]);
+var triageUnverifiedAuthorRule = {
+  id: "triage/unverified-author",
+  title: "Author has not landed a change here before",
+  run(ctx) {
+    const severity = severityOf(ctx, "unverified_author");
+    const association = ctx.input.pr.authorAssociation;
+    if (severity === "off" || association === void 0) {
+      return [];
+    }
+    if (!UNVERIFIED_ASSOCIATIONS.has(association.toUpperCase())) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/unverified-author",
+        severity,
+        title: "Author has not landed a change here before",
+        message: `GitHub reports the author's association with this repository as ${association}.`,
+        evidence: [{ label: "author_association", value: association }],
+        remediation: [
+          "This is context, not a problem. A first contribution is how every contributor starts; it is recorded because it is the case where the other findings on this pull request matter most."
+        ],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var triageRules = [
+  triageNoLinkedIssueRule,
+  triageEmptyDescriptionRule,
+  triageTemplateUnusedRule,
+  triageOversizedChangeRule,
+  triageUnverifiedAuthorRule
+];
 function isRecord6(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -49512,7 +49700,10 @@ var builtInRules = [
   workflowPermissionEscalationRule,
   workflowTriggerRemovedRule,
   workflowDangerousPatternRule,
-  agenticWorkflowInjectionRule
+  agenticWorkflowInjectionRule,
+  // Last on purpose. Triage findings describe what a pull request is missing around the change;
+  // a boundary the change actually crossed should be read first.
+  ...triageRules
 ];
 function createRuleContext(input) {
   let cachedAgentOrigin;
@@ -50048,6 +50239,24 @@ var CommitTrailerProhibitionSchema = external_exports.object({
   severity: SeveritySettingSchema.default("error")
 }).strict();
 var AiDisclosureSettingSchema = external_exports.enum(["off", "info", "warn", "error"]);
+var TriageSettingSchema = external_exports.enum(["off", "info", "warn", "error"]);
+var TriageConfigSchema = external_exports.object({
+  // `off` by default, unlike its siblings. Most pull requests in most repositories reference
+  // no issue, so at `info` this rule would attach a finding to nearly every report — the
+  // noise v0.9.0 removed. It is what `mergewarden triage` turns on to rank many open pull
+  // requests against each other, which is a different question from gating one of them.
+  no_linked_issue: TriageSettingSchema.default("off"),
+  empty_description: TriageSettingSchema.default("info"),
+  template_unused: TriageSettingSchema.default("info"),
+  oversized_change: TriageSettingSchema.default("info"),
+  // Deliberately `info` and deliberately not raised by default. A first contribution is how
+  // every contributor starts, and defaulting it to a warning turns the tool into something
+  // that greets newcomers with a complaint.
+  unverified_author: TriageSettingSchema.default("info"),
+  min_description_characters: external_exports.number().int().min(0).default(80),
+  max_files: external_exports.number().int().min(1).default(50),
+  max_lines: external_exports.number().int().min(1).default(1500)
+}).strict();
 var CommitTrailersConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
   required: external_exports.array(CommitTrailerRequirementSchema).default([]),
@@ -50099,6 +50308,16 @@ var MergeWardenConfigSchema = external_exports.object({
     paths: DEFAULT_PACKAGE_SCRIPT_PATHS,
     lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
     severity: "warn"
+  }),
+  triage: TriageConfigSchema.default({
+    no_linked_issue: "off",
+    empty_description: "info",
+    template_unused: "info",
+    oversized_change: "info",
+    unverified_author: "info",
+    min_description_characters: 80,
+    max_files: 50,
+    max_lines: 1500
   }),
   commit_trailers: CommitTrailersConfigSchema.default({
     enabled: true,
@@ -51111,6 +51330,35 @@ async function loadConfig(api, pullRequest, options, retryBudget) {
     source: "base-branch"
   };
 }
+var PULL_REQUEST_TEMPLATE_PATHS = [
+  ".github/PULL_REQUEST_TEMPLATE.md",
+  ".github/pull_request_template.md",
+  "PULL_REQUEST_TEMPLATE.md"
+];
+async function loadPullRequestTemplate(api, pullRequest, config2, retryBudget) {
+  if (config2.triage.template_unused === "off") {
+    return void 0;
+  }
+  for (const path of PULL_REQUEST_TEMPLATE_PATHS) {
+    try {
+      const result = await withGitHubRetry(
+        `Load ${path}`,
+        retryBudget,
+        () => api.getTextFile(pullRequest.base.repository, path, pullRequest.base.sha)
+      );
+      if (result.kind === "not-found") {
+        continue;
+      }
+      if (Buffer.byteLength(result.text, "utf8") > MAX_TEXT_BYTES) {
+        return void 0;
+      }
+      return result.text;
+    } catch {
+      return void 0;
+    }
+  }
+  return null;
+}
 function fileListGap(expected, collected, reason) {
   return {
     ruleId: "analysis/file-list-incomplete",
@@ -51181,7 +51429,8 @@ function pullRequestContext(pullRequest) {
     labels: pullRequest.labels,
     branchName: pullRequest.head.ref,
     isFork: pullRequest.head.fork,
-    draft: pullRequest.draft
+    draft: pullRequest.draft,
+    authorAssociation: pullRequest.authorAssociation
   };
 }
 async function loadGitHubAnalysis(api, target, options) {
@@ -51222,6 +51471,12 @@ async function loadGitHubAnalysis(api, target, options) {
     }
   }
   const commits = await listPullCommits(api, target, pullRequest, retryBudget, options.warning);
+  const pullRequestTemplate = await loadPullRequestTemplate(
+    api,
+    pullRequest,
+    loadedConfig.config,
+    retryBudget
+  );
   const analysis = {
     complete: gaps.length === 0,
     expectedFileCount: expected,
@@ -51252,6 +51507,7 @@ async function loadGitHubAnalysis(api, target, options) {
       }
     },
     ...commits === void 0 ? {} : { commits },
+    ...pullRequestTemplate === void 0 ? {} : { repoDocs: { pullRequestTemplate } },
     reviews: [],
     checks: [],
     now: options.now,

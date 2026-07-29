@@ -198,6 +198,38 @@ A `required` entry is satisfied by **any** of its `any_of` trailers.
 `value_patterns` rejects the trailer outright; with them, only matching values
 are rejected.
 
+## triage
+
+Facts a maintainer normally checks by hand. Every one is `info`, so none of them moves the
+decision until you raise it.
+
+```yaml
+triage:
+  no_linked_issue: off # off | info | warn | error
+  empty_description: info
+  template_unused: info
+  oversized_change: info
+  unverified_author: info
+  min_description_characters: 80
+  max_files: 50
+  max_lines: 1500
+```
+
+`no_linked_issue` is the one that ships `off`: most pull requests in most repositories
+reference no issue, so at `info` it would attach a finding to nearly every report.
+`mergewarden triage` turns it on, because comparing many open pull requests on the same facts
+is a different question from gating one of them — see [triage](triage.md).
+
+`unverified_author` is deliberately `info` and deliberately not raised by default. A first
+contribution is how every contributor starts; a tool that greets one with a warning is the
+failure mode this project exists to avoid.
+
+`template_unused` reads the repository's pull-request template from the base branch, and only
+fires when the body keeps **none** of its sections — a partly filled template is normal. Headings
+inside HTML comments are instructions to the contributor rather than sections to keep, so they
+are not counted; Next.js's template is entirely comment, and counting it would flag every pull
+request in the repository. The template is not fetched at all when this is `off`.
+
 `ai_disclosure` controls `commit/ai-assistance-disclosed`, which reports the
 `Co-authored-by:` trailers coding tools write about themselves — Claude Code,
 Cursor, GitHub Copilot, Devin, Codex and Google Jules — including the model

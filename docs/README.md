@@ -6,6 +6,8 @@ requests. Start with the shortest path for your task:
 - [Start here](start-here.md): install, what the first pull request looks like,
   and what each finding means. One page.
 - [Getting started](getting-started.md): install, first run, and safe rollout.
+- [Triage](triage.md): read a repository's open pull requests and see what each is
+  missing. No install, no write access, nothing is closed.
 - [CLI reference](cli.md): scan a public or private GitHub pull request.
 - [Action reference](action-reference.md): inputs, outputs, permissions, and failures.
 - [MCP server](../packages/mcp/README.md): check an agent's changes against the

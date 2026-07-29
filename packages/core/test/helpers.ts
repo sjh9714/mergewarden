@@ -16,6 +16,7 @@ interface CreateAnalysisInputOptions {
   files?: FileChange[];
   changes?: ChangeSet;
   commits?: CommitContext[];
+  repoDocs?: AnalysisInput["repoDocs"];
 }
 
 function changesFromFiles(files: FileChange[]): ChangeSet {
@@ -54,7 +55,9 @@ export function createAnalysisInput(options: CreateAnalysisInputOptions = {}): A
     pr: {
       number: 42,
       title: "Scaffold MergeWarden",
-      body: "",
+      // Long enough to clear the triage description threshold. An empty body is a real signal,
+      // so a fixture that leaves it empty is asserting something it does not mean to.
+      body: "Scaffolds the analyzer entry point, wires the default policy through it, and covers the new path with a unit test.",
       author: "octocat",
       labels: [],
       branchName: "feature/scaffold",
@@ -66,6 +69,7 @@ export function createAnalysisInput(options: CreateAnalysisInputOptions = {}): A
     contract: options.contract ?? { kind: "missing" },
     changes: options.changes ?? changesFromFiles(files),
     ...(options.commits === undefined ? {} : { commits: options.commits }),
+    ...(options.repoDocs === undefined ? {} : { repoDocs: options.repoDocs }),
     reviews: [],
     checks: [],
     now: "2026-06-13T00:00:00.000Z",

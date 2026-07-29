@@ -1034,11 +1034,14 @@ describe("runAction", () => {
     const result = await runAction(harness.runtime);
     const createArgs = vi.mocked(octokit.rest.issues!.createComment!).mock.calls[0]?.[0];
 
-    expect(result?.metadata.totalFindingCount).toBe(75);
+    // 75 out-of-scope errors plus two info findings: triage/oversized-change (75 files is past
+    // the 50-file review threshold) and triage/empty-description (this fixture's body is a
+    // contract block and no prose).
+    expect(result?.metadata.totalFindingCount).toBe(77);
     expect(Buffer.byteLength(harness.summaryText(), "utf8")).toBeLessThanOrEqual(900_000);
     expect(createArgs).toBeDefined();
     expect(Buffer.byteLength(createArgs!.body, "utf8")).toBeLessThanOrEqual(60_000);
-    expect(createArgs!.body).toContain("_25 findings omitted from this surface._");
+    expect(createArgs!.body).toContain("_27 findings omitted from this surface._");
     expect(createArgs!.body).toContain("Full report: mergewarden-report.md");
   });
 

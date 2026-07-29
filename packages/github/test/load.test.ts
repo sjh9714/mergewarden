@@ -128,7 +128,11 @@ describe("loadGitHubAnalysis", () => {
       analyzedFileCount: 103,
       contentFileCount: 6,
     });
-    expect(github.getTextFile).toHaveBeenCalledTimes(7);
+    // 1 policy file + 6 content files + 1 pull-request-template read. The template is loaded
+    // from the base branch for triage/template-unused, probing GitHub's paths in order and
+    // stopping at the first hit; it is skipped entirely when that rule is off. The assertion
+    // below is the one that matters — no content is fetched for ordinary source files.
+    expect(github.getTextFile).toHaveBeenCalledTimes(8);
     expect(github.listPullRequestFilesPage).toHaveBeenNthCalledWith(1, TARGET, 1, 100);
     expect(github.listPullRequestFilesPage).toHaveBeenNthCalledWith(2, TARGET, 2, 100);
     expect(
@@ -196,8 +200,8 @@ describe("loadGitHubAnalysis", () => {
         { label: "accepted_content_bytes", value: "67108864" },
       ]),
     });
-    // Config + 64 accepted requests + one eight-request detection window. No later window starts.
-    expect(github.getTextFile).toHaveBeenCalledTimes(73);
+    // Config + 64 accepted requests + the pull-request template + one eight-request detection window. No later window starts.
+    expect(github.getTextFile).toHaveBeenCalledTimes(74);
   });
 
   it("reads fork head content from the fork repository and base content from the base repository", async () => {
@@ -228,7 +232,7 @@ describe("loadGitHubAnalysis", () => {
 
     const loaded = await loadGitHubAnalysis(github, TARGET, options());
 
-    expect(github.getTextFile).toHaveBeenCalledTimes(1);
+    expect(github.getTextFile).toHaveBeenCalledTimes(2);
     expect(loaded.analysis.complete).toBe(true);
   });
 

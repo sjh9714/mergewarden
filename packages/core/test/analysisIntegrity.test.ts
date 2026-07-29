@@ -86,8 +86,10 @@ describe("analysis integrity", () => {
       severity: "error",
     });
     expect(result.summary.errorCount).toBe(261);
-    expect(result.metadata.totalFindingCount).toBe(260);
-    expect(result.metadata.omittedFindingCount).toBe(11);
+    // 260 out-of-scope errors, the limit-exceeded error, and one info from
+    // triage/oversized-change — 260 changed files is past the review threshold.
+    expect(result.metadata.totalFindingCount).toBe(261);
+    expect(result.metadata.omittedFindingCount).toBe(12);
   });
 
   it("applies a surface finding cap without changing the analysis result", async () => {

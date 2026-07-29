@@ -292,6 +292,55 @@ async function loadConfig(
   };
 }
 
+/**
+ * Paths GitHub honours for a pull-request template, in the order it resolves them.
+ *
+ * Read from the base branch, like the policy file: a template served from the pull request's
+ * own head could be edited by the contributor being measured against it.
+ */
+const PULL_REQUEST_TEMPLATE_PATHS = [
+  ".github/PULL_REQUEST_TEMPLATE.md",
+  ".github/pull_request_template.md",
+  "PULL_REQUEST_TEMPLATE.md",
+];
+
+async function loadPullRequestTemplate(
+  api: GitHubApi,
+  pullRequest: RemotePullRequest,
+  config: MergeWardenConfig,
+  retryBudget: ReturnType<typeof createRetryBudget>,
+): Promise<string | null | undefined> {
+  // Nothing reads the template when the rule is off, so nothing fetches it either.
+  if (config.triage.template_unused === "off") {
+    return undefined;
+  }
+
+  for (const path of PULL_REQUEST_TEMPLATE_PATHS) {
+    try {
+      const result = await withGitHubRetry(`Load ${path}`, retryBudget, () =>
+        api.getTextFile(pullRequest.base.repository, path, pullRequest.base.sha),
+      );
+
+      if (result.kind === "not-found") {
+        continue;
+      }
+
+      if (Buffer.byteLength(result.text, "utf8") > MAX_TEXT_BYTES) {
+        return undefined;
+      }
+
+      return result.text;
+    } catch {
+      // A template is optional evidence. If it cannot be read the rules that use it stay
+      // inert — the analysis is not marked incomplete over a document nobody is required
+      // to have.
+      return undefined;
+    }
+  }
+
+  return null;
+}
+
 function fileListGap(
   expected: number,
   collected: number,
@@ -402,6 +451,7 @@ function pullRequestContext(pullRequest: RemotePullRequest) {
     branchName: pullRequest.head.ref,
     isFork: pullRequest.head.fork,
     draft: pullRequest.draft,
+    authorAssociation: pullRequest.authorAssociation,
   };
 }
 
@@ -455,6 +505,12 @@ export async function loadGitHubAnalysis(
   }
 
   const commits = await listPullCommits(api, target, pullRequest, retryBudget, options.warning);
+  const pullRequestTemplate = await loadPullRequestTemplate(
+    api,
+    pullRequest,
+    loadedConfig.config,
+    retryBudget,
+  );
 
   const analysis: CollectionAnalysis = {
     complete: gaps.length === 0,
@@ -489,6 +545,7 @@ export async function loadGitHubAnalysis(
       },
     },
     ...(commits === undefined ? {} : { commits }),
+    ...(pullRequestTemplate === undefined ? {} : { repoDocs: { pullRequestTemplate } }),
     reviews: [],
     checks: [],
     now: options.now,

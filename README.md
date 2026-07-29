@@ -5,46 +5,46 @@
 [![MergeWarden](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml)
 [![License](https://img.shields.io/github/license/sjh9714/mergewarden)](LICENSE)
 
-> **The warden between AI agents and your main branch.**
+> **Which of these pull requests needs you first?**
 
-Coding agents open pull requests all day. MergeWarden is the change-control
-gate that checks each one against boundaries only your repository can define:
+```bash
+npx --yes mergewarden@0.9.0 triage <your owner/repository>
+```
 
-- **Did the PR stay inside its declared scope?** Agents declare intended paths
-  in a PR-body contract; edits outside them become findings.
-- **Did it touch the agent control plane?** Changes to `AGENTS.md`,
-  `CLAUDE.md`, `.mcp.json`, `.cursor/**`, and similar files steer every future
-  agent PR and always deserve human eyes.
-- **Did it wire untrusted text into an agent prompt?** New paths from PR
-  bodies, titles, or comments into registered agentic workflows are traced and
-  flagged.
+```
+8 open pull request(s) read. 7 have something a maintainer checks by hand.
 
-It also catches workflow permission escalation, unpinned supply-chain
-references, and risky package lifecycle scripts.
-It does not execute pull-request code, load policy from the PR head, or call
-an LLM at runtime.
-Every decision includes deterministic evidence that can be replayed locally.
+#169755  feature/openAQ           AI disclosed · no linked issue · oversized
+#176410  unifiprotect-config-map  no linked issue · oversized
+#177530  tod-support-sun-events   AI disclosed · no linked issue
+
+Nothing was closed, labelled, or commented on.
+```
+
+Every row is a fact you can check: no linked issue, no description, a template
+kept empty, a change past your review size, a `Co-authored-by:` trailer a
+coding tool wrote about itself, a file edited outside the scope the pull
+request declared. Nothing scores a contributor, guesses from writing style, or
+closes anything — **there is no `--close` flag, and a test asserts there never
+is.** A pull request closed by a bot in error is not reopened by the person who
+gave up on it.
+
+The same rules run as a [GitHub Action](docs/action-reference.md). It
+does not execute pull-request code, load policy from the PR head, or call an
+LLM, and every finding carries deterministic evidence that replays locally.
 
 MergeWarden gates its own pull requests — the `MergeWarden` badge above is that
 live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)).
 
-[What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md) · [简体中文](README.zh-CN.md)
-
-![Real npx run of mergewarden demo, reporting 7 errors and 5 warnings on an example agent pull request](docs/assets/mergewarden-demo-head.png)
-
-_A real `npx` run, bounded with `head` so the framing stays on screen. Run that exact command yourself — nothing here is simulated. Checkout-free Action evidence: [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17)._
+[Triage your repo](docs/triage.md) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md) · [简体中文](README.zh-CN.md)
 
 ## Try It in 60 Seconds
 
-See what MergeWarden catches — no token, no repository, no network:
+See every rule fire on a bundled example — no token, no repository, no network —
+then scan a real pull request, by `owner/repo#number` or by URL:
 
 ```bash
 npx --yes mergewarden@0.9.0 demo
-```
-
-Then scan a real pull request, by `owner/repo#number` or by URL:
-
-```bash
 npx --yes mergewarden@0.9.0 scan owner/repository#123
 npx --yes mergewarden@0.9.0 scan https://github.com/owner/repository/pull/123
 ```

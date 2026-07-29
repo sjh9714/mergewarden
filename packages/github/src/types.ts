@@ -19,6 +19,7 @@ export interface RemotePullRequest {
   author: string;
   labels: string[];
   draft: boolean;
+  authorAssociation?: string;
   changedFiles: number;
   /**
    * Number of commits GitHub reports for the pull request. Optional so that callers predating
