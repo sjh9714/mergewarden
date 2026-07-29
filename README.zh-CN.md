@@ -59,7 +59,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   mergewarden:
@@ -70,6 +70,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
+          comment: auto
 ```
 
 如果希望按 commit 固定成不可变引用，可以直接钉住 v0.9.0 的发布 commit：
@@ -81,6 +82,19 @@ jobs:
 不需要 checkout 步骤。MergeWarden 不发布、也不建议使用会漂移的 `v0` 标签。
 
 首次运行不需要 `mergewarden.yml`：在 PR 的基线分支上确认到 404 之后，会选用内置的 warn 策略。认证失败、超出速率限制、服务端错误这几种情况绝不会静默回退。
+
+## 你会看到什么
+
+大多数智能体 PR 并不会越过任何边界。这类 PR 判为 `pass`，而 `comment: auto` 不会在
+PR 下留言——findings 仍然完整记录在 Actions 的作业摘要里。只有出现 error、warning
+或分析不完整时，才会留下一条评论：
+
+```
+ERROR contract/out-of-scope: src/billing/invoice.ts changed outside the allowed contract scope.
+```
+
+推一个修复上去，这条评论会就地更新为 `PASSED`，而不是被删除——过期的 “NEEDS REVIEW”
+不会比它描述的问题活得更久。来自 fork 的 PR 从 GitHub 拿到的是只读令牌，因此不会被评论。
 
 ## 2,204 个真实智能体 PR 的扫描结果
 
@@ -110,6 +124,18 @@ jobs:
 | 分析完整性         | 内容缺失、文件列表不完整、或触及报告上限                                   |
 
 MergeWarden 评估的是**变更本身**，而不是把仓库里既有的工作流问题重复报一遍。每条检查结果都会给出规则、严重级别、路径、规范化证据，以及一个稳定的 finding ID。
+
+## 也可以在 PR 出现之前就检查
+
+同一套引擎还以 MCP server 的形式发布，面向的是运行智能体的人，而不是审查 PR 的维护者。
+它只回答一个问题——这次改动有没有停留在被授予的范围内——并生成后续 gate 会读取的
+contract 块。
+
+```json
+{ "mcpServers": { "mergewarden": { "command": "npx", "args": ["-y", "mergewarden-mcp"] } } }
+```
+
+不联网、不需要令牌、不调用模型（[详情](packages/mcp/README.md)）。
 
 ## 最小策略
 

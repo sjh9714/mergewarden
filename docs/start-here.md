@@ -70,5 +70,9 @@ switch `mode` to `block` when you trust the result. Each step is one line in
 If MergeWarden flags something your team decided was fine, please open an issue
 with the scan output. That is the most useful bug report this project can get.
 
+Running the agent yourself rather than reviewing its pull requests? The same
+engine ships as an [MCP server](../packages/mcp/README.md) that checks a change
+against the scope you gave it, before a pull request exists.
+
 Next: [getting started](getting-started.md) · [configuration](configuration.md) ·
 [Action reference](action-reference.md) · [security model](security-model.md)

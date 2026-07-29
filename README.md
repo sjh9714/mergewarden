@@ -130,6 +130,18 @@ MergeWarden evaluates changes rather than re-reporting every pre-existing
 workflow condition. Findings show the rule, severity, path, canonical evidence,
 and a stable finding ID.
 
+## Or Check It Before the PR Exists
+
+The same engine ships as an MCP server, for the person running the agent rather
+than the maintainer reviewing it. It answers one question — did this change stay
+inside the scope it was given — and emits the contract block the gate reads later.
+
+```json
+{ "mcpServers": { "mergewarden": { "command": "npx", "args": ["-y", "mergewarden-mcp"] } } }
+```
+
+No network, no token, no model call ([details](packages/mcp/README.md)).
+
 ## What 2,204 Real Agent PRs Showed
 
 We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
@@ -254,24 +266,12 @@ Read the full [security model](docs/security-model.md) and
 Workflow linters such as zizmor inspect workflow correctness and known
 misconfigurations. LLM reviewers apply semantic judgment. MergeWarden is the
 change-control layer between an AI-generated PR and merge: it asks whether the
-PR crossed repository-specific boundaries and records why.
-
-Use all three when appropriate; they solve different problems.
+PR crossed repository-specific boundaries and records why. Use all three when
+appropriate; they solve different problems.
 
 ## Action Outputs
 
-| Output                                         | Meaning                                                             |
-| ---------------------------------------------- | ------------------------------------------------------------------- |
-| `decision`                                     | `pass`, `warn`, or `block`                                          |
-| `status`                                       | Human/machine status including `incomplete`                         |
-| `analysis-complete`                            | Whether all required evidence was available                         |
-| `error-count` / `warning-count` / `info-count` | Active finding counts                                               |
-| `waived-count`                                 | Findings retained but excluded from the decision                    |
-| `expected-file-count` / `analyzed-file-count`  | File-list completeness evidence                                     |
-| `report-json` / `report-markdown`              | Generated report paths                                              |
-| `risk-score`                                   | Deprecated v0.x compatibility output; not a calibrated risk measure |
-
-Inputs and failure behavior are documented in the
+Every input and output, and the exact failure behavior, is in the
 [Action reference](docs/action-reference.md).
 
 ## Development
