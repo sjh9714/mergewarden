@@ -55,14 +55,14 @@ Every number reproduces from published queries: [study methodology](docs/study/m
 See what MergeWarden catches — no token, no repository, no network:
 
 ```bash
-npx --yes mergewarden@0.6.0 demo
+npx --yes mergewarden@0.7.0 demo
 ```
 
 Then scan a real pull request, by `owner/repo#number` or by URL:
 
 ```bash
-npx --yes mergewarden@0.6.0 scan owner/repository#123
-npx --yes mergewarden@0.6.0 scan https://github.com/owner/repository/pull/123
+npx --yes mergewarden@0.7.0 scan owner/repository#123
+npx --yes mergewarden@0.7.0 scan https://github.com/owner/repository/pull/123
 ```
 
 ![The full mergewarden demo report scrolling past in a terminal](docs/assets/mergewarden-demo.gif)
@@ -93,7 +93,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.6.0
+      - uses: sjh9714/mergewarden@v0.7.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
@@ -290,7 +290,7 @@ assertions, and a Markdown snapshot for user-facing findings. Start with a
 - [Documentation index](docs/README.md) — full list of guides and references
 - [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
 
-Will it be noisy? It [said nothing on 54 of 56 merged human PRs](docs/study/what-a-zero-config-install-reports.md);
+Will it be noisy? It [said nothing on 44 of 46 merged human PRs](docs/study/what-a-zero-config-install-reports.md);
 both findings were correct. If it flags one your team decided was fine, open an
 issue with the scan output — the most useful bug report this project can get.
 

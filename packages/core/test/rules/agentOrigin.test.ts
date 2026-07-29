@@ -133,6 +133,51 @@ describe("default body markers against real agent output", () => {
     );
   });
 
+  // Each of these was verified against a real pull request that the account opened before it
+  // was added as a default; see the provenance table in config/schema.ts. The two that carry a
+  // comment are the ones that motivated the list: Jules opens more pull requests than Devin and
+  // was missing entirely, and Kiro is the account whose pull request exposed the gap.
+  it.each([
+    ["copilot-swe-agent[bot]"],
+    ["google-labs-jules[bot]"], // 319,715 public PRs, more than Devin
+    ["devin-ai-integration[bot]"],
+    ["kiro-agent[bot]"], // found by auditing PRs the engine had classed as human
+    ["codegen-sh[bot]"],
+    ["opencode-agent[bot]"],
+    ["tembo[bot]"],
+    ["amazon-q-developer[bot]"],
+    ["mentatbot[bot]"],
+    ["factory-droid[bot]"],
+    ["ellipsis-dev[bot]"],
+  ])("detects %s on the default config alone", async (author) => {
+    const result = await analyze(
+      createAnalysisInput({
+        pr: { author, branchName: "some-ordinary-branch", body: "Implements the requested fix." },
+      }),
+    );
+
+    expect(result.findings.map((finding) => finding.ruleId)).toContain("agent/origin-detected");
+  });
+
+  it("does not treat ordinary release automation as an agent", async () => {
+    for (const author of ["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]) {
+      const result = await analyze(
+        createAnalysisInput({
+          pr: {
+            author,
+            branchName: "dependabot/npm_and_yarn/lodash-4.17.21",
+            body: "Bumps lodash.",
+          },
+        }),
+      );
+
+      expect(
+        result.findings.map((finding) => finding.ruleId),
+        `${author} must not be treated as a coding agent`,
+      ).not.toContain("agent/origin-detected");
+    }
+  });
+
   it("does not treat a pull request that merely mentions the product as agent-authored", async () => {
     const result = await analyze(
       createAnalysisInput({

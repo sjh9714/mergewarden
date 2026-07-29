@@ -29,11 +29,13 @@ requests. Start with the shortest path for your task:
 - [Commit trailer rules](rules/commit-trailers.md): required and forbidden
   disclosure trailers, and what they cannot prove.
 - [What a zero-config install reports](study/what-a-zero-config-install-reports.md):
-  measured false-positive check — silent on 54 of 56 human pull requests.
+  measured false-positive check — silent on 44 of 46 human pull requests.
 - [What a checker can actually enforce](what-a-checker-can-enforce.md): real
   policy clauses mapped to what is decidable, and what MergeWarden covers.
 - [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.
 - [v0.3.0 migration](migration-v0.3.0.md): compatibility changes.
+- [v0.7.0 release notes](release-notes-v0.7.0.md): nine missing coding-agent
+  accounts, including Google Jules.
 - [v0.6.0 release notes](release-notes-v0.6.0.md): a missing contract warns
   instead of blocking, and `contract.missing_severity`.
 - [v0.5.1 release notes](release-notes-v0.5.1.md): the Claude Code body marker

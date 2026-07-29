@@ -49656,7 +49656,19 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
 ];
 var DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 var DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
-var DEFAULT_AGENT_AUTHORS = ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"];
+var DEFAULT_AGENT_AUTHORS = [
+  "copilot-swe-agent[bot]",
+  "google-labs-jules[bot]",
+  "devin-ai-integration[bot]",
+  "kiro-agent[bot]",
+  "codegen-sh[bot]",
+  "opencode-agent[bot]",
+  "tembo[bot]",
+  "amazon-q-developer[bot]",
+  "mentatbot[bot]",
+  "factory-droid[bot]",
+  "ellipsis-dev[bot]"
+];
 var DEFAULT_AGENT_BRANCH_PATTERNS = [
   "codex/**",
   "claude/**",
@@ -51034,7 +51046,7 @@ async function loadGitHubAnalysis(api, target, options) {
 }
 
 // src/version.ts
-var MERGEWARDEN_VERSION = "0.6.0";
+var MERGEWARDEN_VERSION = "0.7.0";
 
 // src/run.ts
 var MERGEWARDEN_COMMENT_MARKER = "<!-- mergewarden-report -->";

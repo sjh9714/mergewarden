@@ -27,16 +27,63 @@ export const DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 export const DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
 
 /**
- * Agent signatures this project has actually observed in the wild.
+ * Bot accounts that coding agents really use to open pull requests.
  *
- * These are the cohort definitions from the 2,204-PR scan study (docs/study/methodology.md),
- * not guesses: the bot accounts and branch prefixes that Devin, GitHub Copilot's coding agent,
- * Codex, Claude Code and Cursor really use when they open pull requests. Shipping them as the
- * default is what lets a zero-config install recognise an agent pull request at all.
+ * Every entry was verified individually by reading an actual pull request that account opened,
+ * not taken from a vendor's documentation, and the public pull-request counts below were
+ * measured on 2026-07-29 via `is:pr author:<account>`:
  *
- * Labels stay empty because label conventions are per-repository and cannot be guessed.
+ *   copilot-swe-agent[bot]      2,020,056   GitHub Copilot coding agent
+ *   google-labs-jules[bot]        319,715   Google Jules
+ *   devin-ai-integration[bot]     209,483   Devin
+ *   kiro-agent[bot]                21,383   AWS Kiro
+ *   codegen-sh[bot]                 7,968   Codegen
+ *   opencode-agent[bot]             6,696   OpenCode
+ *   tembo[bot]                      3,465   Tembo
+ *   amazon-q-developer[bot]         2,263   Amazon Q Developer
+ *   mentatbot[bot]                  2,184   Mentat
+ *   factory-droid[bot]                604   Factory Droid
+ *   ellipsis-dev[bot]                 396   Ellipsis
+ *
+ * The first two entries were the whole list until v0.7.0, which missed roughly 364,000 pull
+ * requests of coverage — Google Jules alone opens more than Devin does. That gap was found by
+ * checking whether pull requests the engine had classed as human really were human; see
+ * docs/study/what-a-zero-config-install-reports.md.
+ *
+ * Author matching is exact and case-insensitive against a bot account name, so unlike a branch
+ * glob it carries no false-positive risk, which is why low-volume agents are worth listing too.
+ *
+ * Deliberately excluded: dependabot, renovate, github-actions and similar automation. They open
+ * pull requests but they are not coding agents working from a task description, and treating
+ * them as such would demand a scope contract from a version bump.
+ *
+ * Review bots (CodeRabbit, Qodo, Greptile and the like) are excluded for a different reason:
+ * they comment on pull requests rather than authoring them, so they never appear as an author.
  */
-export const DEFAULT_AGENT_AUTHORS = ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"];
+export const DEFAULT_AGENT_AUTHORS = [
+  "copilot-swe-agent[bot]",
+  "google-labs-jules[bot]",
+  "devin-ai-integration[bot]",
+  "kiro-agent[bot]",
+  "codegen-sh[bot]",
+  "opencode-agent[bot]",
+  "tembo[bot]",
+  "amazon-q-developer[bot]",
+  "mentatbot[bot]",
+  "factory-droid[bot]",
+  "ellipsis-dev[bot]",
+];
+/**
+ * Branch prefixes agents create when they run under a *human* account.
+ *
+ * This list stays short on purpose. The bot-authored agents above are matched by author, which
+ * is exact; adding their branch prefixes as well would buy nothing and widen the surface for
+ * false positives. These five are the agents that commonly run on a developer's own machine and
+ * push to an ordinary remote, where the branch name is the only structural signal.
+ *
+ * `agent/**` was considered and rejected: it appears on human pull requests about agent features
+ * as readily as on agent-authored ones, and this project's own branches would trip it.
+ */
 export const DEFAULT_AGENT_BRANCH_PATTERNS = [
   "codex/**",
   "claude/**",

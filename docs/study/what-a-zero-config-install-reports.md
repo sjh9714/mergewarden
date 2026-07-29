@@ -3,8 +3,8 @@
 The most common objection to a policy gate is that it will be noisy. This page
 answers that with a measurement rather than an assurance.
 
-**Result: on 56 recently merged human-authored pull requests, the default policy
-reported nothing on 54 of them. The two findings it did produce were both
+**Result: on 46 recently merged human-authored pull requests, the default policy
+reported nothing on 44 of them. The two findings it did produce were both
 correct.** Zero false positives in this sample.
 
 ## Why this is a separate measurement
@@ -31,8 +31,17 @@ merged:<day>` for each day from 2026-07-22 to 2026-07-28, 60 per day.
 4. Scan each with `mergewarden scan <owner/repo#number> --format json`.
 5. Split by whether the engine's own `agentDetected` flag fired, and inspect
    every finding on the human side by hand.
+6. **Audit the split itself.** Fetch the author, branch and body of every pull
+   request the engine called human, and check for agent signals the defaults
+   might have missed.
 
 All 90 scans completed; none were partial.
+
+Step 6 is not optional, and the first version of this page skipped it. Splitting
+the sample with the engine's own classifier and then measuring how quiet the
+engine is on one side of that split is circular: any pull request it wrongly
+calls human joins the quiet bucket and flatters the result. The audit found the
+split was mostly right and one thing badly wrong — see below.
 
 **Do not add `stars:` to an issue search.** It is not a valid qualifier there, so
 GitHub treats it as free text — `stars:>2000` matched the literal string and
@@ -42,13 +51,31 @@ after hydration, never in the query.
 
 ## Sample composition
 
-| Property                                          | Value    |
-| ------------------------------------------------- | -------- |
-| Pull requests scanned                             | 90       |
-| Detected as agent-authored                        | 34 (38%) |
-| Human-authored                                    | 56       |
-| Repositories under 20 stars                       | 88 of 90 |
-| Human PRs touching workflows or package manifests | 5        |
+| Property                                   | Value    |
+| ------------------------------------------ | -------- |
+| Pull requests scanned                      | 90       |
+| Detected as agent-authored                 | 34 (38%) |
+| Coding-agent bot the defaults **missed**   | 1        |
+| Automation bots (dependabot, renovate, CI) | 9        |
+| Human accounts                             | 46       |
+| Repositories under 20 stars                | 88 of 90 |
+
+The 56 "human" pull requests in the first version of this page were not all
+human. Nine were ordinary automation — dependabot, renovate, `github-actions`
+and two org-specific sync bots. Those are correctly not treated as coding
+agents: they open pull requests, but not from a task description, and demanding
+a scope contract from a version bump would be wrong.
+
+One was a genuine coding agent the defaults did not know about,
+`kiro-agent[bot]` — AWS Kiro, 21,383 public pull requests. That single miss is
+what prompted a full audit of the author list, which turned up **nine coding
+agent accounts missing from the defaults, together worth about 364,000 public
+pull requests**. Google Jules alone opens more than Devin. All nine were added
+in [v0.7.0](../release-notes-v0.7.0.md), each verified by reading a pull request
+it had actually opened.
+
+So the detection recall visible in this sample is 34 of 35 agent pull requests,
+and the corrected human denominator is 46.
 
 This is the recent-merge firehose, so it skews heavily to small repositories.
 That is the population, not a sampling error — but it does mean this is not a
@@ -58,9 +85,11 @@ sample of "repositories that would install MergeWarden", which is unknown.
 
 |                                         |                      |
 | --------------------------------------- | -------------------- |
-| Reported nothing (`pass`)               | **54 of 56 — 96.4%** |
+| Reported nothing (`pass`)               | **44 of 46 — 95.7%** |
 | Produced a finding                      | 2                    |
 | Findings judged incorrect on inspection | **0**                |
+
+All nine automation-bot pull requests also reported nothing.
 
 Both findings were `agent-control-plane/drift`. One pull request edited
 `CLAUDE.md`; the other edited `.github/copilot-instructions.md`. Those are the

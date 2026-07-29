@@ -16,7 +16,19 @@ describe("parseConfig", () => {
     // Defaults ship the agent signatures the 2,204-PR study actually observed, so a
     // zero-config install recognises an agent pull request instead of seeing nothing.
     expect(config.agent_detection).toEqual({
-      authors: ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"],
+      authors: [
+        "copilot-swe-agent[bot]",
+        "google-labs-jules[bot]",
+        "devin-ai-integration[bot]",
+        "kiro-agent[bot]",
+        "codegen-sh[bot]",
+        "opencode-agent[bot]",
+        "tembo[bot]",
+        "amazon-q-developer[bot]",
+        "mentatbot[bot]",
+        "factory-droid[bot]",
+        "ellipsis-dev[bot]",
+      ],
       labels: [],
       branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"],
       body_patterns: ["Generated with [Claude Code]", "Generated with Claude Code"],

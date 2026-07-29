@@ -16,7 +16,9 @@ mode: warn
 
 ```yaml
 agent_detection:
-  authors: ["devin-ai-integration[bot]", "copilot-swe-agent[bot]"]
+  # 11 coding-agent bot accounts by default — Copilot, Jules, Devin, Kiro,
+  # Codegen, OpenCode, Tembo, Amazon Q, Mentat, Factory Droid, Ellipsis.
+  authors: ["copilot-swe-agent[bot]", "google-labs-jules[bot]", "..."]
   labels: [] # label conventions are per-repository; add your own
   branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"]
   body_patterns: ["Generated with [Claude Code]"]

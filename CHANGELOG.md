@@ -6,6 +6,35 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.7.0 - 2026-07-29
+
+### Changed
+
+- **Nine coding-agent bot accounts were missing from `agent_detection.authors`.** The default
+  list was `devin-ai-integration[bot]` and `copilot-swe-agent[bot]`. Added: Google Jules,
+  AWS Kiro, Codegen, OpenCode, Tembo, Amazon Q Developer, Mentat, Factory Droid and Ellipsis —
+  together roughly **364,000 public pull requests** of coverage the defaults could not see.
+  **Google Jules alone opens more pull requests than Devin** (319,715 vs 209,483, measured
+  2026-07-29).
+
+  Each account was verified by reading a pull request it had actually opened, and the counts
+  are recorded in the source. Automation such as dependabot, renovate and `github-actions` is
+  deliberately excluded — those open pull requests but not from a task description, and asking
+  a version bump for a scope contract would be wrong. A regression test pins both directions.
+
+  Found by auditing the split in the false-positive measurement rather than by reading vendor
+  documentation: one pull request the engine had classified as human turned out to be AWS Kiro.
+  See [the measurement](docs/study/what-a-zero-config-install-reports.md).
+
+### Fixed
+
+- `docs/study/what-a-zero-config-install-reports.md` split its sample using the engine's own
+  classifier and then measured how quiet the engine was on one side of that split, which is
+  circular. Re-checked every pull request it had called human: nine were automation bots and one
+  was an undetected coding agent. The corrected figure is **44 of 46 human pull requests
+  reporting nothing (95.7%)**, down from a claimed 96.4% on a contaminated denominator. Both
+  findings remain verified correct, so the zero-false-positive result stands.
+
 ## v0.6.0 - 2026-07-26
 
 ### Fixed

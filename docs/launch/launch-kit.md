@@ -18,7 +18,7 @@ Since v0.5.0 there is a single command that shows what the tool does, with no
 token, no repository, and no network:
 
 ```bash
-npx --yes mergewarden@0.6.0 demo
+npx --yes mergewarden@0.7.0 demo
 ```
 
 It analyzes an example pull request bundled inside the CLI **on the default

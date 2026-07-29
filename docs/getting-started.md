@@ -3,7 +3,7 @@
 ## 1. Try a PR Without Installing
 
 ```bash
-npx --yes mergewarden@0.6.0 scan owner/repository#123
+npx --yes mergewarden@0.7.0 scan owner/repository#123
 ```
 
 Public repositories work without a token. Set `GH_TOKEN`, or
@@ -28,7 +28,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.6.0
+      - uses: sjh9714/mergewarden@v0.7.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
