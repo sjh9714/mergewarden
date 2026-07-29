@@ -1,0 +1,29 @@
+{
+  "name": "@mergewarden/mcp",
+  "version": "0.8.0",
+  "description": "MCP server that checks whether a coding agent's changes stayed inside the scope it was given",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "mergewarden-mcp": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@mergewarden/core": "workspace:*"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

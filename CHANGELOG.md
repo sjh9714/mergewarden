@@ -6,6 +6,34 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **`@mergewarden/mcp`** — an MCP server exposing one tool, `check_change_scope`, which
+  compares the files a change actually touched against the paths it was asked to touch.
+
+  This inverts who the project talks to. Everything else here is for a maintainer gating
+  pull requests that arrive; this is for the person running the agent, before a pull request
+  exists. Out-of-scope edits are a documented failure mode of coding agents, and the standard
+  advice is to run `git diff --name-only` afterwards and check by eye. This does that
+  comparison mechanically.
+
+  It runs the same engine as the Action on the same default policy, so a clean result is the
+  result the gate produces later rather than a second opinion that happens to agree. Only
+  rules decidable from a path list can fire — contract scope, blocked paths, and
+  agent-control-plane drift. Workflow and dependency rules need file contents and are
+  deliberately absent; a test asserts they never appear.
+
+  It also emits the `mergewarden-contract` block for the pull request body. That closes a hole
+  in this project's own argument: the scan study's headline is that **0 of 2,204** merged agent
+  pull requests declared their scope, and until now the only answer was prose in `CLAUDE.md`
+  that a maintainer had to add and an agent had to honour. The intent exists during the agent
+  session and was being lost before the pull request; this captures it while it is still known.
+
+  Verified over the real MCP stdio protocol — `initialize`, `tools/list`, `tools/call` — not
+  against a mock.
+
 ## v0.8.0 - 2026-07-29
 
 ### Added

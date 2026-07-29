@@ -6,6 +6,8 @@ requests. Start with the shortest path for your task:
 - [Getting started](getting-started.md): install, first run, and safe rollout.
 - [CLI reference](cli.md): scan a public or private GitHub pull request.
 - [Action reference](action-reference.md): inputs, outputs, permissions, and failures.
+- [MCP server](../packages/mcp/README.md): check an agent's changes against the
+  scope it was given, before a pull request exists.
 - [Configuration](configuration.md): policy, checks, contracts, and waivers.
 - [Your first report](first-report.md): status labels and next actions.
 - [Evidence model](evidence-model.md): finding IDs and reproducibility metadata.
