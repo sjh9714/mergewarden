@@ -144,6 +144,13 @@ excluding `dependabot[bot]`, `renovate[bot]` and `github-actions[bot]`. Three si
 separately: a `Co-authored-by:` trailer written by a tool, a disclosure field from the
 repository's pull-request template kept in the body, and a disclosure written in prose.
 
+**What this population is.** Repositories were found by code search for a disclosure field in
+`pull_request_template.md`, plus projects already known to have a written AI policy. It is not a
+sample of the [OSS AI-contribution policy catalogue](https://github.com/ecogetaway/oss-ai-contribution-policy):
+of the eighteen repositories measured here, **two — `ghostty-org/ghostty` and `llvm/llvm-project`
+— are catalogued.** Nor is it a sample of contributions: **open pull requests are a queue, not
+merged work**, and a queue over-represents whatever has not been dealt with yet.
+
 Ten repositories ship a disclosure field. **Retention ranges from 0% to 83%.**
 
 | Repository                          | field                                    | pulls |   kept | trailer | prose |
@@ -171,8 +178,16 @@ from scratch (`Fixes #10736. ## Problem …`) rather than editing the template. 
 heading carries `(REQUIRED)`, gets 25 of 30. Something between those two decides the outcome and
 this measurement does not isolate it.
 
-Where there is no field, the trailer does the work by default: Home Assistant reaches 11 of 28
-without asking anyone, because Claude Code writes the trailer unprompted.
+### The trailer column is about one vendor's default, not about projects
+
+Home Assistant reaches 11 of 28 by trailer without asking anyone. It is tempting to read that as
+a symmetry — field here, trailer there — and the first version of this page did. It is not one.
+**Claude Code writes that trailer by default**, so the trailer column tracks which tool a
+repository's contributors happen to use, and whether they left the default on. A project whose
+contributors use a tool that writes no trailer scores zero without having chosen anything.
+
+Only the other half of the claim survives that, and it survives on its own:
+**where a project provides a place to disclose, contributors use it.**
 
 ### Two corrections, both caught before use
 
@@ -196,9 +211,17 @@ and optional model; ten projects here want a field in the template; everywhere e
 whatever the tool happened to write. A schema that asks projects to declare an AI policy cannot
 assume where disclosure lives — it has to let a project say which convention it uses.
 
-One caution on the table: `kept` counts a field **retained**, not filled. Caddy retains it in 24
-pull requests and 12 carry an actual statement. The prose count is deliberately narrow — a body
-mentioning "AI" is not a disclosure.
+### Retention is not disclosure, and the gap is half
+
+`kept` counts a field **retained**, not filled. Caddy retains its `## Assistance Disclosure`
+section in 24 of 30 pull requests, and **12 of those carry an actual statement.**
+
+That gap is probably the more useful finding on this page. Prescribing a format buys retention;
+only half of the retention converts into someone saying anything. A project that adds a field
+and then reads its retention rate as a compliance rate will be measuring the template, not the
+disclosure — **the shape may be relocating the problem rather than solving it.**
+
+The prose count is deliberately narrow — a body mentioning "AI" is not a disclosure.
 
 Reproduce with `node tools/study/disclosure-conventions.mjs <owner/repo> [...]`.
 
