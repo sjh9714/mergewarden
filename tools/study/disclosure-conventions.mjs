@@ -90,8 +90,32 @@ function trailerTools(message) {
  * `## Assistance Disclosure`, counting twelve template disclosures as prose. Projects name this
  * section for the act rather than the technology, so the act is what this matches.
  */
-const DISCLOSURE_HEADING =
-  /^#{1,6}\s*(.*\b(ai|llm|artificial intelligence|assistance|disclosure|attribution)\b.*)$/im;
+const DISCLOSURE_TERMS = /\b(ai|llm|artificial intelligence|assistance|disclosure|attribution)\b/i;
+const HEADING_LINE = /^#{1,6}\s*(.+?)\s*$/;
+// Not every template puts the field under a heading. OWASP Threat Dragon asks for it as a
+// checklist item — "*or* any use of AI in this pull request has been disclosed below:" with
+// tool and model sub-items — which a heading-only detector scores as no field at all. That is
+// a false negative against one of the better-designed disclosure fields in this corpus.
+const CHECKLIST_LINE = /^\s*[-*]\s*\[[ xX]\]\s*(.+?)\s*$/;
+
+function disclosureAnchor(template) {
+  for (const raw of template.split("\n")) {
+    const line = raw.replace(/\*\*|[`*_]/g, "");
+    const heading = HEADING_LINE.exec(line);
+
+    if (heading && DISCLOSURE_TERMS.test(heading[1] ?? "")) {
+      return { kind: "heading", text: (heading[1] ?? "").trim() };
+    }
+
+    const item = CHECKLIST_LINE.exec(line);
+
+    if (item && DISCLOSURE_TERMS.test(item[1] ?? "")) {
+      return { kind: "checklist", text: (item[1] ?? "").trim() };
+    }
+  }
+
+  return undefined;
+}
 
 // Maintenance automation: a release bot does not disclose anything about itself.
 const EXCLUDED_AUTHORS = new Set(["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]);
@@ -158,9 +182,7 @@ function parseArgs(argv) {
 
 async function measure(repo, limit) {
   const template = await pullRequestTemplate(repo);
-  const templateHeading = template
-    ? DISCLOSURE_HEADING.exec(template.text)?.[1]?.trim()
-    : undefined;
+  const anchor = template ? disclosureAnchor(template.text) : undefined;
 
   const pulls = await ghApi([
     "-X",
@@ -183,7 +205,8 @@ async function measure(repo, limit) {
     template: 0,
     prose: 0,
     templatePath: template?.path,
-    templateDisclosureHeading: templateHeading,
+    templateDisclosureAnchor: anchor?.text,
+    templateDisclosureKind: anchor?.kind,
     tools: {},
   };
 
@@ -195,7 +218,17 @@ async function measure(repo, limit) {
     record.measuredPulls += 1;
     const body = pull.body ?? "";
 
-    if (templateHeading && body.toLowerCase().includes(templateHeading.toLowerCase())) {
+    // Compare on a normalised line so that bold markers and back-ticks in the template do not
+    // stop a body that kept the field from matching.
+    const anchorText = anchor?.text.toLowerCase();
+
+    if (
+      anchorText &&
+      body
+        .replace(/\*\*|[`*_]/g, "")
+        .toLowerCase()
+        .includes(anchorText)
+    ) {
       record.template += 1;
     }
 
@@ -232,7 +265,7 @@ for (const repo of repos) {
   const record = await measure(repo, limit);
   appendJsonl(OUT, record);
   process.stdout.write(
-    `${repo.padEnd(24)} pulls ${String(record.measuredPulls).padStart(3)} | trailer ${String(record.trailer).padStart(3)} | template ${String(record.template).padStart(3)} | prose ${String(record.prose).padStart(3)}${record.templateDisclosureHeading ? `  (template section: ${record.templateDisclosureHeading})` : ""}\n`,
+    `${repo.padEnd(24)} pulls ${String(record.measuredPulls).padStart(3)} | trailer ${String(record.trailer).padStart(3)} | template ${String(record.template).padStart(3)} | prose ${String(record.prose).padStart(3)}${record.templateDisclosureAnchor ? `  (${record.templateDisclosureKind}: ${record.templateDisclosureAnchor.slice(0, 46)})` : ""}\n`,
   );
 }
 

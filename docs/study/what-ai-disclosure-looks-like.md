@@ -137,47 +137,69 @@ you used"; `polars` requires that "all AI usage in any form must be disclosed". 
 trailer check on commit metadata — and the trailer these tools already write is the disclosure
 those policies are asking for.
 
-## Disclosure happens in two places, and they do not overlap
+## A field in the template is the mechanism that works
 
 Measured 2026-07-30 over the 30 most recently updated open pull requests of each repository,
 excluding `dependabot[bot]`, `renovate[bot]` and `github-actions[bot]`. Three signals, counted
-separately: a `Co-authored-by:` trailer written by a tool, a disclosure section from the
+separately: a `Co-authored-by:` trailer written by a tool, a disclosure field from the
 repository's pull-request template kept in the body, and a disclosure written in prose.
 
-| Repository            | pulls | trailer | template section | prose |
-| --------------------- | ----: | ------: | ---------------: | ----: |
-| `home-assistant/core` |    30 |  **19** |                — |     1 |
-| `go-gitea/gitea`      |    30 |       7 |                — |     5 |
-| `ghostty-org/ghostty` |    30 |       6 |                — |     6 |
-| `llvm/llvm-project`   |    30 |       3 |                — |    10 |
-| `denoland/deno`       |    30 |       2 |                — |     5 |
-| `caddyserver/caddy`   |    30 |       2 |           **24** |    12 |
-| `ggml-org/llama.cpp`  |    30 |       1 |                — |     7 |
-| `pola-rs/polars`      |    30 |       1 |                — |     4 |
-| `starship/starship`   |    28 |   **0** |           **15** |    15 |
+| Repository            | pulls | trailer | template field | prose |
+| --------------------- | ----: | ------: | -------------: | ----: |
+| `OWASP/threat-dragon` |     4 |       — |          **4** |     — |
+| `caddyserver/caddy`   |    30 |       2 |         **24** |    12 |
+| `starship/starship`   |    28 |       — |         **14** |    14 |
+| `home-assistant/core` |    28 |      11 |              — |     2 |
+| `go-gitea/gitea`      |    30 |       7 |              — |     5 |
+| `ghostty-org/ghostty` |    30 |       5 |              — |     4 |
+| `llvm/llvm-project`   |    30 |       4 |              — |     7 |
+| `pola-rs/polars`      |    30 |       1 |              — |     4 |
+| `denoland/deno`       |    30 |       1 |              — |     2 |
+| `ggml-org/llama.cpp`  |    30 |       1 |              — |     8 |
 
-**The two projects that ship a disclosure section in their template are the two with almost no
-trailers.** Caddy's is `## Assistance Disclosure`, starship's is `#### AI-Assistance`, and both
-work: 24 of 30 and 15 of 28 pull requests keep the section. Neither project's contributors
-disclose through commit metadata, and reading their trailer counts as a compliance rate would
-report the two most disclosure-conscious repositories in the sample as the worst.
+**Three repositories ship a disclosure field in their pull-request template, and all three have
+high retention** — 4 of 4, 24 of 30, 14 of 28. The other seven ship none, and disclosure reaches
+them only when a tool volunteers a trailer or a contributor writes a sentence.
 
-The reverse holds too. Home Assistant has no disclosure section and the highest trailer rate in
-the sample — **19 of 30** — because Claude Code writes the trailer without being asked. Where a
-project provides a place to disclose, contributors use it; where it does not, disclosure happens
-only when the tool does it unprompted.
+The field designs differ. Caddy uses a `## Assistance Disclosure` heading and starship a
+`#### AI-Assistance` one. Threat Dragon's is a checklist and asks for more than either:
 
-That makes at least five incompatible conventions now in use: Fedora requires `Assisted-by:`,
-Kubernetes forbids it, Mesa requires `Generated-by:`, Caddy and starship want a template
-section, and everywhere else it is whatever the tool wrote. A schema that asks projects to
-declare an AI policy cannot assume where the disclosure will be — it has to let a project say
-which convention it uses.
+```
+- [ ] *either* no AI-generated content has been used in this pull request
+- [ ] *or* any use of AI in this pull request has been disclosed below:
+  - AI Tools: `[e.g. GitHub CoPilot, ChatGPT, JetBrains Junie, etc]`
+  - LLMs and versions: `[e.g. GPT-4.1, Claude Haiku 4.5, Gemini 2.5 Pro, etc]`
+```
 
-Two cautions on this table. "Template section" counts a section **kept**, not a section
-**filled**: Caddy retains it in 24 pull requests and 12 of those carry an actual statement.
-And the prose count is deliberately narrow — a body mentioning "AI" is not a disclosure, and
-starship has open pull requests about exposing a Claude Code session id that say nothing about
-authorship.
+Tool **and** model version, with an explicit "no AI" option — the granularity Mesa's policy asks
+for, implemented as a form rather than a rule.
+
+Where there is no field, the trailer does the work by default: Home Assistant reaches 11 of 28
+without asking anyone, because Claude Code writes the trailer unprompted.
+
+### Correction
+
+The first version of this table scored Threat Dragon at **0 of 4** and reported that it had no
+disclosure field. It has one, and by this measure it is the most complied-with in the sample.
+The detector matched only Markdown **headings**, so a field offered as a checklist item was
+invisible to it — a false negative against one of the better designs in the corpus. It was found
+before the number was used for anything, by reading the template rather than trusting the count.
+
+Also worth knowing when reading any row: these are open queues, which move. Home Assistant read
+19 of 30 earlier the same day and 11 of 28 an hour later, on a different set of open pull
+requests. Treat every figure here as a snapshot, not a rate.
+
+### Five conventions, and a checker written for one reads the others as silence
+
+Fedora requires `Assisted-by:`; Kubernetes forbids it; Mesa requires `Generated-by:` with tool
+and optional model; Caddy, starship and Threat Dragon want a field in the template; everywhere
+else it is whatever the tool happened to write. A schema that asks projects to declare an AI
+policy cannot assume where disclosure lives — it has to let a project say which convention it
+uses.
+
+One caution on the table: the template column counts a field **kept**, not filled. Caddy retains
+it in 24 pull requests and 12 carry an actual statement. And the prose count is deliberately
+narrow — a body mentioning "AI" is not a disclosure.
 
 Reproduce with `node tools/study/disclosure-conventions.mjs <owner/repo> [...]`.
 
