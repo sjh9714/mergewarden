@@ -52,6 +52,14 @@ This project follows the spirit of
   `devin-ai-integration[bot]` are bot accounts too, and theirs are the pull requests a
   maintainer wants triaged.
 
+- Triage lifts a note that appears on **80% or more** of a repository's open pull requests out
+  of the rows and reports it once, about the repository. Found by running the command against
+  the projects that installed the competing tool — the ones that self-identified as having this
+  problem. RSSHub came back with 15 of 15 flagged, almost all "no linked issue", because that
+  repository links an issue on nothing. A signal that fires on everything ranks nothing, which
+  is the failure the command exists to avoid; RSSHub now returns 2 rows. Applies only from
+  eight pull requests upward, since below that three of four is a coincidence.
+
 - **`docs/triage.md`** — what the command reports, and why it does not act.
 
 ### Changed

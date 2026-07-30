@@ -172,6 +172,49 @@ export interface TriageEnvironment {
   GITHUB_TOKEN?: string | undefined;
 }
 
+/**
+ * A note that appears on nearly every pull request cannot rank any of them.
+ *
+ * RSSHub links an issue on none of its open pull requests — that is the project's norm, not a
+ * fact about any one contribution. Repeating it on all fifteen rows says nothing about which to
+ * open first, which is the failure this command exists to avoid. Such a note is reported once,
+ * about the repository, and removed from the rows so the remaining signals do the ranking.
+ *
+ * Only applied above a floor: on four pull requests "three of four" is a coincidence, not a norm.
+ */
+export const UNIFORM_THRESHOLD = 0.8;
+const UNIFORM_MIN_PULLS = 8;
+
+export function partitionUniformNotes(rows: { notes: string[] }[]): {
+  uniform: string[];
+  rows: { notes: string[] }[];
+} {
+  if (rows.length < UNIFORM_MIN_PULLS) {
+    return { uniform: [], rows };
+  }
+
+  const counts = new Map<string, number>();
+
+  for (const row of rows) {
+    for (const note of row.notes) {
+      counts.set(note, (counts.get(note) ?? 0) + 1);
+    }
+  }
+
+  const uniform = [...counts.entries()]
+    .filter(([, count]) => count / rows.length >= UNIFORM_THRESHOLD)
+    .map(([note]) => note);
+
+  if (uniform.length === 0) {
+    return { uniform: [], rows };
+  }
+
+  return {
+    uniform,
+    rows: rows.map((row) => ({ ...row, notes: row.notes.filter((n) => !uniform.includes(n)) })),
+  };
+}
+
 export async function runTriageCli(
   args: string[],
   io: TriageIo,
@@ -251,7 +294,11 @@ export async function runTriageCli(
   }
 
   // Most signals first: the point of the command is which pull request to open next.
-  const flagged = rows
+  const partitioned = partitionUniformNotes(rows) as {
+    uniform: string[];
+    rows: typeof rows;
+  };
+  const flagged = partitioned.rows
     .filter((row) => row.notes.length > 0)
     .sort((left, right) => right.notes.length - left.notes.length || left.number - right.number);
 
@@ -264,6 +311,16 @@ export async function runTriageCli(
     `${rows.length} open pull request(s) read. ${flagged.length} have something a maintainer checks by hand.`,
     "",
   ];
+
+  for (const note of partitioned.uniform) {
+    lines.push(
+      `Nearly every open pull request here trips "${note}", so it reads as this repository's norm and is not listed per row.`,
+    );
+  }
+
+  if (partitioned.uniform.length > 0) {
+    lines.push("");
+  }
 
   // Column widths follow the data: pull request numbers reach six digits on large repositories.
   const numberWidth = Math.max(...flagged.map((row) => `#${row.number}`.length), 4) + 2;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseTriageOptions, TriageUsageError } from "../src/triage.js";
+import { parseTriageOptions, partitionUniformNotes, TriageUsageError } from "../src/triage.js";
 
 describe("parseTriageOptions", () => {
   it("accepts owner/repository with defaults", () => {
@@ -44,5 +44,51 @@ describe("parseTriageOptions", () => {
     for (const flag of ["--close", "--label", "--comment", "--fix"]) {
       expect(() => parseTriageOptions(["a/b", flag])).toThrow(/Unknown triage option/);
     }
+  });
+});
+
+describe("partitionUniformNotes", () => {
+  const rows = (notes: string[][]) => notes.map((n) => ({ notes: n }));
+
+  it("lifts a note that appears on nearly every pull request out of the rows", () => {
+    // RSSHub links an issue on none of its open pull requests. Repeating that on all fifteen
+    // rows ranks nothing, which is the failure this command exists to avoid.
+    const input = rows([
+      ...Array.from({ length: 14 }, () => ["no linked issue"]),
+      ["no linked issue", "AI disclosed"],
+    ]);
+    const result = partitionUniformNotes(input);
+
+    expect(result.uniform).toEqual(["no linked issue"]);
+    expect(result.rows.filter((row) => row.notes.length > 0)).toEqual([
+      { notes: ["AI disclosed"] },
+    ]);
+  });
+
+  it("leaves a discriminating note in place", () => {
+    const input = rows([
+      ["oversized"],
+      ["AI disclosed"],
+      [],
+      [],
+      ["no linked issue"],
+      [],
+      [],
+      [],
+      [],
+      [],
+    ]);
+    const result = partitionUniformNotes(input);
+
+    expect(result.uniform).toEqual([]);
+    expect(result.rows).toEqual(input);
+  });
+
+  it("does not call three of four a norm", () => {
+    // Below the floor a coincidence looks like a convention.
+    const input = rows([["no linked issue"], ["no linked issue"], ["no linked issue"], []]);
+    const result = partitionUniformNotes(input);
+
+    expect(result.uniform).toEqual([]);
   });
 });

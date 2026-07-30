@@ -52,6 +52,27 @@ Maintenance automation is skipped: `dependabot[bot]`, `renovate[bot]` and
 `github-actions[bot]` by default, configurable through `triage.exclude_authors`. Coding agents
 are not skipped, because their pull requests are the ones this is for.
 
+## A signal that fires on everything ranks nothing
+
+If nearly every open pull request in a repository trips the same fact, that fact is the
+project's norm rather than something about any one contribution. RSSHub links an issue on none
+of its open pull requests; listing that on all fifteen rows would say nothing about which to
+open first. It is reported once, about the repository, and dropped from the rows so the
+remaining signals do the ranking:
+
+```
+15 open pull request(s) read. 2 have something a maintainer checks by hand.
+
+Nearly every open pull request here trips "no linked issue", so it reads as this
+repository's norm and is not listed per row.
+
+#22437  feat/gov-beijing-bjhd              AI disclosed
+#22836  codex/fix-zsxq-topic-id-precision  agent-authored
+```
+
+This applies at 80% and only from eight pull requests upward — below that, three of four is a
+coincidence rather than a convention.
+
 ## What it does not do
 
 **It never closes, labels, or comments.** There is no `--close` flag, and a test asserts there
