@@ -21,6 +21,7 @@ export interface TriageIo {
 const REPO = /^([A-Za-z0-9._-]+)\/([A-Za-z0-9._-]+)$/;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const RETRYABLE = new Set([403, 429, 500, 502, 503, 504]);
 
 export class TriageUsageError extends Error {}
 
@@ -110,10 +111,26 @@ async function listOpenPullRequests(
     headers.authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, { headers });
+  // GitHub answers a burst of requests with 403 under its secondary rate limit, which is
+  // transient and unrelated to the hourly budget. The rest of the CLI retries through
+  // @mergewarden/github; this listing is a direct call and needs its own bounded backoff.
+  let response = await fetch(url, { headers });
+
+  for (let attempt = 1; attempt <= 3 && RETRYABLE.has(response.status); attempt++) {
+    const retryAfter = Number(response.headers.get("retry-after"));
+    const waitMs =
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : attempt * 20_000;
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+    response = await fetch(url, { headers });
+  }
 
   if (!response.ok) {
-    throw new Error(`Could not list pull requests for ${owner}/${repo}: HTTP ${response.status}`);
+    const hint = RETRYABLE.has(response.status)
+      ? " — GitHub is rate limiting this token; try again in a few minutes"
+      : "";
+    throw new Error(
+      `Could not list pull requests for ${owner}/${repo}: HTTP ${response.status}${hint}`,
+    );
   }
 
   const payload = (await response.json()) as {
@@ -286,18 +303,27 @@ export async function runTriageCli(
     }
   }
 
+  // Applied before the format branch. The human and JSON views must not disagree about which
+  // notes rank a pull request — they did, and a validation run measured the unfixed behaviour
+  // because it asked for JSON.
+  const partitioned = partitionUniformNotes(rows) as { uniform: string[]; rows: typeof rows };
+
   if (options.format === "json") {
     io.stdout(
-      `${JSON.stringify({ repository: `${options.owner}/${options.repo}`, rows }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          repository: `${options.owner}/${options.repo}`,
+          uniformNotes: partitioned.uniform,
+          rows: partitioned.rows,
+        },
+        null,
+        2,
+      )}\n`,
     );
     return 0;
   }
 
   // Most signals first: the point of the command is which pull request to open next.
-  const partitioned = partitionUniformNotes(rows) as {
-    uniform: string[];
-    rows: typeof rows;
-  };
   const flagged = partitioned.rows
     .filter((row) => row.notes.length > 0)
     .sort((left, right) => right.notes.length - left.notes.length || left.number - right.number);

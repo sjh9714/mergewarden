@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { parseTriageOptions, partitionUniformNotes, TriageUsageError } from "../src/triage.js";
@@ -90,5 +92,19 @@ describe("partitionUniformNotes", () => {
     const result = partitionUniformNotes(input);
 
     expect(result.uniform).toEqual([]);
+  });
+});
+
+describe("triage output formats", () => {
+  it("keeps the human and JSON views in agreement", () => {
+    // They diverged once: the uniform-note partition ran after the JSON branch returned, so a
+    // validation run that asked for JSON measured the behaviour the fix had already removed.
+    const source = readFileSync(new URL("../src/triage.ts", import.meta.url), "utf8");
+    const partitionAt = source.indexOf("const partitioned = partitionUniformNotes(rows)");
+    const jsonBranchAt = source.indexOf('if (options.format === "json")');
+
+    expect(partitionAt).toBeGreaterThan(-1);
+    expect(jsonBranchAt).toBeGreaterThan(-1);
+    expect(partitionAt).toBeLessThan(jsonBranchAt);
   });
 });

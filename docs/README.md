@@ -18,6 +18,8 @@ requests. Start with the shortest path for your task:
 - [Security model](security-model.md): trust boundaries and known limitations.
 - [Enforce an AI-contribution policy](enforce-ai-contribution-policy.md): a
   copy-paste preset for the checkable clauses of your policy.
+- [Does triage help?](study/does-triage-help.md): the command measured against the 167
+  repositories that installed a competing tool, with what counts as helping decided first.
 - [What AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md):
   the trailer coding tools write about themselves, measured across 1,029
   repositories — and a correction to an earlier claim about policy effects.

@@ -52,6 +52,11 @@ This project follows the spirit of
   `devin-ai-integration[bot]` are bot accounts too, and theirs are the pull requests a
   maintainer wants triaged.
 
+- The human and JSON views of triage no longer disagree. The uniform-note partition ran after
+  the JSON branch returned, so a validation run that asked for JSON scored the behaviour the fix
+  had already removed — the numbers were discarded and the run repeated. A test pins the
+  ordering, because this is the kind of divergence that comes back quietly.
+
 - Triage lifts a note that appears on **80% or more** of a repository's open pull requests out
   of the rows and reports it once, about the repository. Found by running the command against
   the projects that installed the competing tool — the ones that self-identified as having this
@@ -59,6 +64,16 @@ This project follows the spirit of
   repository links an issue on nothing. A signal that fires on everything ranks nothing, which
   is the failure the command exists to avoid; RSSHub now returns 2 rows. Applies only from
   eight pull requests upward, since below that three of four is a coincidence.
+
+- Bounded retry on the pull-request listing. GitHub answers a burst of requests with `403`
+  under its secondary rate limit — unrelated to the hourly budget — and this listing is a direct
+  call that did not go through the retry the rest of the CLI gets. 16 of 41 repositories in a
+  measurement run failed this way before it was added.
+
+- **`docs/study/does-triage-help.md`** — the command measured against the 167 repositories that
+  installed a competing tool. 20 of 34 judgeable repositories get a ranked list, 11 of 13 among
+  those with 100 stars or more, and **none came back flat**. 41% get nothing, which is correct
+  for the Action and a bad first run for the CLI.
 
 - **`docs/triage.md`** — what the command reports, and why it does not act.
 
