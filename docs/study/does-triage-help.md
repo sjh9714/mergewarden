@@ -47,22 +47,44 @@ because that project links an issue on nothing. Fifteen identical rows rank noth
 note carried by 80% of a repository's pull requests out of the rows fixed it, and nothing in the
 sample reproduced it afterwards.
 
-**41% silence is the honest problem.** For the Action, saying nothing is correct behaviour. For
-someone typing `npx mergewarden triage` at their own repository once, two in five see an empty
-result — and that first run is the only distribution this command has.
+### The 41% is not what it looks like
+
+Reading the silent repositories one by one changed the number. **All 14 have open queues that
+are entirely maintenance automation** — thirteen at 10 of 10 dependabot, and `DimensionDev/Flare`
+at 9 of 10. Not one of them has a human pull request that triage failed to say something about.
+
+So the useful statement is: **of the repositories with a human pull request queue, 20 of 20 were
+ranked.** The silence was correct, and it was correct on repositories where there was nothing
+for a maintainer to look at in the first place.
+
+What was wrong is what the command _printed_. "10 open pull request(s) read. 0 have something a
+maintainer checks by hand" reads as the tool failing. Automation is now counted separately, so
+Flare returns the one human pull request in its queue rather than an empty result:
+
+```
+1 open pull request(s) read. 1 have something a maintainer checks by hand.
+9 more are maintenance automation and were not read.
+
+#2346  feature/flare-ui-codegen   no linked issue · no description · oversized
+```
+
+That was the weakest part of the first-run experience and it was invisible until the silent
+cases were read individually rather than counted.
 
 ## What the measurement caught about the tool
 
-Running against real repositories found five defects in one day. Four were invisible inside this
+Running against real repositories found six defects in one day. Five were invisible inside this
 repository:
 
 1. Maintenance automation reported for not following the template — starship's own release bot.
 2. Template headings counted from inside HTML comments, flagging 10 of 12 Next.js pull requests.
 3. A note carried by every pull request repeated on every row (RSSHub).
-4. **The JSON and human views disagreed.** The uniform-note fix ran after the JSON branch
+4. A queue of ten dependabot bumps printed as "10 read, 0 flagged", which reads as failure
+   rather than as an automation-only queue. Every silent repository in the sample was this.
+5. **The JSON and human views disagreed.** The uniform-note fix ran after the JSON branch
    returned, so the first pass of _this_ measurement scored the behaviour the fix had already
    removed. Those numbers were discarded and the run repeated. A test now pins the ordering.
-5. No backoff on the pull-request listing. GitHub answers a burst with `403` under its secondary
+6. No backoff on the pull-request listing. GitHub answers a burst with `403` under its secondary
    rate limit, and 16 of 41 repositories failed that way before a bounded retry was added.
 
 ## Limits
