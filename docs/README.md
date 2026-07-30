@@ -18,6 +18,8 @@ requests. Start with the shortest path for your task:
 - [Security model](security-model.md): trust boundaries and known limitations.
 - [Enforce an AI-contribution policy](enforce-ai-contribution-policy.md): a
   copy-paste preset for the checkable clauses of your policy.
+- [What pull request caps reach](study/what-pr-caps-reach.md): GitHub's new per-contributor
+  limit measured against six real queues — it defers 2–13%, because the queues are dispersed.
 - [Does triage help?](study/does-triage-help.md): the command measured against the 167
   repositories that installed a competing tool, with what counts as helping decided first.
 - [What AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md):
