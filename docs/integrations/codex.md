@@ -28,7 +28,6 @@ agent_detection:
 
 contract:
   required_for: [agent]
-  allow_missing_in_observe_mode: true
 ```
 
 Detection is a heuristic for deciding which PRs must carry a contract; it is

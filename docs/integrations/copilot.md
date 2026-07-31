@@ -18,20 +18,26 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@21982fe53cec6d465777bc853de097da8f74708d # v0.4.0
+      - uses: sjh9714/mergewarden@e97f47b59dcda0eb48ba88275c176fc734325659 # v0.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
+          comment: auto
 ```
 
 No checkout step is needed and the Action never executes PR code.
+
+`comment: auto` posts a pull-request comment only when there is an error, a
+warning, or an incomplete analysis — a routine agent pull request that crossed
+no boundary gets nothing. It needs `pull-requests: write`; drop both if you
+would rather read the findings in the Actions job summary.
 
 ## 2. Detect Copilot PRs
 
@@ -48,7 +54,6 @@ agent_detection:
 
 contract:
   required_for: [agent]
-  allow_missing_in_observe_mode: true
 ```
 
 Detection is a heuristic for deciding which PRs must carry a contract; it is
