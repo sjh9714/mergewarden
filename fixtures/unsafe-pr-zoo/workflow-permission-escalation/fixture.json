@@ -6,8 +6,8 @@
   "pr": {
     "number": 101,
     "title": "Escalate release workflow permissions",
-    "branchName": "codex/workflow-permission-escalation",
-    "author": "codex"
+    "branchName": "demo/workflow-permission-escalation",
+    "author": "octocat"
   },
   "files": [
     {

@@ -5,75 +5,57 @@
 [![MergeWarden](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml)
 [![License](https://img.shields.io/github/license/sjh9714/mergewarden)](LICENSE)
 
-> **The warden between AI agents and your main branch.**
+> **Which of these pull requests needs you first?**
 
-Coding agents open pull requests all day. MergeWarden is the change-control
-gate that checks each one against boundaries only your repository can define:
+```bash
+npx --yes mergewarden@0.9.0 triage <your owner/repository>
+```
 
-- **Did the PR stay inside its declared scope?** Agents declare intended paths
-  in a PR-body contract; edits outside them become findings.
-- **Did it touch the agent control plane?** Changes to `AGENTS.md`,
-  `CLAUDE.md`, `.mcp.json`, `.cursor/**`, and similar files steer every future
-  agent PR and always deserve human eyes.
-- **Did it wire untrusted text into an agent prompt?** New paths from PR
-  bodies, titles, or comments into registered agentic workflows are traced and
-  flagged.
+```
+8 open pull request(s) read. 7 have something a maintainer checks by hand.
 
-It also catches workflow permission escalation, unpinned supply-chain
-references, and risky package lifecycle scripts.
-It does not execute pull-request code, load policy from the PR head, or call
-an LLM at runtime.
-Every decision includes deterministic evidence that can be replayed locally.
+#169755  feature/openAQ           AI disclosed · no linked issue · oversized
+#176410  unifiprotect-config-map  no linked issue · oversized
+#177530  tod-support-sun-events   AI disclosed · no linked issue
+
+Nothing was closed, labelled, or commented on.
+```
+
+Every row is a fact you can check: no linked issue, no description, a template
+kept empty, a change past your review size, a `Co-authored-by:` trailer a
+coding tool wrote about itself, a file edited outside the scope the pull
+request declared. Nothing scores a contributor, guesses from writing style, or
+closes anything — **there is no `--close` flag, and a test asserts there never
+is.** A pull request closed by a bot in error is not reopened by the person who
+gave up on it.
+
+The same rules run as a [GitHub Action](docs/action-reference.md). It
+does not execute pull-request code, load policy from the PR head, or call an
+LLM, and every finding carries deterministic evidence that replays locally.
 
 MergeWarden gates its own pull requests — the `MergeWarden` badge above is that
 live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)).
-Formerly named Agent Gate; old links redirect and pre-v0.4.0 proofs use that name.
 
-[What we found in 2,204 agent PRs](#what-2204-real-agent-prs-showed) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md)
-
-![Report from a real v0.4.0 scan of a public composite PR](docs/assets/mergewarden-report-v0.4.0.png)
-
-_Real checkout-free report from [public composite PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17) and its [SHA-pinned Action run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/29817195616)._
-
-## What 2,204 Real Agent PRs Showed
-
-We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
-agent, Codex, Claude Code, Cursor) on public repositories with the default
-policy:
-
-- **0 of 2,204** declared a machine-readable scope for the change.
-- Of the 349 PRs that touched workflows or package manifests, **12.9%**
-  escalated workflow permissions and **17.5%** introduced unpinned actions.
-- **3.9%** changed agent control-plane files (`AGENTS.md`, `.mcp.json`, and
-  similar) — the files that steer every future agent PR.
-- Repositories with 10k+ stars showed roughly **half** the finding rate of the
-  long tail.
-
-Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
+[Triage your repo](docs/triage.md) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md) · [简体中文](README.zh-CN.md)
 
 ## Try It in 60 Seconds
 
-Scan any public GitHub pull request without installing the Action:
+See every rule fire on a bundled example — no token, no repository, no network —
+then scan a real pull request, by `owner/repo#number` or by URL:
 
 ```bash
-npx --yes mergewarden@0.4.0 scan owner/repository#123
+npx --yes mergewarden@0.9.0 demo
+npx --yes mergewarden@0.9.0 scan owner/repository#123
+npx --yes mergewarden@0.9.0 scan https://github.com/owner/repository/pull/123
 ```
 
-A full pull-request URL works too:
-
-```bash
-npx --yes mergewarden@0.4.0 scan https://github.com/owner/repository/pull/123
-```
-
-![Real npx execution of mergewarden@0.4.0 scanning a public PR](docs/assets/mergewarden-cli-v0.4.0.gif)
+![The full mergewarden demo report scrolling past in a terminal](docs/assets/mergewarden-demo.gif)
 
 Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
 limits. MergeWarden intentionally has no token command-line flag.
 
-The default output is concise. Use `--format json` or `--format markdown` for
-the complete machine-readable report. See the [CLI reference](docs/cli.md).
-The recording above is an actual `npx` execution of the published package; no
-simulated CLI output is used.
+The default output is concise; `--format json` or `--format markdown` gives the
+complete machine-readable report ([CLI reference](docs/cli.md)).
 
 ## Install in 30 Seconds
 
@@ -88,56 +70,89 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.4.0
+      - uses: sjh9714/mergewarden@v0.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn
           fail-on-block: false
+          comment: auto
 ```
 
-For an immutable, commit-addressed install, pin the exact v0.4.0 release
-commit:
+No checkout step is needed, and MergeWarden
+does not publish or recommend a mutable `v0` tag.
+For an immutable install, pin the exact v0.9.0 release commit:
 
 ```yaml
-- uses: sjh9714/mergewarden@21982fe53cec6d465777bc853de097da8f74708d
+- uses: sjh9714/mergewarden@e97f47b59dcda0eb48ba88275c176fc734325659
 ```
-
-No checkout step is needed.
-MergeWarden does not publish or recommend a mutable `v0` tag.
 
 The first run works without `mergewarden.yml`: a confirmed 404 on the PR base
 branch selects the built-in warn policy. Authentication, rate-limit, and server
 errors never fall back silently.
 
-Verified checkout-free Action evidence is available in
-[sandbox PR #17](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17).
-Its public run downloads the exact SHA-pinned v0.4.0 release commit and
-reports contract scope escapes, workflow permission escalation, and
-agent-control-plane drift.
+## What You'll See
+
+Most agent pull requests cross no boundary, and those get a `pass` and no
+comment — `comment: auto` speaks only when there is an error or a warning.
+Everything else is recorded in the Actions job summary. When a boundary
+is crossed you get one comment:
+
+```
+ERROR contract/out-of-scope: src/billing/invoice.ts changed outside the allowed contract scope.
+```
+
+Push a fix and that same comment updates itself to PASSED. It is never
+deleted, so a stale "NEEDS REVIEW" cannot outlive the problem it described.
+Fork pull requests get a read-only token from GitHub and so are never
+commented on. New here? [Start here](docs/start-here.md) is the one-page version.
 
 ## What It Catches
 
-| Boundary                   | Deterministic evidence                                              |
-| -------------------------- | ------------------------------------------------------------------- |
-| Declared PR scope          | Files outside `allowed_paths` or inside `blocked_paths`             |
-| Agent control plane        | Changes to `AGENTS.md`, `.mcp.json`, `.codex/**`, and related files |
-| Agentic workflow injection | Untrusted GitHub text flowing into registered agent prompts         |
-| Workflow privilege         | Permission escalation, new write-all or OIDC access                 |
-| Dangerous triggers         | `pull_request_target` use of attacker-controlled PR head refs       |
-| Workflow supply chain      | Unpinned actions, reusable workflows, and containers                |
-| Package execution          | Added or changed install/prepare lifecycle scripts                  |
-| Test evidence              | High-risk source changes without matching test-file changes         |
-| Analysis integrity         | Missing content, incomplete file lists, or report limits            |
+| Boundary                   | Deterministic evidence                                                      |
+| -------------------------- | --------------------------------------------------------------------------- |
+| Declared PR scope          | Files outside `allowed_paths` or inside `blocked_paths`                     |
+| Agent control plane        | Changes to `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.mcp.json`, `.cursor/**` |
+| Agentic workflow injection | Untrusted GitHub text flowing into registered agent prompts                 |
+| Workflow privilege         | Permission escalation, new write-all or OIDC access                         |
+| Dangerous triggers         | `pull_request_target` use of attacker-controlled PR head refs               |
+| Workflow supply chain      | Unpinned actions, reusable workflows, and containers                        |
+| Package execution          | Added or changed install/prepare lifecycle scripts                          |
+| Test evidence              | High-risk source changes without matching test-file changes                 |
+| Analysis integrity         | Missing content, incomplete file lists, or report limits                    |
 
 MergeWarden evaluates changes rather than re-reporting every pre-existing
 workflow condition. Findings show the rule, severity, path, canonical evidence,
 and a stable finding ID.
+
+## Or Check It Before the PR Exists
+
+The same engine ships as an MCP server, for the person running the agent rather
+than the maintainer reviewing it. It answers one question — did this change stay
+inside the scope it was given — and emits the contract block the gate reads later.
+
+```json
+{ "mcpServers": { "mergewarden": { "command": "npx", "args": ["-y", "mergewarden-mcp"] } } }
+```
+
+No network, no token, no model call ([details](packages/mcp/README.md)).
+
+## What 2,204 Real Agent PRs Showed
+
+We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
+agent, Codex, Claude Code, Cursor) on public repositories with the default
+policy. **0 of 2,204** declared their intended scope in any machine-checkable
+form. Of the 349 that touched workflows or package manifests, **12.9%**
+escalated workflow permissions and **17.5%** introduced unpinned actions;
+**3.9%** changed agent control-plane files. Repositories with 10k+ stars showed
+roughly **half** the boundary-crossing rate of the long tail.
+
+Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
 
 ## Minimal Policy
 
@@ -251,35 +266,19 @@ Read the full [security model](docs/security-model.md) and
 Workflow linters such as zizmor inspect workflow correctness and known
 misconfigurations. LLM reviewers apply semantic judgment. MergeWarden is the
 change-control layer between an AI-generated PR and merge: it asks whether the
-PR crossed repository-specific boundaries and records why.
-
-Use all three when appropriate; they solve different problems.
+PR crossed repository-specific boundaries and records why. Use all three when
+appropriate; they solve different problems.
 
 ## Action Outputs
 
-| Output                                         | Meaning                                                             |
-| ---------------------------------------------- | ------------------------------------------------------------------- |
-| `decision`                                     | `pass`, `warn`, or `block`                                          |
-| `status`                                       | Human/machine status including `incomplete`                         |
-| `analysis-complete`                            | Whether all required evidence was available                         |
-| `error-count` / `warning-count` / `info-count` | Active finding counts                                               |
-| `waived-count`                                 | Findings retained but excluded from the decision                    |
-| `expected-file-count` / `analyzed-file-count`  | File-list completeness evidence                                     |
-| `report-json` / `report-markdown`              | Generated report paths                                              |
-| `risk-score`                                   | Deprecated v0.x compatibility output; not a calibrated risk measure |
-
-Inputs and failure behavior are documented in the
+Every input and output, and the exact failure behavior, is in the
 [Action reference](docs/action-reference.md).
 
 ## Development
 
 ```bash
 pnpm install
-pnpm test
-pnpm typecheck
-pnpm lint
-pnpm build
-pnpm format:check
+pnpm test && pnpm typecheck && pnpm lint && pnpm build && pnpm format:check
 ```
 
 Every rule requires passing and failing fixtures, exact rule/severity/decision
@@ -289,10 +288,11 @@ assertions, and a Markdown snapshot for user-facing findings. Start with a
 ## Documentation
 
 - [Documentation index](docs/README.md) — full list of guides and references
-- [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
+- [Start here](docs/start-here.md) · [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
 
-If MergeWarden catches a real boundary crossing in your repository, a GitHub
-Star is a simple way to tell us the project is useful.
+Will it be noisy? It [said nothing on 44 of 46 merged human PRs](docs/study/what-a-zero-config-install-reports.md);
+both findings were correct. If it flags one your team decided was fine, open an
+issue with the scan output — the most useful bug report this project can get.
 
 ## License
 

@@ -11,7 +11,12 @@ export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "**/AGENTS.override.md",
   "CLAUDE.md",
   "**/CLAUDE.md",
+  "GEMINI.md",
+  "**/GEMINI.md",
+  "QWEN.md",
+  "**/QWEN.md",
   ".cursor/**",
+  ".gemini/**",
   ".github/copilot-instructions.md",
   ".mcp.json",
   "claude_desktop_config.json",
@@ -21,15 +26,109 @@ export const DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
 export const DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 export const DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
 
+/**
+ * Bot accounts that coding agents really use to open pull requests.
+ *
+ * Every entry was verified individually by reading an actual pull request that account opened,
+ * not taken from a vendor's documentation, and the public pull-request counts below were
+ * measured on 2026-07-29 via `is:pr author:<account>`:
+ *
+ *   copilot-swe-agent[bot]      2,020,056   GitHub Copilot coding agent
+ *   google-labs-jules[bot]        319,715   Google Jules
+ *   devin-ai-integration[bot]     209,483   Devin
+ *   kiro-agent[bot]                21,383   AWS Kiro
+ *   codegen-sh[bot]                 7,968   Codegen
+ *   opencode-agent[bot]             6,696   OpenCode
+ *   tembo[bot]                      3,465   Tembo
+ *   amazon-q-developer[bot]         2,263   Amazon Q Developer
+ *   mentatbot[bot]                  2,184   Mentat
+ *   factory-droid[bot]                604   Factory Droid
+ *   ellipsis-dev[bot]                 396   Ellipsis
+ *
+ * The first two entries were the whole list until v0.7.0, which missed roughly 364,000 pull
+ * requests of coverage — Google Jules alone opens more than Devin does. That gap was found by
+ * checking whether pull requests the engine had classed as human really were human; see
+ * docs/study/what-a-zero-config-install-reports.md.
+ *
+ * Author matching is exact and case-insensitive against a bot account name, so unlike a branch
+ * glob it carries no false-positive risk, which is why low-volume agents are worth listing too.
+ *
+ * Deliberately excluded: dependabot, renovate, github-actions and similar automation. They open
+ * pull requests but they are not coding agents working from a task description, and treating
+ * them as such would demand a scope contract from a version bump.
+ *
+ * Review bots (CodeRabbit, Qodo, Greptile and the like) are excluded for a different reason:
+ * they comment on pull requests rather than authoring them, so they never appear as an author.
+ */
+export const DEFAULT_AGENT_AUTHORS = [
+  "copilot-swe-agent[bot]",
+  "google-labs-jules[bot]",
+  "devin-ai-integration[bot]",
+  "kiro-agent[bot]",
+  "codegen-sh[bot]",
+  "opencode-agent[bot]",
+  "tembo[bot]",
+  "amazon-q-developer[bot]",
+  "mentatbot[bot]",
+  "factory-droid[bot]",
+  "ellipsis-dev[bot]",
+];
+/**
+ * Branch prefixes agents create when they run under a *human* account.
+ *
+ * This list stays short on purpose. The bot-authored agents above are matched by author, which
+ * is exact; adding their branch prefixes as well would buy nothing and widen the surface for
+ * false positives. These five are the agents that commonly run on a developer's own machine and
+ * push to an ordinary remote, where the branch name is the only structural signal.
+ *
+ * `agent/**` was considered and rejected: it appears on human pull requests about agent features
+ * as readily as on agent-authored ones, and this project's own branches would trip it.
+ */
+export const DEFAULT_AGENT_BRANCH_PATTERNS = [
+  "codex/**",
+  "claude/**",
+  "cursor/**",
+  "copilot/**",
+  "devin/**",
+];
+/**
+ * Body markers are matched as case-insensitive substrings, so they have to be the literal
+ * text an agent really writes.
+ *
+ * Claude Code's footer is `🤖 Generated with [Claude Code](https://claude.com/claude-code)` —
+ * the product name sits inside a Markdown link, so the plain string "Generated with Claude
+ * Code" never occurs in a real pull-request body. It was the default until v0.5.1 and matched
+ * 0 of 13 sampled Claude Code pull requests from the scan study; the bracketed form matches 12
+ * of the same 13 (the remaining one had its footer edited out before merge). The plain form is
+ * kept as a cheap fallback in case the footer is ever emitted without the link.
+ *
+ * The body marker matters more than it looks: Codex, Cursor, Copilot and Devin pull requests
+ * are identified by branch or author, but Claude Code usually runs on a developer's own machine
+ * and pushes to an ordinary branch name, so the footer is frequently the only signal there is.
+ */
+export const DEFAULT_AGENT_BODY_PATTERNS = [
+  "Generated with [Claude Code]",
+  "Generated with Claude Code",
+];
+
 const SeveritySettingSchema = z.enum(["warn", "error"]);
+
+/**
+ * Severity for `contract/missing` only.
+ *
+ * This is the one rule that can sensibly be `info`, so it gets its own enum rather than
+ * widening `SeveritySettingSchema` — every other rule fires on something a pull request did,
+ * and none of them should be able to declare itself informational.
+ */
+const ContractMissingSeveritySchema = z.enum(["info", "warn", "error"]);
 const CheckSettingSchema = z.enum(["off", "warn", "error"]);
 
 const AgentDetectionSchema = z
   .object({
-    authors: z.array(NonEmptyStringSchema).default([]),
+    authors: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_AUTHORS),
     labels: z.array(NonEmptyStringSchema).default([]),
-    branch_patterns: z.array(NonEmptyStringSchema).default([]),
-    body_patterns: z.array(NonEmptyStringSchema).default([]),
+    branch_patterns: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BRANCH_PATTERNS),
+    body_patterns: z.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BODY_PATTERNS),
   })
   .strict();
 
@@ -37,6 +136,27 @@ const ContractConfigSchema = z
   .object({
     required_for: z.array(z.enum(["agent", "all"])).default(["agent"]),
     allow_missing_in_observe_mode: z.boolean().default(true),
+    /**
+     * Severity of `contract/missing` only — not of the other contract rules.
+     *
+     * Defaults to `info`, which is the end of a line this project has walked twice. v0.6.0
+     * stopped this rule from *blocking*, because the scan study found 0 of 2,204 merged agent
+     * pull requests declaring a scope and an `error` default would have rejected essentially
+     * every agent pull request on the day `mode: block` was switched on. v0.9.0 stops it
+     * *warning* for the same reason taken one step further: a rule that fires on 100% of a
+     * population, for the absence of a convention nobody has adopted, carries no information.
+     * Reported on every routine pull request it trains maintainers to ignore the comment, and
+     * the findings that matter — permission escalation, control-plane drift — go with it.
+     *
+     * The principle is the one v0.6.0 established: speak about what a pull request did, not
+     * about a convention it did not follow. A repository that actually asks contributors for a
+     * declared scope opts in with `warn` or `error`.
+     *
+     * `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay `error`:
+     * each of those fires on something the pull request actually did against its own
+     * declaration.
+     */
+    missing_severity: ContractMissingSeveritySchema.default("info"),
   })
   .strict();
 
@@ -68,6 +188,17 @@ export const DEFAULT_GITHUB_ACTION_CHECKS = {
   added_secret_reference: "warn",
   workflow_deleted: "warn",
   malformed_workflow: "error",
+  /**
+   * A workflow that stops firing on an event it used to fire on.
+   *
+   * GitHub's own review guidance treats weakening CI as a blocker outright ("Confirm workflow
+   * still runs on forks and pull requests"), but that instruction is aimed at a human deciding
+   * one case. As a machine default `warn` is the honest setting: consolidating workflows and
+   * retiring a `schedule` are ordinary, and the artifact cannot tell those apart from a pull
+   * request quietly removing the check that would have gated it. Teams that want it enforced
+   * set this to `error`.
+   */
+  trigger_removed: "warn",
 } as const;
 
 const GitHubActionsChecksSchema = z
@@ -96,6 +227,7 @@ const GitHubActionsChecksSchema = z
     ),
     workflow_deleted: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.workflow_deleted),
     malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow),
+    trigger_removed: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed),
   })
   .strict();
 
@@ -115,6 +247,7 @@ function legacyChecks(config: {
     unpinned_reusable_workflow: config.require_pinned_actions,
     unpinned_container: config.require_pinned_actions,
     malformed_workflow: config.severity,
+    trigger_removed: DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed,
   });
 }
 
@@ -222,11 +355,64 @@ const CommitTrailerProhibitionSchema = z
   })
   .strict();
 
+/**
+ * Severity for `commit/ai-assistance-disclosed`, plus `off`.
+ *
+ * `info` by default: the rule records a disclosure a tool wrote about itself, not something the
+ * pull request did wrong, so it must not move the decision. Repositories whose policy requires
+ * disclosure can raise it; `off` removes it entirely.
+ */
+const AiDisclosureSettingSchema = z.enum(["off", "info", "warn", "error"]);
+
+/**
+ * Severity for a triage rule, plus `off`.
+ *
+ * `info` throughout by default. Triage rules report a fact a maintainer would otherwise check
+ * by hand — they do not judge the change, and they must not move the decision until a
+ * repository decides one of them should.
+ */
+const TriageSettingSchema = z.enum(["off", "info", "warn", "error"]);
+
+const TriageConfigSchema = z
+  .object({
+    // `off` by default, unlike its siblings. Most pull requests in most repositories reference
+    // no issue, so at `info` this rule would attach a finding to nearly every report — the
+    // noise v0.9.0 removed. It is what `mergewarden triage` turns on to rank many open pull
+    // requests against each other, which is a different question from gating one of them.
+    no_linked_issue: TriageSettingSchema.default("off"),
+    empty_description: TriageSettingSchema.default("info"),
+    template_unused: TriageSettingSchema.default("info"),
+    oversized_change: TriageSettingSchema.default("info"),
+    // Deliberately `info` and deliberately not raised by default. A first contribution is how
+    // every contributor starts, and defaulting it to a warning turns the tool into something
+    // that greets newcomers with a complaint.
+    unverified_author: TriageSettingSchema.default("info"),
+    /**
+     * Maintenance automation whose pull requests these rules should not describe.
+     *
+     * A release bot does not fill in a template and a dependency bump has no issue to link;
+     * reporting that is the noise this file exists to avoid. Every entry was observed opening
+     * pull requests in the repositories used to calibrate these rules.
+     *
+     * Coding agents are deliberately **not** here. `Copilot` and `devin-ai-integration[bot]`
+     * are bot accounts too, and their pull requests are exactly the ones a maintainer wants
+     * triaged — which is why this is a list of accounts rather than a test for `type: Bot`.
+     */
+    exclude_authors: z
+      .array(NonEmptyStringSchema)
+      .default(["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]),
+    min_description_characters: z.number().int().min(0).default(80),
+    max_files: z.number().int().min(1).default(50),
+    max_lines: z.number().int().min(1).default(1500),
+  })
+  .strict();
+
 const CommitTrailersConfigSchema = z
   .object({
     enabled: z.boolean().default(true),
     required: z.array(CommitTrailerRequirementSchema).default([]),
     forbidden: z.array(CommitTrailerProhibitionSchema).default([]),
+    ai_disclosure: AiDisclosureSettingSchema.default("info"),
   })
   .strict();
 
@@ -244,14 +430,15 @@ export const MergeWardenConfigSchema = z
     version: z.literal(1),
     mode: z.enum(["observe", "warn", "block"]).default("warn"),
     agent_detection: AgentDetectionSchema.default({
-      authors: [],
+      authors: DEFAULT_AGENT_AUTHORS,
       labels: [],
-      branch_patterns: [],
-      body_patterns: [],
+      branch_patterns: DEFAULT_AGENT_BRANCH_PATTERNS,
+      body_patterns: DEFAULT_AGENT_BODY_PATTERNS,
     }),
     contract: ContractConfigSchema.default({
       required_for: ["agent"],
       allow_missing_in_observe_mode: true,
+      missing_severity: "info",
     }),
     high_risk_paths: z.record(z.string(), HighRiskPathAreaSchema).default({}),
     agent_control_plane: AgentControlPlaneSchema.default({
@@ -279,10 +466,22 @@ export const MergeWardenConfigSchema = z
       lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
       severity: "warn",
     }),
+    triage: TriageConfigSchema.default({
+      no_linked_issue: "off",
+      empty_description: "info",
+      template_unused: "info",
+      oversized_change: "info",
+      unverified_author: "info",
+      exclude_authors: ["dependabot[bot]", "renovate[bot]", "github-actions[bot]"],
+      min_description_characters: 80,
+      max_files: 50,
+      max_lines: 1500,
+    }),
     commit_trailers: CommitTrailersConfigSchema.default({
       enabled: true,
       required: [],
       forbidden: [],
+      ai_disclosure: "info",
     }),
   })
   .strict()

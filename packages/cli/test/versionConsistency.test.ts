@@ -37,9 +37,11 @@ describe("version consistency", () => {
       readPackageVersion("packages/github/package.json"),
       readPackageVersion("packages/action/package.json"),
       readPackageVersion("packages/cli/package.json"),
+      readPackageVersion("packages/mcp/package.json"),
       readVersionConstant("packages/core/src/version.ts"),
       readVersionConstant("packages/action/src/version.ts"),
       readVersionConstant("packages/cli/src/version.ts"),
+      readVersionConstant("packages/mcp/src/version.ts"),
     ]);
 
     expect(new Set(versions)).toEqual(new Set([versions[0]]));

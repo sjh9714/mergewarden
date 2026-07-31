@@ -638,4 +638,97 @@ describe("report renderers", () => {
     expect(plainText).not.toContain("Snapshot:");
     expect(plainText).not.toContain("evidenceSnapshot");
   });
+  it("collapses detailed findings only when asked, without dropping any content", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md"), fileChange("CLAUDE.md")],
+      }),
+    );
+
+    const flat = renderMarkdownReport(result);
+    const collapsed = renderMarkdownReport(result, { collapseFindings: true });
+
+    expect(flat).not.toContain("<details>");
+    expect(collapsed).toContain("<details>");
+    expect(collapsed).toContain("</details>");
+    expect(collapsed).toContain("<summary>Detailed findings (2 findings)");
+
+    // The collapsed surface pushes very little into the conversation, but hides nothing.
+    const visibleBeforeDetails = collapsed.split("<details>")[0] ?? "";
+    expect(visibleBeforeDetails.trim().split("\n").length).toBeLessThanOrEqual(6);
+
+    // The four things a reviewer needs above the fold, each stated once.
+    expect(visibleBeforeDetails).toContain("# MergeWarden:");
+    expect(visibleBeforeDetails).toContain("**Why:**");
+    expect(visibleBeforeDetails).toContain("**Next:**");
+    expect(visibleBeforeDetails).toContain("**Findings:**");
+
+    // Run metadata moves inside the fold rather than being dropped.
+    expect(visibleBeforeDetails).not.toContain("Policy digest");
+    expect(visibleBeforeDetails).not.toContain("## Summary");
+    expect(collapsed).toContain("Policy digest");
+    expect(collapsed).toContain("## Summary");
+
+    // The flat report keeps its existing shape.
+    expect(flat).toContain("## Why");
+    expect(flat).toContain("## Recommended Next Step");
+    expect(flat).toContain("## Policy Status");
+    expect(flat).toContain("## Summary");
+    expect(flat).not.toContain("**Why:**");
+
+    for (const finding of result.findings) {
+      expect(collapsed).toContain(finding.findingId);
+      expect(collapsed).toContain(finding.ruleId);
+    }
+
+    expect(collapsed).toContain("Snapshot:");
+    expect(collapsed).toContain("Remediation:");
+  });
+
+  it("does not restate the path when the finding message already names it", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: warn\n"),
+        contract: { kind: "valid", contract: { version: 1, allowed_paths: ["src/auth/**"] } },
+        files: [fileChange(".github/workflows/demo-release.yml")],
+      }),
+    );
+
+    const why = renderMarkdownReport(result, { collapseFindings: true })
+      .split("\n")
+      .find((line) => line.startsWith("**Why:**"));
+
+    expect(why).toBeDefined();
+    expect(why?.match(/demo-release\.yml/g)).toHaveLength(1);
+  });
+
+  it("appends the path when the finding message omits it", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: warn\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const why = renderMarkdownReport(result, { collapseFindings: true })
+      .split("\n")
+      .find((line) => line.startsWith("**Why:**"));
+
+    expect(why).toContain("(`AGENTS.md`)");
+  });
+
+  it("labels the collapsed summary with waived counts", async () => {
+    const result = await analyze(
+      createAnalysisInput({
+        config: parseConfig("version: 1\nmode: block\n"),
+        files: [fileChange("AGENTS.md")],
+      }),
+    );
+
+    const collapsed = renderMarkdownReport(result, { collapseFindings: true });
+
+    expect(collapsed).toContain("<summary>Detailed findings (1 finding)");
+    expect(collapsed).not.toContain("waived)");
+  });
 });

@@ -57,6 +57,13 @@ export interface PullRequestContext {
   branchName: string;
   isFork: boolean;
   draft: boolean;
+  /**
+   * GitHub's relationship between the author and the repository, e.g. `OWNER`, `MEMBER`,
+   * `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, `NONE`. Optional so that callers predating its
+   * collection keep compiling; rules that read it stay inert when it is absent rather than
+   * assuming a value.
+   */
+  authorAssociation?: string;
 }
 
 export interface FileChange {
@@ -121,6 +128,14 @@ export interface AnalysisInput {
   commits?: CommitContext[];
   reviews: ReviewEvidence[];
   checks: CheckEvidence[];
+  /**
+   * Repository documents read from the base branch that are not part of the change. Optional,
+   * and each entry is `null` when the collector confirmed the file does not exist — which is
+   * different from `undefined`, meaning it was never looked for.
+   */
+  repoDocs?: {
+    pullRequestTemplate?: string | null;
+  };
   now: string;
   configSource: ConfigSource;
   version: string;

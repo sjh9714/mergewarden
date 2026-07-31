@@ -13,15 +13,30 @@ describe("parseConfig", () => {
 
     expect(config.version).toBe(1);
     expect(config.mode).toBe("warn");
+    // Defaults ship the agent signatures the 2,204-PR study actually observed, so a
+    // zero-config install recognises an agent pull request instead of seeing nothing.
     expect(config.agent_detection).toEqual({
-      authors: [],
+      authors: [
+        "copilot-swe-agent[bot]",
+        "google-labs-jules[bot]",
+        "devin-ai-integration[bot]",
+        "kiro-agent[bot]",
+        "codegen-sh[bot]",
+        "opencode-agent[bot]",
+        "tembo[bot]",
+        "amazon-q-developer[bot]",
+        "mentatbot[bot]",
+        "factory-droid[bot]",
+        "ellipsis-dev[bot]",
+      ],
       labels: [],
-      branch_patterns: [],
-      body_patterns: [],
+      branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"],
+      body_patterns: ["Generated with [Claude Code]", "Generated with Claude Code"],
     });
     expect(config.contract).toEqual({
       required_for: ["agent"],
       allow_missing_in_observe_mode: true,
+      missing_severity: "info",
     });
   });
 
@@ -293,7 +308,12 @@ high_risk_paths:
       "**/AGENTS.override.md",
       "CLAUDE.md",
       "**/CLAUDE.md",
+      "GEMINI.md",
+      "**/GEMINI.md",
+      "QWEN.md",
+      "**/QWEN.md",
       ".cursor/**",
+      ".gemini/**",
       ".github/copilot-instructions.md",
       ".mcp.json",
       "claude_desktop_config.json",

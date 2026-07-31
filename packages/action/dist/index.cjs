@@ -48303,7 +48303,7 @@ var contractInvalidRule = {
       "contract/invalid",
       "error",
       "Invalid agent contract",
-      "This PR contains an mergewarden contract, but it could not be parsed."
+      "This PR contains a MergeWarden contract, but it could not be parsed."
     );
     finding2.evidence.push({ label: "parser_message", value: ctx.input.contract.message });
     finding2.remediation.push("Fix the mergewarden contract block in the PR body.");
@@ -48317,18 +48317,18 @@ var contractMissingRule = {
     if (ctx.input.contract.kind !== "missing" || !contractRequired(ctx)) {
       return [];
     }
-    const severity = ctx.input.config.mode === "observe" && ctx.input.config.contract.allow_missing_in_observe_mode ? "warn" : "error";
+    const severity = ctx.input.config.contract.missing_severity;
     const finding2 = baseFinding(
       "contract/missing",
       severity,
       "Missing agent contract",
-      "Agent-generated PRs must include an mergewarden contract."
+      "Agent-generated PRs must include a MergeWarden contract."
     );
     finding2.evidence.push({
       label: "required_for",
       value: ctx.input.config.contract.required_for.join(", ")
     });
-    finding2.remediation.push("Add an mergewarden contract block to the PR body.");
+    finding2.remediation.push("Add a MergeWarden contract block to the PR body.");
     return [finding2];
   }
 };
@@ -48402,6 +48402,49 @@ var contractBlockedPathRule = {
     });
   }
 };
+function githubBotAddress(login) {
+  const suffix = `+${login.toLowerCase()}@users.noreply.github.com`;
+  return (email3) => {
+    if (!email3.endsWith(suffix)) {
+      return false;
+    }
+    const prefix = email3.slice(0, email3.length - suffix.length);
+    return prefix.length > 0 && /^\d+$/.test(prefix);
+  };
+}
+function exactAddress(address) {
+  const normalized = address.toLowerCase();
+  return (email3) => email3 === normalized;
+}
+var AI_COAUTHOR_IDENTITIES = [
+  { tool: "Claude Code", match: exactAddress("noreply@anthropic.com") },
+  { tool: "Cursor", match: exactAddress("cursoragent@cursor.com") },
+  { tool: "GitHub Copilot", match: exactAddress("copilot@github.com") },
+  { tool: "GitHub Copilot", match: githubBotAddress("copilot") },
+  { tool: "Devin", match: githubBotAddress("devin-ai-integration[bot]") },
+  { tool: "Google Jules", match: githubBotAddress("google-labs-jules[bot]") },
+  { tool: "Codex", match: exactAddress("codex@openai.com") }
+];
+var ADDRESS = /<([^>]+)>\s*$/;
+function aiCoauthorTool(trailerValue) {
+  const match = ADDRESS.exec(trailerValue.trim());
+  if (!match) {
+    return void 0;
+  }
+  const email3 = (match[1] ?? "").trim().toLowerCase();
+  for (const identity of AI_COAUTHOR_IDENTITIES) {
+    if (identity.match(email3)) {
+      return identity.tool;
+    }
+  }
+  return void 0;
+}
+function coauthorDisplayName(trailerValue) {
+  const trimmed = trailerValue.trim();
+  const index = trimmed.lastIndexOf("<");
+  const name = index === -1 ? "" : trimmed.slice(0, index).trim();
+  return name.length > 0 ? name : void 0;
+}
 var TRAILER_LINE = /^([A-Za-z][A-Za-z0-9-]*):[ \t]*(.*)$/;
 function shortSha(sha) {
   return sha.length > 12 ? sha.slice(0, 12) : sha;
@@ -48567,6 +48610,65 @@ var commitTrailerForbiddenRule = {
       }
     }
     return findings;
+  }
+};
+var commitAiDisclosedRule = {
+  id: "commit/ai-assistance-disclosed",
+  title: "AI assistance disclosed in commit trailers",
+  run(ctx) {
+    const active = scope(ctx);
+    const severity = ctx.input.config.commit_trailers.ai_disclosure;
+    if (!active || severity === "off") {
+      return [];
+    }
+    const tools = /* @__PURE__ */ new Map();
+    const commits = [];
+    for (const commit of active.commits) {
+      let disclosed = false;
+      for (const trailer of parseCommitTrailers(commit.message)) {
+        if (trailer.name.toLowerCase() !== "co-authored-by") {
+          continue;
+        }
+        const tool = aiCoauthorTool(trailer.value);
+        if (!tool) {
+          continue;
+        }
+        disclosed = true;
+        const names = tools.get(tool) ?? /* @__PURE__ */ new Set();
+        const display = coauthorDisplayName(trailer.value);
+        if (display) {
+          names.add(display);
+        }
+        tools.set(tool, names);
+      }
+      if (disclosed) {
+        commits.push(shortSha(commit.sha));
+      }
+    }
+    if (tools.size === 0) {
+      return [];
+    }
+    const toolList = [...tools.keys()].sort().join(", ");
+    const detail = [...tools.entries()].sort(([left], [right]) => left.localeCompare(right)).map(([tool, names]) => names.size > 0 ? `${tool} (${[...names].sort().join(", ")})` : tool).join("; ");
+    return [
+      {
+        ruleId: "commit/ai-assistance-disclosed",
+        severity,
+        title: "AI assistance disclosed in commit trailers",
+        message: `${commits.length} of ${active.commits.length} commit(s) disclose AI assistance: ${toolList}.`,
+        evidence: [
+          { label: "tools", value: detail },
+          { label: "commits", value: commits.slice(0, 10).join(", ") },
+          { label: "disclosed_commits", value: String(commits.length) },
+          { label: "total_commits", value: String(active.commits.length) }
+        ],
+        remediation: [
+          "No action is required. This records a disclosure the tool made; it is not a finding against the change."
+        ],
+        tags: ["commit-trailer", "disclosure", "agent"],
+        confidence: "high"
+      }
+    ];
   }
 };
 function isWorkflowFile(ctx, path) {
@@ -49303,6 +49405,288 @@ var workflowPermissionEscalationRule = {
     return findings;
   }
 };
+var ISSUE_REFERENCE = /(^|[^\w`])#\d+\b/;
+var CLOSING_KEYWORD = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\b\s*:?\s*(#\d+|https?:\/\/\S*\/issues\/\d+)/i;
+var ISSUE_URL = /https?:\/\/\S*\/issues\/\d+/;
+function proseOf(body) {
+  return body.replace(/<!--[\s\S]*?-->/g, " ").replace(/^#{1,6}\s.*$/gm, " ").replace(/^\s*[-*]\s*\[[ xX]\]\s*/gm, " ").replace(/```[\s\S]*?```/g, " ").replace(/\s+/g, " ").trim();
+}
+function severityOf(ctx, key) {
+  const author = ctx.input.pr.author.toLowerCase();
+  if (ctx.input.config.triage.exclude_authors.some((entry) => entry.toLowerCase() === author)) {
+    return "off";
+  }
+  return ctx.input.config.triage[key];
+}
+var triageNoLinkedIssueRule = {
+  id: "triage/no-linked-issue",
+  title: "No linked issue",
+  run(ctx) {
+    const severity = severityOf(ctx, "no_linked_issue");
+    if (severity === "off") {
+      return [];
+    }
+    const body = ctx.input.pr.body ?? "";
+    if (CLOSING_KEYWORD.test(body) || ISSUE_REFERENCE.test(body) || ISSUE_URL.test(body)) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/no-linked-issue",
+        severity,
+        title: "No linked issue",
+        message: "The pull request body references no issue.",
+        evidence: [
+          { label: "body_length", value: String(body.length) },
+          { label: "checked_for", value: "#number, issue URL, or a closing keyword" }
+        ],
+        remediation: [
+          "If this change was discussed first, add the issue reference. If it was not, that is what this finding records."
+        ],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var triageEmptyDescriptionRule = {
+  id: "triage/empty-description",
+  title: "Pull request describes itself in almost nothing",
+  run(ctx) {
+    const severity = severityOf(ctx, "empty_description");
+    if (severity === "off") {
+      return [];
+    }
+    const body = ctx.input.pr.body ?? "";
+    const prose = proseOf(body);
+    const threshold = ctx.input.config.triage.min_description_characters;
+    if (prose.length >= threshold) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/empty-description",
+        severity,
+        title: "Pull request describes itself in almost nothing",
+        message: `The body carries ${prose.length} character(s) of prose, below the configured ${threshold}.`,
+        evidence: [
+          { label: "prose_characters", value: String(prose.length) },
+          { label: "raw_characters", value: String(body.length) },
+          { label: "threshold", value: String(threshold) },
+          { label: "counted", value: "template comments, headings and checkboxes excluded" }
+        ],
+        remediation: ["Describe what the change does and how it was verified."],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var triageTemplateUnusedRule = {
+  id: "triage/template-unused",
+  title: "Pull request template not followed",
+  run(ctx) {
+    const severity = severityOf(ctx, "template_unused");
+    const template = ctx.input.repoDocs?.pullRequestTemplate;
+    if (severity === "off" || template === void 0 || template === null) {
+      return [];
+    }
+    const visible = template.replace(/<!--[\s\S]*?-->/g, " ");
+    const headings = [...visible.matchAll(/^#{1,6}\s*(.+?)\s*$/gm)].map((match) => (match[1] ?? "").trim()).filter((heading) => heading.length > 0);
+    if (headings.length === 0) {
+      return [];
+    }
+    const body = (ctx.input.pr.body ?? "").toLowerCase();
+    const missing = headings.filter((heading) => !body.includes(heading.toLowerCase()));
+    if (missing.length < headings.length) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/template-unused",
+        severity,
+        title: "Pull request template not followed",
+        message: `The repository ships a pull request template with ${headings.length} section(s); the body keeps none of them.`,
+        evidence: [
+          { label: "template_sections", value: headings.slice(0, 8).join(", ") },
+          { label: "sections_present_in_body", value: "0" }
+        ],
+        remediation: [
+          "Fill in the template rather than replacing it, so reviewers find the sections where they expect them."
+        ],
+        tags: ["triage"],
+        confidence: "medium"
+      }
+    ];
+  }
+};
+var triageOversizedChangeRule = {
+  id: "triage/oversized-change",
+  title: "Change is larger than the review threshold",
+  run(ctx) {
+    const severity = severityOf(ctx, "oversized_change");
+    if (severity === "off") {
+      return [];
+    }
+    const { filesChanged, additions, deletions } = ctx.input.changes.totals;
+    const lines = additions + deletions;
+    const maxFiles = ctx.input.config.triage.max_files;
+    const maxLines = ctx.input.config.triage.max_lines;
+    const overFiles = filesChanged > maxFiles;
+    const overLines = lines > maxLines;
+    if (!overFiles && !overLines) {
+      return [];
+    }
+    const exceeded = [
+      overFiles ? `${filesChanged} files (limit ${maxFiles})` : void 0,
+      overLines ? `${lines} lines (limit ${maxLines})` : void 0
+    ].filter((part) => part !== void 0);
+    return [
+      {
+        ruleId: "triage/oversized-change",
+        severity,
+        title: "Change is larger than the review threshold",
+        message: `The change exceeds the configured review size: ${exceeded.join(" and ")}.`,
+        evidence: [
+          { label: "files_changed", value: String(filesChanged) },
+          { label: "lines_changed", value: String(lines) },
+          { label: "limits", value: `${maxFiles} files, ${maxLines} lines` }
+        ],
+        remediation: [
+          "Large changes are not wrong. This records that the change is past the size this repository chose to review in one pass."
+        ],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var UNVERIFIED_ASSOCIATIONS = /* @__PURE__ */ new Set(["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "NONE"]);
+var triageUnverifiedAuthorRule = {
+  id: "triage/unverified-author",
+  title: "Author has not landed a change here before",
+  run(ctx) {
+    const severity = severityOf(ctx, "unverified_author");
+    const association = ctx.input.pr.authorAssociation;
+    if (severity === "off" || association === void 0) {
+      return [];
+    }
+    if (!UNVERIFIED_ASSOCIATIONS.has(association.toUpperCase())) {
+      return [];
+    }
+    return [
+      {
+        ruleId: "triage/unverified-author",
+        severity,
+        title: "Author has not landed a change here before",
+        message: `GitHub reports the author's association with this repository as ${association}.`,
+        evidence: [{ label: "author_association", value: association }],
+        remediation: [
+          "This is context, not a problem. A first contribution is how every contributor starts; it is recorded because it is the case where the other findings on this pull request matter most."
+        ],
+        tags: ["triage"],
+        confidence: "high"
+      }
+    ];
+  }
+};
+var triageRules = [
+  triageNoLinkedIssueRule,
+  triageEmptyDescriptionRule,
+  triageTemplateUnusedRule,
+  triageOversizedChangeRule,
+  triageUnverifiedAuthorRule
+];
+function isRecord6(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function isWorkflowFile4(ctx, path) {
+  return ctx.helpers.matchesAny(path, ctx.input.config.github_actions.paths);
+}
+function wasWorkflowFile3(ctx, file2) {
+  return isWorkflowFile4(ctx, file2.previousPath ?? file2.path);
+}
+function workflowEventNames(workflow) {
+  const on = workflow.on;
+  if (typeof on === "string") {
+    return [on];
+  }
+  if (Array.isArray(on)) {
+    return on.filter((entry) => typeof entry === "string");
+  }
+  return isRecord6(on) ? Object.keys(on) : [];
+}
+function removedWorkflowEvents(base, head) {
+  if (!base) {
+    return [];
+  }
+  const headEvents = new Set(workflowEventNames(head));
+  return workflowEventNames(base).filter((event) => !headEvents.has(event));
+}
+function eventConsequence(event) {
+  switch (event) {
+    case "pull_request":
+    case "pull_request_target":
+      return "this workflow no longer runs on pull requests, including the one removing it";
+    case "push":
+      return "this workflow no longer runs on pushes";
+    case "merge_group":
+      return "this workflow no longer runs in the merge queue";
+    case "schedule":
+      return "this workflow no longer runs on its schedule";
+    case "workflow_call":
+      return "this workflow can no longer be called by other workflows";
+    default:
+      return `this workflow no longer runs on ${event}`;
+  }
+}
+var workflowTriggerRemovedRule = {
+  id: "workflow/trigger-removed",
+  title: "Workflow trigger removed",
+  run(ctx) {
+    const setting = ctx.input.config.github_actions.checks.trigger_removed;
+    if (setting === "off") {
+      return [];
+    }
+    const findings = [];
+    for (const file2 of ctx.helpers.changedFiles()) {
+      const treatAsAdded = file2.status === "added" || !wasWorkflowFile3(ctx, file2);
+      if (!isWorkflowFile4(ctx, file2.path) || file2.status === "removed" || treatAsAdded || !file2.headContent || !file2.baseContent) {
+        continue;
+      }
+      const base = parseWorkflow(file2.baseContent);
+      const head = parseWorkflow(file2.headContent);
+      if (base.kind !== "valid" || head.kind !== "valid") {
+        continue;
+      }
+      for (const event of removedWorkflowEvents(base.workflow, head.workflow)) {
+        findings.push({
+          ruleId: "workflow/trigger-removed",
+          severity: setting,
+          title: "Workflow trigger removed",
+          message: `${file2.path} no longer triggers on ${event}; ${eventConsequence(event)}. Confirm this reduction in coverage is intended.`,
+          path: file2.path,
+          evidence: [
+            { label: "changed_file", value: file2.path },
+            { label: "removed_event", value: event },
+            { label: "events_before", value: workflowEventNames(base.workflow).join(", ") },
+            {
+              label: "events_after",
+              value: workflowEventNames(head.workflow).join(", ") || "none"
+            }
+          ],
+          remediation: [
+            "Confirm the workflow is still expected to run in the situations it stopped covering.",
+            "If coverage moved to another workflow, say so in the pull request description."
+          ],
+          tags: ["workflow", "ci-coverage"],
+          confidence: "high"
+        });
+      }
+    }
+    return findings;
+  }
+};
 var builtInRules = [
   agentOriginRule,
   contractInvalidRule,
@@ -49316,9 +49700,14 @@ var builtInRules = [
   packageScriptDriftRule,
   commitTrailerMissingRule,
   commitTrailerForbiddenRule,
+  commitAiDisclosedRule,
   workflowPermissionEscalationRule,
+  workflowTriggerRemovedRule,
   workflowDangerousPatternRule,
-  agenticWorkflowInjectionRule
+  agenticWorkflowInjectionRule,
+  // Last on purpose. Triage findings describe what a pull request is missing around the change;
+  // a boundary the change actually crossed should be read first.
+  ...triageRules
 ];
 function createRuleContext(input) {
   let cachedAgentOrigin;
@@ -49642,7 +50031,12 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
   "**/AGENTS.override.md",
   "CLAUDE.md",
   "**/CLAUDE.md",
+  "GEMINI.md",
+  "**/GEMINI.md",
+  "QWEN.md",
+  "**/QWEN.md",
   ".cursor/**",
+  ".gemini/**",
   ".github/copilot-instructions.md",
   ".mcp.json",
   "claude_desktop_config.json",
@@ -49650,17 +50044,63 @@ var DEFAULT_AGENT_CONTROL_PLANE_PATHS = [
 ];
 var DEFAULT_PACKAGE_SCRIPT_PATHS = ["package.json", "**/package.json"];
 var DEFAULT_LIFECYCLE_SCRIPTS = ["preinstall", "install", "postinstall", "prepare"];
+var DEFAULT_AGENT_AUTHORS = [
+  "copilot-swe-agent[bot]",
+  "google-labs-jules[bot]",
+  "devin-ai-integration[bot]",
+  "kiro-agent[bot]",
+  "codegen-sh[bot]",
+  "opencode-agent[bot]",
+  "tembo[bot]",
+  "amazon-q-developer[bot]",
+  "mentatbot[bot]",
+  "factory-droid[bot]",
+  "ellipsis-dev[bot]"
+];
+var DEFAULT_AGENT_BRANCH_PATTERNS = [
+  "codex/**",
+  "claude/**",
+  "cursor/**",
+  "copilot/**",
+  "devin/**"
+];
+var DEFAULT_AGENT_BODY_PATTERNS = [
+  "Generated with [Claude Code]",
+  "Generated with Claude Code"
+];
 var SeveritySettingSchema = external_exports.enum(["warn", "error"]);
+var ContractMissingSeveritySchema = external_exports.enum(["info", "warn", "error"]);
 var CheckSettingSchema = external_exports.enum(["off", "warn", "error"]);
 var AgentDetectionSchema = external_exports.object({
-  authors: external_exports.array(NonEmptyStringSchema).default([]),
+  authors: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_AUTHORS),
   labels: external_exports.array(NonEmptyStringSchema).default([]),
-  branch_patterns: external_exports.array(NonEmptyStringSchema).default([]),
-  body_patterns: external_exports.array(NonEmptyStringSchema).default([])
+  branch_patterns: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BRANCH_PATTERNS),
+  body_patterns: external_exports.array(NonEmptyStringSchema).default(DEFAULT_AGENT_BODY_PATTERNS)
 }).strict();
 var ContractConfigSchema = external_exports.object({
   required_for: external_exports.array(external_exports.enum(["agent", "all"])).default(["agent"]),
-  allow_missing_in_observe_mode: external_exports.boolean().default(true)
+  allow_missing_in_observe_mode: external_exports.boolean().default(true),
+  /**
+   * Severity of `contract/missing` only — not of the other contract rules.
+   *
+   * Defaults to `info`, which is the end of a line this project has walked twice. v0.6.0
+   * stopped this rule from *blocking*, because the scan study found 0 of 2,204 merged agent
+   * pull requests declaring a scope and an `error` default would have rejected essentially
+   * every agent pull request on the day `mode: block` was switched on. v0.9.0 stops it
+   * *warning* for the same reason taken one step further: a rule that fires on 100% of a
+   * population, for the absence of a convention nobody has adopted, carries no information.
+   * Reported on every routine pull request it trains maintainers to ignore the comment, and
+   * the findings that matter — permission escalation, control-plane drift — go with it.
+   *
+   * The principle is the one v0.6.0 established: speak about what a pull request did, not
+   * about a convention it did not follow. A repository that actually asks contributors for a
+   * declared scope opts in with `warn` or `error`.
+   *
+   * `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay `error`:
+   * each of those fires on something the pull request actually did against its own
+   * declaration.
+   */
+  missing_severity: ContractMissingSeveritySchema.default("info")
 }).strict();
 var HighRiskPathAreaSchema = external_exports.object({
   paths: external_exports.array(NonEmptyStringSchema).min(1),
@@ -49683,7 +50123,18 @@ var DEFAULT_GITHUB_ACTION_CHECKS = {
   unknown_write_permission: "warn",
   added_secret_reference: "warn",
   workflow_deleted: "warn",
-  malformed_workflow: "error"
+  malformed_workflow: "error",
+  /**
+   * A workflow that stops firing on an event it used to fire on.
+   *
+   * GitHub's own review guidance treats weakening CI as a blocker outright ("Confirm workflow
+   * still runs on forks and pull requests"), but that instruction is aimed at a human deciding
+   * one case. As a machine default `warn` is the honest setting: consolidating workflows and
+   * retiring a `schedule` are ordinary, and the artifact cannot tell those apart from a pull
+   * request quietly removing the check that would have gated it. Teams that want it enforced
+   * set this to `error`.
+   */
+  trigger_removed: "warn"
 };
 var GitHubActionsChecksSchema = external_exports.object({
   permission_escalation: CheckSettingSchema.default(
@@ -49709,7 +50160,8 @@ var GitHubActionsChecksSchema = external_exports.object({
     DEFAULT_GITHUB_ACTION_CHECKS.added_secret_reference
   ),
   workflow_deleted: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.workflow_deleted),
-  malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow)
+  malformed_workflow: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.malformed_workflow),
+  trigger_removed: CheckSettingSchema.default(DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed)
 }).strict();
 function legacyChecks(config2) {
   return GitHubActionsChecksSchema.parse({
@@ -49721,7 +50173,8 @@ function legacyChecks(config2) {
     unpinned_action: config2.require_pinned_actions,
     unpinned_reusable_workflow: config2.require_pinned_actions,
     unpinned_container: config2.require_pinned_actions,
-    malformed_workflow: config2.severity
+    malformed_workflow: config2.severity,
+    trigger_removed: DEFAULT_GITHUB_ACTION_CHECKS.trigger_removed
   });
 }
 function hasLegacyAndGranularChecks(value) {
@@ -49789,10 +50242,42 @@ var CommitTrailerProhibitionSchema = external_exports.object({
   value_patterns: external_exports.array(NonEmptyStringSchema).default([]),
   severity: SeveritySettingSchema.default("error")
 }).strict();
+var AiDisclosureSettingSchema = external_exports.enum(["off", "info", "warn", "error"]);
+var TriageSettingSchema = external_exports.enum(["off", "info", "warn", "error"]);
+var TriageConfigSchema = external_exports.object({
+  // `off` by default, unlike its siblings. Most pull requests in most repositories reference
+  // no issue, so at `info` this rule would attach a finding to nearly every report — the
+  // noise v0.9.0 removed. It is what `mergewarden triage` turns on to rank many open pull
+  // requests against each other, which is a different question from gating one of them.
+  no_linked_issue: TriageSettingSchema.default("off"),
+  empty_description: TriageSettingSchema.default("info"),
+  template_unused: TriageSettingSchema.default("info"),
+  oversized_change: TriageSettingSchema.default("info"),
+  // Deliberately `info` and deliberately not raised by default. A first contribution is how
+  // every contributor starts, and defaulting it to a warning turns the tool into something
+  // that greets newcomers with a complaint.
+  unverified_author: TriageSettingSchema.default("info"),
+  /**
+   * Maintenance automation whose pull requests these rules should not describe.
+   *
+   * A release bot does not fill in a template and a dependency bump has no issue to link;
+   * reporting that is the noise this file exists to avoid. Every entry was observed opening
+   * pull requests in the repositories used to calibrate these rules.
+   *
+   * Coding agents are deliberately **not** here. `Copilot` and `devin-ai-integration[bot]`
+   * are bot accounts too, and their pull requests are exactly the ones a maintainer wants
+   * triaged — which is why this is a list of accounts rather than a test for `type: Bot`.
+   */
+  exclude_authors: external_exports.array(NonEmptyStringSchema).default(["dependabot[bot]", "renovate[bot]", "github-actions[bot]"]),
+  min_description_characters: external_exports.number().int().min(0).default(80),
+  max_files: external_exports.number().int().min(1).default(50),
+  max_lines: external_exports.number().int().min(1).default(1500)
+}).strict();
 var CommitTrailersConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
   required: external_exports.array(CommitTrailerRequirementSchema).default([]),
-  forbidden: external_exports.array(CommitTrailerProhibitionSchema).default([])
+  forbidden: external_exports.array(CommitTrailerProhibitionSchema).default([]),
+  ai_disclosure: AiDisclosureSettingSchema.default("info")
 }).strict();
 var PackageScriptsConfigSchema = external_exports.object({
   enabled: external_exports.boolean().default(true),
@@ -49804,14 +50289,15 @@ var MergeWardenConfigSchema = external_exports.object({
   version: external_exports.literal(1),
   mode: external_exports.enum(["observe", "warn", "block"]).default("warn"),
   agent_detection: AgentDetectionSchema.default({
-    authors: [],
+    authors: DEFAULT_AGENT_AUTHORS,
     labels: [],
-    branch_patterns: [],
-    body_patterns: []
+    branch_patterns: DEFAULT_AGENT_BRANCH_PATTERNS,
+    body_patterns: DEFAULT_AGENT_BODY_PATTERNS
   }),
   contract: ContractConfigSchema.default({
     required_for: ["agent"],
-    allow_missing_in_observe_mode: true
+    allow_missing_in_observe_mode: true,
+    missing_severity: "info"
   }),
   high_risk_paths: external_exports.record(external_exports.string(), HighRiskPathAreaSchema).default({}),
   agent_control_plane: AgentControlPlaneSchema.default({
@@ -49839,10 +50325,22 @@ var MergeWardenConfigSchema = external_exports.object({
     lifecycle_scripts: DEFAULT_LIFECYCLE_SCRIPTS,
     severity: "warn"
   }),
+  triage: TriageConfigSchema.default({
+    no_linked_issue: "off",
+    empty_description: "info",
+    template_unused: "info",
+    oversized_change: "info",
+    unverified_author: "info",
+    exclude_authors: ["dependabot[bot]", "renovate[bot]", "github-actions[bot]"],
+    min_description_characters: 80,
+    max_files: 50,
+    max_lines: 1500
+  }),
   commit_trailers: CommitTrailersConfigSchema.default({
     enabled: true,
     required: [],
-    forbidden: []
+    forbidden: [],
+    ai_disclosure: "info"
   })
 }).strict().superRefine((value, ctx) => {
   const seen = /* @__PURE__ */ new Set();
@@ -49873,11 +50371,11 @@ function formatZodIssues(issues) {
 function formatYamlErrors(errors) {
   return errors.map((error52) => error52.message).join("; ");
 }
-function isRecord6(value) {
+function isRecord7(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function assertNoGitHubActionsConfigMixing(value) {
-  if (!isRecord6(value) || !isRecord6(value.github_actions)) {
+  if (!isRecord7(value) || !isRecord7(value.github_actions)) {
     return;
   }
   const githubActions = value.github_actions;
@@ -50111,6 +50609,27 @@ function policySource(source) {
   }
   return "local fixture";
 }
+function whyLine(result) {
+  const finding2 = highestActionableFinding(result.findings);
+  if (!finding2) {
+    return result.waivedFindings.length > 0 ? "All detected findings are covered by active base-policy waivers." : "No active warning or blocking findings were detected.";
+  }
+  const message = safeReportValue(finding2.message);
+  if (!finding2.path) {
+    return message;
+  }
+  const path = safeReportValue(finding2.path);
+  return message.includes(path) ? message : `${message} (\`${path}\`)`;
+}
+function countsLine(result) {
+  const parts = [
+    `${result.summary.errorCount} error`,
+    `${result.summary.warnCount} warning`,
+    `${result.summary.infoCount} info`,
+    ...result.summary.waivedCount > 0 ? [`${result.summary.waivedCount} waived`] : []
+  ];
+  return parts.join(" \xB7 ");
+}
 function whyLines(result) {
   const finding2 = highestActionableFinding(result.findings);
   if (!finding2) {
@@ -50179,10 +50698,45 @@ function pushWaivedFinding(lines, finding2) {
     ""
   );
 }
-function buildMarkdownReport(result, combined, visibleCount, fullReportPath) {
+function detailSummaryLabel(activeCount, waivedCount) {
+  if (activeCount === 0 && waivedCount === 0) {
+    return "Detailed findings";
+  }
+  const parts = [
+    ...activeCount > 0 ? [`${activeCount} finding${activeCount === 1 ? "" : "s"}`] : [],
+    ...waivedCount > 0 ? [`${waivedCount} waived`] : []
+  ];
+  return `Detailed findings (${parts.join(", ")}) \u2014 evidence, finding IDs, remediation`;
+}
+function buildMarkdownReport(result, combined, visibleCount, fullReportPath, collapseFindings) {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
-  const lines = [
+  const runSummary = [
+    "## Summary",
+    "",
+    `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
+    `- PR-declared contract present: ${yesNo(result.summary.contractPresent)}`,
+    `- Policy source: ${policySource(result.metadata.configSource)}`,
+    `- Analysis complete: ${yesNo(result.metadata.analysisComplete)}`,
+    `- Files analyzed: ${result.metadata.analyzedFileCount} / ${result.metadata.expectedFileCount}`,
+    `- Errors: ${result.summary.errorCount}`,
+    `- Warnings: ${result.summary.warnCount}`,
+    `- Info: ${result.summary.infoCount}`,
+    `- Waived: ${result.summary.waivedCount}`,
+    `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
+    ""
+  ];
+  const lines = collapseFindings ? [
+    // Four lines: what was decided, why, what to do, how much. Everything a reviewer needs to
+    // know without expanding, and nothing repeated. The heading already states the decision,
+    // so `Decision:`/`Status:`/`Policy Status:` do not restate it above the fold.
+    `# MergeWarden: ${humanDecisionLabel(result)}`,
+    "",
+    `**Why:** ${whyLine(result)}`,
+    `**Next:** ${recommendedNextStep(result)}`,
+    `**Findings:** ${countsLine(result)} \u2014 ${policyStatus(result)}`,
+    ""
+  ] : [
     `# MergeWarden: ${humanDecisionLabel(result)}`,
     "",
     `Decision: ${result.decision}`,
@@ -50200,39 +50754,39 @@ function buildMarkdownReport(result, combined, visibleCount, fullReportPath) {
     "",
     policyStatus(result),
     "",
-    "## Summary",
-    "",
-    `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
-    `- PR-declared contract present: ${yesNo(result.summary.contractPresent)}`,
-    `- Policy source: ${policySource(result.metadata.configSource)}`,
-    `- Analysis complete: ${yesNo(result.metadata.analysisComplete)}`,
-    `- Files analyzed: ${result.metadata.analyzedFileCount} / ${result.metadata.expectedFileCount}`,
-    `- Errors: ${result.summary.errorCount}`,
-    `- Warnings: ${result.summary.warnCount}`,
-    `- Info: ${result.summary.infoCount}`,
-    `- Waived: ${result.summary.waivedCount}`,
-    `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
-    "",
-    "## Detailed Findings",
-    ""
+    ...runSummary
   ];
   const activeVisible = visible.filter((item) => !item.waived);
+  const waivedVisible = visible.filter((item) => item.waived);
+  const detail = ["## Detailed Findings", ""];
   if (activeVisible.length === 0) {
-    lines.push(
+    detail.push(
       result.findings.length === 0 ? "No active findings." : "Active findings omitted.",
       ""
     );
   } else {
     for (const item of activeVisible) {
-      pushFinding(lines, item.finding);
+      pushFinding(detail, item.finding);
     }
   }
-  const waivedVisible = visible.filter((item) => item.waived);
   if (waivedVisible.length > 0) {
-    lines.push("## Waived Findings", "");
+    detail.push("## Waived Findings", "");
     for (const item of waivedVisible) {
-      pushWaivedFinding(lines, item.finding);
+      pushWaivedFinding(detail, item.finding);
     }
+  }
+  if (collapseFindings) {
+    lines.push(
+      "<details>",
+      `<summary>${detailSummaryLabel(activeVisible.length, waivedVisible.length)}</summary>`,
+      "",
+      ...runSummary,
+      ...detail,
+      "</details>",
+      ""
+    );
+  } else {
+    lines.push(...detail);
   }
   const omitted = result.metadata.omittedFindingCount + surfaceOmitted;
   if (omitted > 0) {
@@ -50259,7 +50813,13 @@ function renderMarkdownReport(result, options = {}) {
   let best;
   while (low <= high) {
     const visibleCount = Math.floor((low + high) / 2);
-    const candidate = buildMarkdownReport(result, combined, visibleCount, options.fullReportPath);
+    const candidate = buildMarkdownReport(
+      result,
+      combined,
+      visibleCount,
+      options.fullReportPath,
+      options.collapseFindings ?? false
+    );
     if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
       best = candidate;
       low = visibleCount + 1;
@@ -50411,11 +50971,11 @@ var REQUEST_TIMEOUT_MS = 3e4;
 function requestOptions() {
   return { request: { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) } };
 }
-function isRecord7(value) {
+function isRecord8(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function decodeTextFile(data, path) {
-  if (!isRecord7(data) || data.type !== "file" || data.encoding !== "base64" || typeof data.content !== "string") {
+  if (!isRecord8(data) || data.type !== "file" || data.encoding !== "base64" || typeof data.content !== "string") {
     throw new GitHubApiError(`Read ${path}: response was not base64 file content.`, {
       retryable: false
     });
@@ -50787,6 +51347,35 @@ async function loadConfig(api, pullRequest, options, retryBudget) {
     source: "base-branch"
   };
 }
+var PULL_REQUEST_TEMPLATE_PATHS = [
+  ".github/PULL_REQUEST_TEMPLATE.md",
+  ".github/pull_request_template.md",
+  "PULL_REQUEST_TEMPLATE.md"
+];
+async function loadPullRequestTemplate(api, pullRequest, config2, retryBudget) {
+  if (config2.triage.template_unused === "off") {
+    return void 0;
+  }
+  for (const path of PULL_REQUEST_TEMPLATE_PATHS) {
+    try {
+      const result = await withGitHubRetry(
+        `Load ${path}`,
+        retryBudget,
+        () => api.getTextFile(pullRequest.base.repository, path, pullRequest.base.sha)
+      );
+      if (result.kind === "not-found") {
+        continue;
+      }
+      if (Buffer.byteLength(result.text, "utf8") > MAX_TEXT_BYTES) {
+        return void 0;
+      }
+      return result.text;
+    } catch {
+      return void 0;
+    }
+  }
+  return null;
+}
 function fileListGap(expected, collected, reason) {
   return {
     ruleId: "analysis/file-list-incomplete",
@@ -50857,7 +51446,8 @@ function pullRequestContext(pullRequest) {
     labels: pullRequest.labels,
     branchName: pullRequest.head.ref,
     isFork: pullRequest.head.fork,
-    draft: pullRequest.draft
+    draft: pullRequest.draft,
+    authorAssociation: pullRequest.authorAssociation
   };
 }
 async function loadGitHubAnalysis(api, target, options) {
@@ -50898,6 +51488,12 @@ async function loadGitHubAnalysis(api, target, options) {
     }
   }
   const commits = await listPullCommits(api, target, pullRequest, retryBudget, options.warning);
+  const pullRequestTemplate = await loadPullRequestTemplate(
+    api,
+    pullRequest,
+    loadedConfig.config,
+    retryBudget
+  );
   const analysis = {
     complete: gaps.length === 0,
     expectedFileCount: expected,
@@ -50928,6 +51524,7 @@ async function loadGitHubAnalysis(api, target, options) {
       }
     },
     ...commits === void 0 ? {} : { commits },
+    ...pullRequestTemplate === void 0 ? {} : { repoDocs: { pullRequestTemplate } },
     reviews: [],
     checks: [],
     now: options.now,
@@ -50938,7 +51535,7 @@ async function loadGitHubAnalysis(api, target, options) {
 }
 
 // src/version.ts
-var MERGEWARDEN_VERSION = "0.4.0";
+var MERGEWARDEN_VERSION = "0.9.0";
 
 // src/run.ts
 var MERGEWARDEN_COMMENT_MARKER = "<!-- mergewarden-report -->";
@@ -50971,6 +51568,21 @@ function parseBooleanInput(name, value, fallback) {
     return false;
   }
   throw new Error(`Invalid boolean input ${name}: ${value}. Expected true or false.`);
+}
+var COMMENT_MODES = ["auto", "always", "never"];
+function parseCommentMode(value) {
+  const trimmed = value.trim().toLowerCase();
+  if (trimmed === "" || trimmed === "false") {
+    return "never";
+  }
+  if (trimmed === "true") {
+    return "always";
+  }
+  const mode = COMMENT_MODES.find((candidate) => candidate === trimmed);
+  if (mode) {
+    return mode;
+  }
+  throw new Error(`Invalid comment input: ${value}. Expected auto, always, or never.`);
 }
 function parseModeOverride(value) {
   const trimmed = value.trim();
@@ -51086,10 +51698,13 @@ function isMergeWardenManagedComment(comment) {
 function latestMarkedComment(comments) {
   return comments.filter(isMergeWardenManagedComment).sort((left, right) => right.id - left.id)[0];
 }
-async function upsertPullRequestComment(octokit, repository, issueNumber, markdownReport) {
+async function upsertPullRequestComment(octokit, repository, issueNumber, markdownReport, options = { onlyUpdateExisting: false }) {
   const comments = await listIssueComments(octokit, repository, issueNumber);
-  const body = markedCommentBody(markdownReport);
   const existingComment = latestMarkedComment(comments);
+  if (!existingComment && options.onlyUpdateExisting) {
+    return;
+  }
+  const body = markedCommentBody(markdownReport);
   if (existingComment) {
     const updateComment = octokit.rest.issues?.updateComment;
     if (!updateComment) {
@@ -51142,7 +51757,7 @@ async function runActionInner(runtime) {
     runtime.getInput("report-markdown"),
     "mergewarden-report.md"
   );
-  const comment = parseBooleanInput("comment", runtime.getInput("comment"), false);
+  const commentMode = parseCommentMode(runtime.getInput("comment"));
   const failOnBlock = parseBooleanInput("fail-on-block", runtime.getInput("fail-on-block"), true);
   const modeOverride = parseModeOverride(runtime.getInput("mode"));
   const target = {
@@ -51176,14 +51791,18 @@ async function runActionInner(runtime) {
   setResultOutputs(runtime, result, reportJsonPath, reportMarkdownPath);
   await runtime.summary.addRaw(summaryReport).write();
   runtime.info(plainTextReportSummary);
-  if (comment) {
+  if (commentMode !== "never") {
     try {
+      const needsAttention = !result.metadata.analysisComplete || result.summary.errorCount > 0 || result.summary.warnCount > 0;
       const commentReport = renderMarkdownReport(result, {
         maxFindings: 50,
         maxBytes: COMMENT_MAX_BYTES - COMMENT_WRAPPER_RESERVE_BYTES,
-        fullReportPath: reportMarkdownPath
+        fullReportPath: reportMarkdownPath,
+        collapseFindings: true
       });
-      await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport);
+      await upsertPullRequestComment(runtime.octokit, context3.repo, pr.number, commentReport, {
+        onlyUpdateExisting: commentMode === "auto" && !needsAttention
+      });
     } catch (error52) {
       runtime.warning(`MergeWarden could not upsert PR comment: ${errorMessage(error52)}`);
     }

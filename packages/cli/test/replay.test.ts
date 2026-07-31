@@ -59,8 +59,12 @@ async function createFixture(
 const unsafePrZooFixtures = [
   {
     name: "workflow-permission-escalation",
-    expectedRuleIds: ["workflow/permission-escalation", "workflow/dangerous-pattern"],
-    expectedSeverities: ["error", "error"],
+    expectedRuleIds: [
+      "workflow/permission-escalation",
+      "workflow/trigger-removed",
+      "workflow/dangerous-pattern",
+    ],
+    expectedSeverities: ["error", "warn", "error"],
     expectedPath: ".github/workflows/release.yml",
     expectedDecision: "block",
   },
@@ -119,6 +123,7 @@ const unsafePrZooFixtures = [
       "dependency/lifecycle-script-added",
       "workflow/permission-escalation",
       "workflow/permission-escalation",
+      "workflow/trigger-removed",
       "workflow/dangerous-pattern",
       "workflow/dangerous-pattern",
       "workflow/dangerous-pattern",
@@ -136,6 +141,7 @@ const unsafePrZooFixtures = [
       "warn",
       "error",
       "error",
+      "warn",
       "error",
       "error",
       "error",
@@ -213,6 +219,36 @@ describe("CLI replay", () => {
     expect(output).toContain(
       "Full retained report: rerun with --format json or --format markdown.",
     );
+  });
+
+  it("keeps errors on the bounded surface even when warnings are evaluated first", async () => {
+    const result = await analyze(await loadReplayFixture(await createTempFixture()));
+    const firstFinding = result.findings[0];
+
+    if (!firstFinding) {
+      throw new Error("Expected a replay finding");
+    }
+
+    const output = renderHumanReport({
+      ...result,
+      findings: [
+        ...Array.from({ length: 11 }, (_, index) => ({
+          ...firstFinding,
+          severity: "warn" as const,
+          ruleId: `noise/warning-${index}`,
+          findingId: `agf_${String(index).padStart(16, "0")}`,
+        })),
+        {
+          ...firstFinding,
+          severity: "error" as const,
+          ruleId: "critical/last-evaluated",
+          findingId: `agf_${"f".repeat(16)}`,
+        },
+      ],
+    });
+
+    expect(output).toContain("critical/last-evaluated");
+    expect(output).toContain("2 additional finding(s) omitted from this surface.");
   });
 
   it("neutralizes terminal control sequences, injected lines, and mentions", async () => {

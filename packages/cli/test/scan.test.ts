@@ -273,7 +273,10 @@ describe("CLI scan", () => {
       status: "blocked",
       metadata: { analysisComplete: true, expectedFileCount: 1, analyzedFileCount: 1 },
     });
-    expect(fetch).toHaveBeenCalledTimes(3);
+    // 3 for the pull request, its files and the policy, plus 3 probes for a pull-request
+    // template that this repository does not have. The assertion below is the one that
+    // matters: no pull-request code is fetched.
+    expect(fetch).toHaveBeenCalledTimes(6);
     expect(fetch.mock.calls.map(([url]) => String(url)).join("\n")).not.toContain(
       "/contents/AGENTS.md",
     );

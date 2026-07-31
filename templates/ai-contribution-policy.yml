@@ -34,6 +34,11 @@ agent_detection:
 contract:
   required_for: [agent]
   allow_missing_in_observe_mode: true
+  # `contract/missing` warns rather than errors, so switching this repository to
+  # `mode: block` does not reject every agent PR on day one — no agent emits a
+  # scope contract by default (0 of 2,204 in the scan study). Set this to `error`
+  # once your contributors actually declare scope and you want it enforced.
+  missing_severity: warn
 
 # 2) "Don't touch the files that steer future agents" — control-plane drift.
 #    AGENTS.md / CLAUDE.md / .cursor/** / .mcp.json and friends configure how

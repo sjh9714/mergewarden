@@ -26,6 +26,116 @@ Proofs recorded before v0.4.0 ran under the project's former name, Agent Gate.
 Their linked runs, screenshots, and `sjh9714/Agent-Gate` Action refs keep the
 historical name; the old repository URL redirects to `sjh9714/mergewarden`.
 
+## v0.9.0: What the Action Says, and When
+
+v0.9.0 changed the daily experience rather than a rule's logic, so the proof is
+three pull requests in the same sandbox, on the same commit-pinned Action
+(`sjh9714/mergewarden@e97f47b59dcda0eb48ba88275c176fc734325659`), differing only
+in what the change did.
+
+| Pull request                                                                | Change                                         | Decision        | Comment                           |
+| --------------------------------------------------------------------------- | ---------------------------------------------- | --------------- | --------------------------------- |
+| [#19](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/19) | Agent branch, no contract, README only         | `pass`          | **none**                          |
+| [#18](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/18) | Agent branch, no contract, edits `src/auth/**` | `warn`          | posted                            |
+| [#20](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/20) | Declares `docs/**`, edits `README.md`          | `warn` → `pass` | posted, then **updated in place** |
+
+**[#19](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/19) is
+the one that matters.** It is a routine agent pull request — detected as
+agent-authored, no declared contract — and it reports `agent/origin-detected`
+and `contract/missing`, both `info`, and says nothing on the pull request. The
+[run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30474857695)
+records both findings in the job summary. Before v0.9.0 this exact pull request
+resolved to `needs-review` and, with comments enabled, posted one.
+
+**[#18](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/18)**
+shows `auto` is not "quieter about everything". The sandbox policy marks
+`src/auth/**` as a high-risk area, the change lands there, and the
+[run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30474761421)
+comments. Same Action, same input, different change.
+
+**[#20](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/20)**
+declared a scope of `docs/**` and edited `README.md`, so `contract/out-of-scope`
+fired and comment `5121230270` said `NEEDS REVIEW`. The contract was then
+corrected in the pull-request body. Comment `5121230270` — the same comment, by
+id — now reads `PASSED`. It was updated, not deleted: the record of what was
+flagged and how it was resolved stays on the pull request.
+
+## v0.6.0 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30169314930
+- Action ref: `sjh9714/mergewarden@ec38a1dd467d04fa69a983a3b54ae6fb70f5aba6`
+- Checkout step: not used
+- Final decision: `warn`
+- Findings: 9 error, 2 warning, 1 info
+- Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
+
+Unchanged from v0.5.1, and here the reason is specific: this pull request
+**declares a contract**, so `contract/missing` — the rule v0.6.0 softened — never
+fires on it. The finding driving the decision is `contract/out-of-scope`, which
+stays `error` by design. A proof that a rule changed would need a pull request
+without a contract; that evidence is the two real agent pull requests in the
+[release notes](release-notes-v0.6.0.md).
+
+## v0.5.1 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30162555920
+- Action ref: `sjh9714/mergewarden@3f87f5d1197e24482aa3f0a788e0158e41d53baa`
+- Checkout step: not used
+- Base-branch policy: repository `mergewarden.yml`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: 9 error, 2 warning, 1 info
+- Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
+
+Identical to the v0.5.0 run below, including the policy digest — this sandbox
+sets `agent_detection` explicitly, so neither v0.5.0's new defaults nor v0.5.1's
+corrected body marker changes anything here. The evidence for the v0.5.1 fix is
+the 13-pull-request Claude Code sample in the
+[release notes](release-notes-v0.5.1.md), not this proof.
+
+## v0.5.0 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30160399530
+- Action ref: `sjh9714/mergewarden@d4892fa234498032a1e1bea6ff3882e76506722b`
+- Checkout step: not used
+- Base-branch policy: repository `mergewarden.yml`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: 9 error, 2 warning, 1 info
+- Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
+
+The same pull request re-run against the v0.5.0 release commit. Decision and
+finding counts are identical to the v0.4.1 run below, which is worth stating
+plainly: v0.5.0's headline change is that agent detection works without
+configuration, and this sandbox already configured `agent_detection` explicitly,
+so the new defaults have nothing to add here. The evidence that the defaults
+changed anything is in the release notes' 14-repository measurement, not in this
+proof. The policy digest differs because the default control-plane path list
+gained `GEMINI.md` and `QWEN.md`; finding IDs did not change.
+
+## v0.4.1 Public Composite Proof
+
+- Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17
+- Workflow run: https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30156230619
+- Action ref: `sjh9714/mergewarden@ccef99499b5932864decf24656dc6b4aefd2e6a8`
+- Checkout step: not used
+- Base-branch policy: repository `mergewarden.yml`
+- Final decision: `warn`
+- Status: `needs-review`
+- Findings: 9 error, 2 warning, 1 info
+- Managed PR comment: posted by the run, with the detailed findings behind a
+  `<details>` fold added in v0.4.1
+
+The same pull request re-run against the v0.4.1 release commit. Rule outcomes
+are identical to the v0.4.0 run below — same decision, same finding counts —
+which is the point: the v0.4.1 changes are a new opt-in rule family and a
+report-surface change, not a change in what the engine decides. The policy
+digest differs because the configuration schema gained the `commit_trailers`
+key; finding IDs did not change.
+
 ## v0.4.0 Public Composite Proof
 
 - Pull request: https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/17

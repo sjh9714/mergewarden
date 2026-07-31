@@ -10,6 +10,373 @@ This project follows the spirit of
 
 ### Added
 
+- **`mergewarden triage <owner/repository>`** — reads a repository's open pull requests and
+  reports, for each, the facts a maintainer normally checks by hand. Rows are ordered by how
+  many facts each pull request trips, so the top of the list is where attention goes first.
+  No installation, no configuration, no write access.
+
+  **It never closes, labels, or comments, and there is no flag that does** — a test asserts
+  that no option acts on a pull request. The tools that auto-close have to be right every
+  time, and the public record of the leading one is its own issue tracker: a username with two
+  consecutive digits read as spam, a maintainer's own merge flagged, and no way to reopen what
+  was closed by mistake.
+
+- **Five triage rules**, all `info` so none moves the decision: `triage/no-linked-issue`,
+  `triage/empty-description`, `triage/template-unused`, `triage/oversized-change` and
+  `triage/unverified-author`. Each reports a fact that can be checked and argued with, never a
+  judgement about quality — nothing scores a contributor or guesses from writing style.
+
+  `no_linked_issue` ships `off`: most pull requests in most repositories reference no issue, so
+  at `info` it would attach a finding to nearly every report, which is the noise v0.9.0 removed.
+  `mergewarden triage` turns it on, because ranking many open pull requests against each other
+  is a different question from gating one of them.
+
+  `unverified_author` is deliberately not raised by default. A first contribution is how every
+  contributor starts.
+
+  Thresholds were measured rather than guessed. The 80-character description floor fires on
+  **7% of 135 recently merged pull requests** across four large repositories, in the range
+  v0.5.0 established as acceptable for an informational rule.
+
+- The collector reads the repository's **pull-request template** from the base branch, and the
+  author's `author_association`. The template is not fetched when `triage.template_unused` is
+  `off`. Headings inside HTML comments are not counted as sections: they are instructions to the
+  contributor, and Next.js's template is entirely comment — counting them flagged every pull
+  request in the repository until this was fixed.
+
+- `triage.exclude_authors` — maintenance automation these rules say nothing about, defaulting
+  to `dependabot[bot]`, `renovate[bot]` and `github-actions[bot]`. Found by running the command
+  against real repositories: it was reporting starship's own release bot for not following the
+  pull-request template and renovate for not linking an issue, which is the complaint on the
+  competing tool's issue tracker. Coding agents are deliberately not excluded — `Copilot` and
+  `devin-ai-integration[bot]` are bot accounts too, and theirs are the pull requests a
+  maintainer wants triaged.
+
+- The human and JSON views of triage no longer disagree. The uniform-note partition ran after
+  the JSON branch returned, so a validation run that asked for JSON scored the behaviour the fix
+  had already removed — the numbers were discarded and the run repeated. A test pins the
+  ordering, because this is the kind of divergence that comes back quietly.
+
+- Triage lifts a note that appears on **80% or more** of a repository's open pull requests out
+  of the rows and reports it once, about the repository. Found by running the command against
+  the projects that installed the competing tool — the ones that self-identified as having this
+  problem. RSSHub came back with 15 of 15 flagged, almost all "no linked issue", because that
+  repository links an issue on nothing. A signal that fires on everything ranks nothing, which
+  is the failure the command exists to avoid; RSSHub now returns 2 rows. Applies only from
+  eight pull requests upward, since below that three of four is a coincidence.
+
+- Bounded retry on the pull-request listing. GitHub answers a burst of requests with `403`
+  under its secondary rate limit — unrelated to the hourly budget — and this listing is a direct
+  call that did not go through the retry the rest of the CLI gets. 16 of 41 repositories in a
+  measurement run failed this way before it was added.
+
+- **`docs/study/does-triage-help.md`** — the command measured against the 167 repositories that
+  installed a competing tool. 20 of 34 judgeable repositories get a ranked list, 11 of 13 among
+  those with 100 stars or more, and **none came back flat**. 41% get nothing, which is correct
+  for the Action and a bad first run for the CLI.
+
+- **`docs/triage.md`** — what the command reports, and why it does not act.
+
+### Changed
+
+- The README now leads with the triage question rather than with scope contracts. Contract scope
+  remains a rule and remains documented; it is no longer the first thing a reader is asked to
+  care about.
+
+### Added
+
+- **`commit/ai-assistance-disclosed`** — reports the `Co-authored-by:` trailers coding tools
+  write about themselves (Claude Code, Cursor, GitHub Copilot, Devin, Codex, Google Jules),
+  including the model name where the tool records one. `info` by default via
+  `commit_trailers.ai_disclosure`, so it never moves the decision; raise it if your policy
+  requires disclosure.
+
+  Every signal MergeWarden had until now was human-chosen — an author account, a branch prefix,
+  a label, a body marker — and a branch prefix disappears the moment the branch is renamed. This
+  one the tool writes itself, and it survives a squash merge into permanent history. The rule
+  reuses the commit enumeration and Git-trailer parsing shipped in v0.4.1, which were already
+  collecting the data without reading it.
+
+  Tools are matched on the co-author **address**. Not the domain: `mdangelo@openai.com` and
+  `etraut@openai.com` appear as co-authors in the scanned corpus and belong to people who work
+  at OpenAI, so an `@openai.com` rule reports humans as AI. Not the display name either: the same
+  tool writes `Claude`, `Claude Opus 4.8` and `Claude Opus 4.8 (1M context)`, and a person can
+  type any of them. Addresses and counts come from real merged history, not vendor docs.
+
+- **`docs/study/what-ai-disclosure-looks-like.md`** — 1,029 repositories read from cloned git
+  history. Includes a **correction**: an earlier pass of this measurement found AI-banning
+  projects at 0% and read it as evidence that policy changes behaviour. It was confounded by
+  language — every repository in that list is C or C++, and the median C/C++ repository is at 0%
+  regardless of policy. Stratified by language the effect disappears. The same data found that
+  only **three of the 355 most popular repositories** actually prohibit AI-written code, while
+  the common requirement is comprehension, which no checker can verify.
+
+## v0.9.0 - 2026-07-30
+
+### Added
+
+- **`comment: auto`** on the Action — post a pull-request comment only when there is an
+  error, a warning, or an incomplete analysis. `always` and `never` are the other values;
+  `true` and `false` keep working and mean `always` and `never`.
+
+  The Action previously posted on every run it was enabled for, including a passing one, so
+  a repository that turned comments on got a `PASSED` comment on every pull request forever.
+  Under `auto`, info findings are recorded in the job summary and nowhere else. A comment
+  that was posted and later resolved is **updated** to the passing report rather than
+  deleted, so a stale `NEEDS REVIEW` cannot outlive the problem it described.
+
+  The default stays `never`: the install documented in the README grants `pull-requests: read`
+  and commenting needs `write`. The README now recommends `comment: auto` with `write`.
+
+- **`docs/start-here.md`** — a one-page introduction: install, what the first pull request
+  will look like, and one line for each finding. There were 38 documents and no front door.
+
+- **`mergewarden-mcp`** — an MCP server exposing one tool, `check_change_scope`, which
+  compares the files a change actually touched against the paths it was asked to touch.
+
+  This inverts who the project talks to. Everything else here is for a maintainer gating
+  pull requests that arrive; this is for the person running the agent, before a pull request
+  exists. Out-of-scope edits are a documented failure mode of coding agents, and the standard
+  advice is to run `git diff --name-only` afterwards and check by eye. This does that
+  comparison mechanically.
+
+  It runs the same engine as the Action on the same default policy, so a clean result is the
+  result the gate produces later rather than a second opinion that happens to agree. Only
+  rules decidable from a path list can fire — contract scope, blocked paths, and
+  agent-control-plane drift. Workflow and dependency rules need file contents and are
+  deliberately absent; a test asserts they never appear.
+
+  It also emits the `mergewarden-contract` block for the pull request body. That closes a hole
+  in this project's own argument: the scan study's headline is that **0 of 2,204** merged agent
+  pull requests declared their scope, and until now the only answer was prose in `CLAUDE.md`
+  that a maintainer had to add and an agent had to honour. The intent exists during the agent
+  session and was being lost before the pull request; this captures it while it is still known.
+
+  Verified over the real MCP stdio protocol — `initialize`, `tools/list`, `tools/call` — not
+  against a mock.
+
+### Changed
+
+- **`contract/missing` now defaults to `info`** instead of `warn`, and `info` is a value
+  `contract.missing_severity` accepts. A routine agent pull request — in scope, nothing
+  dangerous — now resolves to `pass` rather than `needs-review`.
+
+  v0.6.0 stopped this rule from blocking a pull request over a convention nobody has
+  adopted; this stops it from labelling one. The scan study measured **0 of 2,204** merged
+  agent pull requests declaring a scope, so at `warn` the rule fired on essentially every
+  agent pull request, essentially always. A signal that fires on everything is not a signal,
+  and `workflow/permission-escalation` and `agent-control-plane/drift` were being learned
+  away alongside it. Raise it to `warn`, then `error`, as your contributors adopt contracts.
+
+  `info` is accepted for this key only. Every other rule fires on something a pull request
+  did, and none of them should be able to declare itself informational.
+
+- **`contract.allow_missing_in_observe_mode` is now a no-op.** It downgraded
+  `contract/missing` to `warn` in observe mode, which made sense against an `error` default;
+  against an `info` default the same code would _raise_ the severity a repository had
+  deliberately configured. The key is still accepted so existing configuration keeps parsing.
+  Observe-mode decisions are `pass` regardless, so no gate changes.
+
+- The publish workflow now packs and publishes both `mergewarden` and `mergewarden-mcp`, and
+  resolves each tarball by exact filename. The previous wildcard on the CLI name also matched
+  the MCP package's tarball, so `find -print -quit` could have published one package under the
+  other's name. A documentation test asserts the wildcard never comes back.
+
+## v0.8.0 - 2026-07-29
+
+### Added
+
+- **`workflow/trigger-removed`** — reports a workflow that stops firing on an event it used
+  to fire on. It compares the `on:` block at the base commit against the head and names each
+  event that disappeared, reading all three shapes GitHub Actions accepts (bare string,
+  sequence, mapping).
+
+  Added because it is the one thing [GitHub's own review guidance](docs/github-review-guidance.md)
+  puts first — _"Any change that weakens CI is a blocker. Full stop… Confirm workflow still
+  runs on forks and pull requests"_ — and it was the area this project covered least. We
+  checked workflow **permissions** thoroughly and workflow **coverage** not at all, so a pull
+  request that removed `pull_request` from a workflow silently disabled the check that would
+  have gated it.
+
+  It found a real case in this repository's own fixture zoo on the first run: the composite
+  fixture switches a release workflow from `push` to `issue_comment`, and we had been
+  reporting the dangerous addition while missing the safe removal.
+
+  Defaults to `warn`, not `error`. GitHub's guidance says blocker, but that is aimed at a
+  human judging one case; consolidating workflows and retiring a `schedule` are ordinary, and
+  the artifact cannot tell those apart from a quiet removal. Set
+  `github_actions.checks.trigger_removed: error` to enforce it.
+
+- `docs/github-review-guidance.md` — GitHub's five red flags mapped to whether each is
+  decidable from a pull request, which rule covers it, and how often it fired across the
+  2,204-PR scan. **Two of the five are not mechanically decidable and the page says so**,
+  along with the three CI-gaming checks that are decidable and still unimplemented. GitHub's
+  post gives no frequency data for four of its five flags; this supplies it where we measured
+  it.
+
+## v0.7.0 - 2026-07-29
+
+### Changed
+
+- **Nine coding-agent bot accounts were missing from `agent_detection.authors`.** The default
+  list was `devin-ai-integration[bot]` and `copilot-swe-agent[bot]`. Added: Google Jules,
+  AWS Kiro, Codegen, OpenCode, Tembo, Amazon Q Developer, Mentat, Factory Droid and Ellipsis —
+  together roughly **364,000 public pull requests** of coverage the defaults could not see.
+  **Google Jules alone opens more pull requests than Devin** (319,715 vs 209,483, measured
+  2026-07-29).
+
+  Each account was verified by reading a pull request it had actually opened, and the counts
+  are recorded in the source. Automation such as dependabot, renovate and `github-actions` is
+  deliberately excluded — those open pull requests but not from a task description, and asking
+  a version bump for a scope contract would be wrong. A regression test pins both directions.
+
+  Found by auditing the split in the false-positive measurement rather than by reading vendor
+  documentation: one pull request the engine had classified as human turned out to be AWS Kiro.
+  See [the measurement](docs/study/what-a-zero-config-install-reports.md).
+
+### Fixed
+
+- `docs/study/what-a-zero-config-install-reports.md` split its sample using the engine's own
+  classifier and then measured how quiet the engine was on one side of that split, which is
+  circular. Re-checked every pull request it had called human: nine were automation bots and one
+  was an undetected coding agent. The corrected figure is **44 of 46 human pull requests
+  reporting nothing (95.7%)**, down from a claimed 96.4% on a contaminated denominator. Both
+  findings remain verified correct, so the zero-false-positive result stands.
+
+## v0.6.0 - 2026-07-26
+
+### Fixed
+
+- Three user-facing strings said **"an mergewarden contract"** — leftovers from the
+  v0.4.0 rename. `contract/missing` is the most frequently emitted finding in the
+  whole ruleset now that detection works, so this was the sentence most new installs
+  would see first. Now "a MergeWarden contract".
+
+### Changed
+
+- **`contract/missing` now defaults to `warn` instead of `error`**, and its severity is
+  configurable as `contract.missing_severity`.
+
+  It is the one rule that fires on the _absence_ of a convention rather than on
+  something a pull request did, and the scan study measured **0 of 2,204** merged agent
+  pull requests declaring a scope. At `error`, following this project's own documented
+  adoption path to `mode: block` would reject essentially every agent pull request from
+  the moment it was switched on — for a condition a reviewer cannot resolve by reviewing
+  the change. It also made a missing declaration exactly as severe as an observed
+  privilege escalation, which flattened the signal the tool exists to provide.
+
+  Verified on two real agent pull requests. One that only lacks a contract now warns and
+  does not block; one that also edits an agent instruction file still blocks, on the
+  drift finding. `contract` was also the only rule family with no severity control, so
+  this closes that inconsistency.
+
+  In the default `warn` mode the decision is unchanged — it was `needs-review` before and
+  still is. What changes is that the report no longer calls it an error. Repositories that
+  do want declaration enforced set `contract.missing_severity: error`.
+
+  `contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` remain `error`:
+  each fires on something a pull request did against its own declaration.
+
+## v0.5.1 - 2026-07-25
+
+### Fixed
+
+- **The default Claude Code body marker matched nothing.** `DEFAULT_AGENT_BODY_PATTERNS`
+  shipped the plain string `Generated with Claude Code`, but Claude Code's real footer
+  is `🤖 Generated with [Claude Code](https://claude.com/claude-code)` — the product
+  name sits inside a Markdown link, so that substring never occurs in an actual pull
+  request body. Measured against 13 real Claude Code pull requests taken from the scan
+  study: the old default matched **0 of 13**, the corrected
+  `Generated with [Claude Code]` matches **12 of 13** (the remaining one had its footer
+  edited out before merge). The plain form is kept as a fallback.
+
+  This matters more than the other markers: Codex, Cursor, Copilot and Devin pull
+  requests are caught by branch or author, but Claude Code usually runs on a
+  developer's own machine and pushes to an ordinary branch name, so the body footer is
+  often the only signal available.
+
+### Changed
+
+- `docs/study/methodology.md` now states which of the study's rates carry across engine
+  versions and which do not. The per-rule boundary rates (3.9%, 12.9%, 17.5%, 22.1%) are
+  unaffected by the v0.5.0 detection fix — verified by re-scanning a 66-PR stratified
+  sample of the dataset under the new defaults, which produced identical boundary
+  findings on 66 of 66. The "at least one finding" rate and the star-band comparison are
+  boundary-crossing rates and are not comparable to a v0.5.0+ run, which would add
+  `contract/missing` to nearly the whole corpus.
+
+## v0.5.0 - 2026-07-25
+
+### Added
+
+- **`mergewarden demo`** — analyzes an example pull request bundled inside the CLI,
+  with no network call, no token and no repository. It runs the **default** policy,
+  so the 13 findings it reports are a verifiable statement about what a
+  zero-configuration install does rather than a showcase arranged by a bespoke
+  fixture config. The example is an agent pull request that declares
+  `allowed_paths: docs/**` and then edits a release workflow, `AGENTS.md` and
+  `package.json`, which is enough to demonstrate contract scope, control-plane
+  drift, workflow permission escalation, prompt injection into an agentic workflow,
+  and an added lifecycle script in a single report. Accepts
+  `--format human|json|markdown`.
+
+### Changed
+
+- **Agent detection now ships working defaults.** `agent_detection.authors`,
+  `branch_patterns` and `body_patterns` previously defaulted to empty arrays, which
+  meant a zero-config install could never detect an agent pull request — and because
+  `contract.required_for` defaults to `[agent]`, the project's headline check
+  ("did the PR stay inside its declared scope?") was unreachable without configuration.
+  Measured before this change: 14 of 14 recent merged pull requests from well-known
+  public repositories returned `0 error, 0 warning, 0 info`. The defaults are now the
+  cohort definitions from the [2,204-PR study](docs/study/methodology.md):
+  `devin-ai-integration[bot]` and `copilot-swe-agent[bot]` authors, `codex/**`,
+  `claude/**`, `cursor/**`, `copilot/**` and `devin/**` branches, and the
+  `Generated with Claude Code` body marker.
+
+  **This is a behaviour change.** A repository that relied on the empty defaults will
+  now see `agent/origin-detected` (info) and, on agent pull requests without a declared
+  contract, `contract/missing`. In the default `warn` mode that produces a
+  `needs-review` decision, not a block. Pull requests from humans are unaffected. To
+  restore the previous behaviour, set the keys explicitly to `[]`.
+
+- **Agent control-plane defaults now cover Gemini and Qwen.** Added `GEMINI.md`,
+  `**/GEMINI.md`, `QWEN.md`, `**/QWEN.md` and `.gemini/**` to
+  `DEFAULT_AGENT_CONTROL_PLANE_PATHS`. GitHub indexes 8,208 `GEMINI.md` and 1,376
+  `QWEN.md` files, so this was a real coverage hole: a pull request steering every
+  future Gemini run was invisible. **This is a behaviour change** — these paths carry
+  the `error` severity the rest of the control-plane list uses.
+
+- Cut the pull request comment down to what a reviewer needs above the fold:
+  the decision heading, one `Why` line with the path inline, one `Next` line,
+  and one `Findings` line with the counts and policy status. A 12-finding
+  report now shows 5 lines before the fold instead of 30. The run summary —
+  agent detection, contract presence, policy source, file counts, policy
+  digest — moves inside the `<details>` element rather than being dropped, and
+  report files, job summaries and the CLI keep the full flat layout. Second
+  round of feedback from the same maintainer evaluating MergeWarden on
+  [microcks/.github#86](https://github.com/microcks/.github/issues/86), who
+  pointed out that the first fix hid the findings but left the header
+  restating the decision four times.
+
+- The CLI's terminal report bounds itself to 10 findings; it now chooses those 10
+  by severity instead of by evaluation order, so a report with more findings than
+  fit can no longer hide every `error` behind warnings that happened to run first.
+  `agent/origin-detected` is retained regardless of its `info` severity because it
+  is what explains why the contract rules fired at all. The selected findings are
+  still printed in evaluation order, and `--format json` and `--format markdown`
+  are unaffected.
+
+### Fixed
+
+- Piping CLI output into a command that closes the pipe early — `| head`, or
+  `| less` quit before the end — printed an unhandled `EPIPE` stack trace over
+  the terminal. The CLI now exits quietly, as command-line tools are expected to.
+
+## v0.4.1 - 2026-07-25
+
+### Added
+
 - Commit trailer rules: `commit/trailer-missing` and `commit/trailer-forbidden`,
   configured under `commit_trailers`. Real AI-contribution policies express
   disclosure as a commit trailer and disagree on which one — Fedora and Mesa
@@ -25,6 +392,13 @@ This project follows the spirit of
 
 ### Changed
 
+- Collapse the detailed findings in the pull request comment behind a `<details>`
+  element. On a 12-finding report the comment drops from 371 rendered lines to 33
+  before the fold, while the findings, evidence snapshots, finding IDs and
+  remediation stay exactly where they were, one click away. Report files and job
+  summaries are unchanged. Reported by a maintainer evaluating MergeWarden on
+  [microcks/.github#86](https://github.com/microcks/.github/issues/86): a bot
+  comment that long buries every other conversation on the page.
 - The default policy digest changed because the configuration schema gained the
   `commit_trailers` key. Stored digests from earlier versions will differ; no
   finding IDs changed.

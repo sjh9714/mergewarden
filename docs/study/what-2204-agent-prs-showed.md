@@ -55,7 +55,10 @@ you want to know whether an agent PR stayed inside its intended task, there
 is currently nothing to check it against.
 
 **7.0% of complete analyses had at least one boundary finding** (153 of
-2,191). The interesting structure is underneath that number:
+2,191). That is a boundary-crossing rate, not a disclosure rate — the engine
+used here could not detect agent authorship at all, which is
+[covered in the methodology](methodology.md#what-these-rates-do-and-do-not-carry-across-engine-versions).
+The interesting structure is underneath that number:
 
 - Of the **349 PRs that touched GitHub Actions workflows or package
   manifests**, 12.9% escalated workflow permissions and 17.5% introduced
@@ -66,8 +69,8 @@ is currently nothing to check it against.
   repository, which makes them a quiet privilege-escalation path: an agent
   that edits its own instructions today shapes what the next agent does
   tomorrow.
-- Repositories with **10k+ stars showed a 4.3% finding rate — roughly half**
-  the long-tail rate (8.6%). Established projects have guardrails. The long
+- Repositories with **10k+ stars showed a 4.3% boundary-crossing rate — roughly
+  half** the long-tail rate (8.6%). Established projects have guardrails. The long
   tail of small repositories, where most agent PRs actually land, is where
   agents run with the least oversight.
 

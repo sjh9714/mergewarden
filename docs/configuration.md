@@ -16,15 +16,24 @@ mode: warn
 
 ```yaml
 agent_detection:
-  authors: []
-  labels: [ai, agent]
-  branch_patterns: ["codex/**", "ai/**"]
-  body_patterns: []
+  # 11 coding-agent bot accounts by default — Copilot, Jules, Devin, Kiro,
+  # Codegen, OpenCode, Tembo, Amazon Q, Mentat, Factory Droid, Ellipsis.
+  authors: ["copilot-swe-agent[bot]", "google-labs-jules[bot]", "..."]
+  labels: [] # label conventions are per-repository; add your own
+  branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"]
+  body_patterns: ["Generated with [Claude Code]"]
 
 contract:
   required_for: [agent]
   allow_missing_in_observe_mode: true
+  missing_severity: info
 ```
+
+Those are the **defaults**, not a suggestion — they are the cohort definitions from the
+[2,204-PR study](study/methodology.md), so a zero-config install recognises an agent pull
+request out of the box. Setting any of these keys replaces the default list for that key
+rather than adding to it. Detection is a heuristic for deciding which pull requests must
+carry a contract; it is not proof of authorship.
 
 PR contracts are comment blocks in the PR body:
 
@@ -42,6 +51,26 @@ blocked_paths:
 
 The contract is an untrusted declaration. `required_evidence` was removed in
 v0.3.0 because it had no enforceable deterministic semantics.
+
+`missing_severity` applies to `contract/missing` only, and is the one rule that
+accepts `info` as well as `warn` and `error`. It defaults to **`info`** because
+that rule fires on the _absence_ of a convention rather than on something a pull
+request did, and the [scan study](study/methodology.md) found 0 of 2,204 merged
+agent pull requests declaring a scope. At `error` a `mode: block` install would
+reject essentially every agent pull request on day one; at `warn` it would label
+every one of them for review. `info` records the fact and leaves the decision
+alone. Raise it to `warn` once you have asked your contributors to declare
+scope, and to `error` once they do.
+
+`allow_missing_in_observe_mode` is a **no-op since v0.9.0**. It existed to
+downgrade `contract/missing` to `warn` in observe mode, which only made sense
+while the default was `error`; against an `info` default the same code would
+_raise_ the severity a repository had deliberately configured. The key is still
+accepted so existing config files keep parsing.
+
+`contract/invalid`, `contract/out-of-scope` and `contract/blocked-path` stay
+`error` regardless: each fires on something the pull request did against its
+own declaration.
 
 ## High-Risk Paths
 
@@ -73,7 +102,15 @@ github_actions:
     added_secret_reference: warn
     workflow_deleted: warn
     malformed_workflow: error
+    trigger_removed: warn
 ```
+
+`trigger_removed` fires when a workflow stops firing on an event it used to —
+the case GitHub's review guidance calls out as "confirm workflow still runs on
+forks and pull requests". It defaults to `warn` because consolidating workflows
+is ordinary and the artifact cannot tell that apart from a pull request removing
+the check that would have gated it. See
+[GitHub's review guidance mapped to rules](github-review-guidance.md).
 
 Every check accepts `off`, `warn`, or `error`. Legacy
 `block_permission_escalation`, `block_pull_request_target_checkout`,
@@ -121,7 +158,10 @@ waivers:
 
 ```yaml
 agent_control_plane:
-  paths: ["AGENTS.md", "**/AGENTS.md", ".mcp.json", ".codex/**"]
+  # Defaults cover AGENTS.md, CLAUDE.md, GEMINI.md, QWEN.md (and **/ variants),
+  # .cursor/**, .gemini/**, .codex/**, .github/copilot-instructions.md, .mcp.json,
+  # and claude_desktop_config.json.
+  paths: ["AGENTS.md", "**/AGENTS.md", "GEMINI.md", ".mcp.json", ".codex/**"]
   severity: error
 
 package_scripts:
@@ -140,6 +180,7 @@ default, so this changes nothing until you add an entry.
 ```yaml
 commit_trailers:
   enabled: true
+  ai_disclosure: info # off | info | warn | error
   required:
     - any_of: [Assisted-by, Generated-by]
       applies_to: agent # agent | all
@@ -156,6 +197,59 @@ A `required` entry is satisfied by **any** of its `any_of` trailers.
 `Signed-off-by:` requirement needs. A `forbidden` entry without
 `value_patterns` rejects the trailer outright; with them, only matching values
 are rejected.
+
+## triage
+
+Facts a maintainer normally checks by hand. Every one is `info`, so none of them moves the
+decision until you raise it.
+
+```yaml
+triage:
+  no_linked_issue: off # off | info | warn | error
+  empty_description: info
+  template_unused: info
+  oversized_change: info
+  unverified_author: info
+  exclude_authors: [dependabot[bot], renovate[bot], github-actions[bot]]
+  min_description_characters: 80
+  max_files: 50
+  max_lines: 1500
+```
+
+`exclude_authors` is maintenance automation these rules should not describe: a release bot does
+not fill in a template and a dependency bump has no issue to link. Coding agents are
+deliberately absent from the default — `Copilot` and `devin-ai-integration[bot]` are bot
+accounts too, and their pull requests are the ones a maintainer most wants triaged, which is
+why this is a list of accounts rather than a test for `type: Bot`.
+
+`no_linked_issue` is the one that ships `off`: most pull requests in most repositories
+reference no issue, so at `info` it would attach a finding to nearly every report.
+`mergewarden triage` turns it on, because comparing many open pull requests on the same facts
+is a different question from gating one of them — see [triage](triage.md).
+
+`unverified_author` is deliberately `info` and deliberately not raised by default. A first
+contribution is how every contributor starts; a tool that greets one with a warning is the
+failure mode this project exists to avoid.
+
+`template_unused` reads the repository's pull-request template from the base branch, and only
+fires when the body keeps **none** of its sections — a partly filled template is normal. Headings
+inside HTML comments are instructions to the contributor rather than sections to keep, so they
+are not counted; Next.js's template is entirely comment, and counting it would flag every pull
+request in the repository. The template is not fetched at all when this is `off`.
+
+`ai_disclosure` controls `commit/ai-assistance-disclosed`, which reports the
+`Co-authored-by:` trailers coding tools write about themselves — Claude Code,
+Cursor, GitHub Copilot, Devin, Codex and Google Jules — including the model
+name where the tool records one. It is `info` by default because it describes a
+disclosure the tool made, not something the pull request did wrong, so it must
+not move the decision. Raise it if your policy requires disclosure; set `off` to
+drop it.
+
+Tools are matched on the co-author **address**, never the domain and never the
+display name. `mdangelo@openai.com` belongs to a person, and the same tool
+writes `Claude`, `Claude Opus 4.8` and `Claude Opus 4.8 (1M context)` across
+commits — the addresses were read out of real merged history, and the counts are
+in [what AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md).
 
 These rules stay inert when MergeWarden could not enumerate every commit — see
 [the commit trailer rule guide](rules/commit-trailers.md) for the limits and

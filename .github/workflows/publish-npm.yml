@@ -6,7 +6,7 @@ on:
       ref:
         description: "Signed release tag to publish"
         required: true
-        default: "v0.4.0"
+        default: "v0.8.0"
         type: string
       confirmation:
         description: "Type PUBLISH to confirm the external release action"
@@ -89,19 +89,32 @@ jobs:
           pnpm format:check
           pnpm audit
 
-      - name: Pack release artifact once
+      - name: Pack release artifacts once
         shell: bash
+        env:
+          RELEASE_REF: ${{ inputs.ref }}
         run: |
+          version="${RELEASE_REF#v}"
           pnpm --filter mergewarden pack --pack-destination "$RUNNER_TEMP"
-          tarball="$(find "$RUNNER_TEMP" -maxdepth 1 -name 'mergewarden-*.tgz' -print -quit)"
-          test -n "$tarball"
-          echo "CLI_TARBALL=$tarball" >> "$GITHUB_ENV"
-          sha256sum "$tarball"
+          pnpm --filter mergewarden-mcp pack --pack-destination "$RUNNER_TEMP"
+
+          # Resolve each tarball by exact filename. A wildcard on the CLI name also matches
+          # the MCP package's tarball, and `find -print -quit` would then publish whichever
+          # the filesystem happened to return first — under the wrong package name.
+          cli="$RUNNER_TEMP/mergewarden-$version.tgz"
+          mcp="$RUNNER_TEMP/mergewarden-mcp-$version.tgz"
+          test -f "$cli"
+          test -f "$mcp"
+          echo "CLI_TARBALL=$cli" >> "$GITHUB_ENV"
+          echo "MCP_TARBALL=$mcp" >> "$GITHUB_ENV"
+          sha256sum "$cli" "$mcp"
 
       - name: Smoke-test the exact release artifact
         env:
           GH_TOKEN: ${{ github.token }}
         run: pnpm --filter mergewarden test:packed -- "$CLI_TARBALL"
 
-      - name: Publish the exact tarball with provenance
-        run: npm publish "$CLI_TARBALL" --provenance --access public
+      - name: Publish the exact tarballs with provenance
+        run: |
+          npm publish "$CLI_TARBALL" --provenance --access public
+          npm publish "$MCP_TARBALL" --provenance --access public

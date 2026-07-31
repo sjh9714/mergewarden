@@ -6,8 +6,8 @@
   "pr": {
     "number": 106,
     "title": "Add package lifecycle script",
-    "branchName": "codex/package-lifecycle-script",
-    "author": "codex"
+    "branchName": "demo/package-lifecycle-script",
+    "author": "octocat"
   },
   "files": [
     {

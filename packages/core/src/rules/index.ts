@@ -9,7 +9,11 @@ import {
   contractMissingRule,
   contractOutOfScopeRule,
 } from "./contractRules.js";
-import { commitTrailerForbiddenRule, commitTrailerMissingRule } from "./commitTrailers.js";
+import {
+  commitAiDisclosedRule,
+  commitTrailerForbiddenRule,
+  commitTrailerMissingRule,
+} from "./commitTrailers.js";
 import { contentUnavailableRule } from "./contentUnavailable.js";
 import { highRiskPathRule } from "./highRiskPath.js";
 import { packageScriptDriftRule } from "./packageScripts.js";
@@ -17,6 +21,8 @@ import { missingTestEvidenceRule } from "./testEvidence.js";
 import type { Rule, RuleContext } from "./types.js";
 import { workflowDangerousPatternRule } from "./workflowDangerousPattern.js";
 import { workflowPermissionEscalationRule } from "./workflowPermissions.js";
+import { triageRules } from "./triage.js";
+import { workflowTriggerRemovedRule } from "./workflowTriggers.js";
 
 export const builtInRules: Rule[] = [
   agentOriginRule,
@@ -31,9 +37,14 @@ export const builtInRules: Rule[] = [
   packageScriptDriftRule,
   commitTrailerMissingRule,
   commitTrailerForbiddenRule,
+  commitAiDisclosedRule,
   workflowPermissionEscalationRule,
+  workflowTriggerRemovedRule,
   workflowDangerousPatternRule,
   agenticWorkflowInjectionRule,
+  // Last on purpose. Triage findings describe what a pull request is missing around the change;
+  // a boundary the change actually crossed should be read first.
+  ...triageRules,
 ];
 
 export function createRuleContext(input: AnalysisInput): RuleContext {

@@ -6,8 +6,8 @@
   "pr": {
     "number": 107,
     "title": "Add workflow with unpinned container images",
-    "branchName": "codex/workflow-unpinned-containers",
-    "author": "codex"
+    "branchName": "demo/workflow-unpinned-containers",
+    "author": "octocat"
   },
   "files": [
     {

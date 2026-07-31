@@ -6,8 +6,8 @@
   "pr": {
     "number": 108,
     "title": "Add workflow with pinned container images",
-    "branchName": "codex/workflow-pinned-containers",
-    "author": "codex"
+    "branchName": "demo/workflow-pinned-containers",
+    "author": "octocat"
   },
   "files": [
     {

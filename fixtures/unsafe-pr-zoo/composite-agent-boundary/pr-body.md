@@ -7,3 +7,5 @@ allowed_paths:
 -->
 
 Clarify the installation guide.
+
+Reworks the release workflow and the auth helper in one pass. Several boundaries move at once, which is what this fixture exercises.

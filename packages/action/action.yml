@@ -15,7 +15,7 @@ inputs:
     description: "Override config mode: observe, warn, or block"
     required: false
   comment:
-    description: "Post or update a PR comment with the report"
+    description: "PR comment mode: auto (only when a finding needs attention), always, or never. Needs pull-requests: write"
     required: false
     default: "false"
   fail-on-block:

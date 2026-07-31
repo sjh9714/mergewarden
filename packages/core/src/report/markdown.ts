@@ -11,6 +11,14 @@ export interface MarkdownReportOptions {
   maxFindings?: number;
   maxBytes?: number;
   fullReportPath?: string;
+  /**
+   * Wrap the detailed finding sections in a collapsed `<details>` element.
+   *
+   * Used for the pull request comment, where a full listing buries every other conversation on the
+   * page. Nothing is removed — the same findings, evidence snapshots and remediation are inside,
+   * one click away. Off by default so report files and job summaries stay flat.
+   */
+  collapseFindings?: boolean;
 }
 
 const severityRank: Record<Finding["severity"], number> = {
@@ -33,6 +41,39 @@ function policySource(source: AnalysisResult["metadata"]["configSource"]): strin
   }
 
   return "local fixture";
+}
+
+function whyLine(result: AnalysisResult): string {
+  const finding = highestActionableFinding(result.findings);
+
+  if (!finding) {
+    return result.waivedFindings.length > 0
+      ? "All detected findings are covered by active base-policy waivers."
+      : "No active warning or blocking findings were detected.";
+  }
+
+  const message = safeReportValue(finding.message);
+
+  if (!finding.path) {
+    return message;
+  }
+
+  const path = safeReportValue(finding.path);
+
+  // Most rule messages already name the file they are about. Appending it again is exactly the
+  // kind of restatement this compact header exists to remove.
+  return message.includes(path) ? message : `${message} (\`${path}\`)`;
+}
+
+function countsLine(result: AnalysisResult): string {
+  const parts = [
+    `${result.summary.errorCount} error`,
+    `${result.summary.warnCount} warning`,
+    `${result.summary.infoCount} info`,
+    ...(result.summary.waivedCount > 0 ? [`${result.summary.waivedCount} waived`] : []),
+  ];
+
+  return parts.join(" \u00b7 ");
 }
 
 function whyLines(result: AnalysisResult): string[] {
@@ -129,32 +170,32 @@ type MarkdownReportItem =
   | { finding: Finding; waived: false }
   | { finding: WaivedFinding; waived: true };
 
+function detailSummaryLabel(activeCount: number, waivedCount: number): string {
+  if (activeCount === 0 && waivedCount === 0) {
+    return "Detailed findings";
+  }
+
+  const parts = [
+    ...(activeCount > 0 ? [`${activeCount} finding${activeCount === 1 ? "" : "s"}`] : []),
+    ...(waivedCount > 0 ? [`${waivedCount} waived`] : []),
+  ];
+
+  return `Detailed findings (${parts.join(", ")}) — evidence, finding IDs, remediation`;
+}
+
 function buildMarkdownReport(
   result: AnalysisResult,
   combined: MarkdownReportItem[],
   visibleCount: number,
   fullReportPath: string | undefined,
+  collapseFindings: boolean,
 ): string {
   const visible = combined.slice(0, visibleCount);
   const surfaceOmitted = combined.length - visible.length;
-  const lines = [
-    `# MergeWarden: ${humanDecisionLabel(result)}`,
-    "",
-    `Decision: ${result.decision}`,
-    `Status: ${result.status}`,
-    "",
-    "## Why",
-    "",
-    ...whyLines(result),
-    "",
-    "## Recommended Next Step",
-    "",
-    recommendedNextStep(result),
-    "",
-    "## Policy Status",
-    "",
-    policyStatus(result),
-    "",
+  // The full run metadata. Visible in report files and job summaries, which are surfaces a reader
+  // opens deliberately; folded away in the pull request comment, which is pushed into everyone's
+  // conversation. Same content either way.
+  const runSummary = [
     "## Summary",
     "",
     `- Agent detected: ${yesNo(result.summary.agentDetected)}`,
@@ -168,31 +209,76 @@ function buildMarkdownReport(
     `- Waived: ${result.summary.waivedCount}`,
     `- Policy digest: ${safeReportValue(result.metadata.policyDigest)}`,
     "",
-    "## Detailed Findings",
-    "",
   ];
 
+  const lines = collapseFindings
+    ? [
+        // Four lines: what was decided, why, what to do, how much. Everything a reviewer needs to
+        // know without expanding, and nothing repeated. The heading already states the decision,
+        // so `Decision:`/`Status:`/`Policy Status:` do not restate it above the fold.
+        `# MergeWarden: ${humanDecisionLabel(result)}`,
+        "",
+        `**Why:** ${whyLine(result)}`,
+        `**Next:** ${recommendedNextStep(result)}`,
+        `**Findings:** ${countsLine(result)} — ${policyStatus(result)}`,
+        "",
+      ]
+    : [
+        `# MergeWarden: ${humanDecisionLabel(result)}`,
+        "",
+        `Decision: ${result.decision}`,
+        `Status: ${result.status}`,
+        "",
+        "## Why",
+        "",
+        ...whyLines(result),
+        "",
+        "## Recommended Next Step",
+        "",
+        recommendedNextStep(result),
+        "",
+        "## Policy Status",
+        "",
+        policyStatus(result),
+        "",
+        ...runSummary,
+      ];
+
   const activeVisible = visible.filter((item) => !item.waived);
+  const waivedVisible = visible.filter((item) => item.waived);
+  const detail: string[] = ["## Detailed Findings", ""];
 
   if (activeVisible.length === 0) {
-    lines.push(
+    detail.push(
       result.findings.length === 0 ? "No active findings." : "Active findings omitted.",
       "",
     );
   } else {
     for (const item of activeVisible) {
-      pushFinding(lines, item.finding);
+      pushFinding(detail, item.finding);
     }
   }
 
-  const waivedVisible = visible.filter((item) => item.waived);
-
   if (waivedVisible.length > 0) {
-    lines.push("## Waived Findings", "");
+    detail.push("## Waived Findings", "");
 
     for (const item of waivedVisible) {
-      pushWaivedFinding(lines, item.finding);
+      pushWaivedFinding(detail, item.finding);
     }
+  }
+
+  if (collapseFindings) {
+    lines.push(
+      "<details>",
+      `<summary>${detailSummaryLabel(activeVisible.length, waivedVisible.length)}</summary>`,
+      "",
+      ...runSummary,
+      ...detail,
+      "</details>",
+      "",
+    );
+  } else {
+    lines.push(...detail);
   }
 
   const omitted = result.metadata.omittedFindingCount + surfaceOmitted;
@@ -231,7 +317,13 @@ export function renderMarkdownReport(
 
   while (low <= high) {
     const visibleCount = Math.floor((low + high) / 2);
-    const candidate = buildMarkdownReport(result, combined, visibleCount, options.fullReportPath);
+    const candidate = buildMarkdownReport(
+      result,
+      combined,
+      visibleCount,
+      options.fullReportPath,
+      options.collapseFindings ?? false,
+    );
 
     if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
       best = candidate;
