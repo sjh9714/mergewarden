@@ -1,5 +1,5 @@
 name: "MergeWarden for AI PRs"
-description: "Checkout-free policy gate for AI-generated pull requests"
+description: "Reports when a pull request edits the files coding agents read as instructions (CLAUDE.md, AGENTS.md, .mcp.json). Closes nothing."
 author: "MergeWarden contributors"
 
 inputs:

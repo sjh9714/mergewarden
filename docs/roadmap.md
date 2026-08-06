@@ -2,14 +2,23 @@
 
 The roadmap is ordered by evidence quality, not promised dates.
 
-## Shipped in v0.3.1
+## Shipped
 
-- Ship v0.3.1 as a normal release with a public `npx` scan path.
-- Fail closed on incomplete GitHub file/content collection.
-- Make workflow findings differential and independently tunable.
-- Add exact, expiring base-policy waivers.
-- Detect a narrow, documented class of agentic workflow injection.
-- Replace release-history-heavy onboarding with a concise product path.
+Through v0.10.2. The [changelog](../CHANGELOG.md) has every release; this is the
+shape of what exists.
+
+- A public `npx` path, and a checkout-free Action that fails closed when it
+  cannot collect the files it needs.
+- Workflow findings that compare against the base branch rather than restating
+  pre-existing conditions, each independently tunable, with exact and expiring
+  base-policy waivers.
+- Reporting when a pull request changes the files coding agents read as
+  instructions, and a narrow documented class of agentic workflow injection.
+- `mergewarden triage`, which reads a repository's open pull requests and
+  reports what each is missing without writing anything back.
+- Identification of the co-author trailers coding tools write about themselves,
+  matched on exact address rather than domain or display name.
+- A quiet default: the Action says nothing when there is nothing to say.
 
 ## Next
 
