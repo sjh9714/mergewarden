@@ -4,7 +4,12 @@ allowBuilds:
   esbuild: true
 overrides:
   esbuild: 0.28.1
-  undici: ^6.27.0
-  # GHSA-mh99-v99m-4gvg: brace-expansion DoS. Reached only through eslint's
-  # transitive minimatch@3, which still resolves the vulnerable 1.x line.
-  brace-expansion: ^5.0.8
+  undici: ^6.28.0
+  # GHSA-rgw5-rvv9-x895: brace-expansion DoS, bypassing the earlier
+  # CVE-2026-14257 mitigation that ^5.0.8 was pinned for. Reached only through
+  # eslint's transitive minimatch.
+  brace-expansion: ^5.0.9
+  # GHSA-7p8r-x3mc-p8w7: fast-uri authority-introducer parsing. Reached through
+  # @modelcontextprotocol/sdk > ajv, which needs the 3.x line, so this stays on
+  # ^3 rather than following fast-uri to 4.x.
+  fast-uri: ^3.1.5
