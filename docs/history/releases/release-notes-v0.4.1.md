@@ -22,7 +22,7 @@ express disclosure as a commit trailer and disagree on which one — Fedora and
 Mesa require `Assisted-by:`, Kubernetes forbids it, QEMU and FreeBSD require a
 DCO `Signed-off-by:` — and every one of those clauses is decidable from commit
 metadata alone, with no heuristics and no model. See
-[the rule guide](rules/commit-trailers.md).
+[the rule guide](../../rules/commit-trailers.md).
 
 ```yaml
 commit_trailers:
@@ -44,7 +44,7 @@ lines to 33 before the fold — decision, why, recommended next step, counts. Th
 findings, evidence snapshots, finding IDs and remediation are all still there,
 one click away; report files, job summaries and the CLI are unchanged.
 
-**A new documentation page,** [what a checker can actually enforce](what-a-checker-can-enforce.md),
+**A new documentation page,** [what a checker can actually enforce](../../what-a-checker-can-enforce.md),
 mapping real policy clauses to what is decidable — including the clauses
 MergeWarden does not and will not attempt, such as deciding whether a change was
 model-produced.
@@ -62,5 +62,5 @@ model-produced.
   checkout, no execution of pull-request code, no head-branch policy loading,
   no LLM.
 
-See the [changelog](../CHANGELOG.md), [CLI reference](cli.md), and
-[release checklist](release-checklist.md).
+See the [changelog](../../../CHANGELOG.md), [CLI reference](../../cli.md), and
+[release checklist](../../release-checklist.md).

@@ -61,7 +61,7 @@ Even before any of the policy above, the built-in default policy reports:
 
 - `agent-control-plane/drift` when a PR edits `CLAUDE.md`, `AGENTS.md`,
   `.mcp.json`, `claude_desktop_config.json`, or similar files that steer
-  future agent runs — including the agent editing its own instructions. Add
+  future agent runs, including the agent editing its own instructions. Add
   `.claude/**` to `agent_control_plane.paths` if your repository keeps agent
   settings there; it is not in the default list.
 - `workflow/permission-escalation` and related workflow findings when a PR

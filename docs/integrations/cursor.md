@@ -35,7 +35,7 @@ jobs:
 No checkout step is needed and the Action never executes PR code.
 
 `comment: auto` posts a pull-request comment only when there is an error, a
-warning, or an incomplete analysis — a routine agent pull request that crossed
+warning, or an incomplete analysis. A routine agent pull request that crossed
 no boundary gets nothing. It needs `pull-requests: write`; drop both if you
 would rather read the findings in the Actions job summary.
 
@@ -94,7 +94,7 @@ an untrusted declaration; the base-branch policy stays authoritative.
 Even before any of the policy above, the built-in default policy reports:
 
 - `agent-control-plane/drift` when a PR edits `.cursor/**`, `AGENTS.md`,
-  `.mcp.json`, or similar files that steer future agent runs — including the
+  `.mcp.json`, or similar files that steer future agent runs, including the
   agent editing its own instructions.
 - `workflow/permission-escalation` and related workflow findings when a PR
   raises GitHub Actions privileges.

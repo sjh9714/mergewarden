@@ -36,8 +36,8 @@ changed, so deciding what to read first is still the work.**
 ## Maintainers are not closing the door either
 
 GitHub also shipped a setting for who may open a pull request at all. Across the 30 repositories
-in the anti-slop adopter cohort that have a live queue — projects that had already decided the
-problem was real enough to install an auto-closing action — **every one reports
+in the anti-slop adopter cohort that have a live queue (projects that had already decided the
+problem was real enough to install an auto-closing action), **every one reports
 `pull_request_creation_policy: "all"`.**
 
 That is the default, so this mostly measures that nobody changed it. Still: the population most

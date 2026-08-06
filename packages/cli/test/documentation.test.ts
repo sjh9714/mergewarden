@@ -71,11 +71,12 @@ describe("documentation contracts", () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
     const headings = [
       "# MergeWarden for AI PRs",
-      "## Try It in 60 Seconds",
-      "## Install in 30 Seconds",
-      "## What It Catches",
-      "## Adopt Safely",
-      "## Trust Boundary",
+      "## The situation it is built for",
+      "## See it work, without installing anything",
+      "## What it looks for",
+      "## Run it on every pull request",
+      "## What it will not do",
+      "## Turning it on gradually",
       "## Documentation",
     ];
     let previous = -1;

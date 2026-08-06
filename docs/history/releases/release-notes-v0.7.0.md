@@ -29,7 +29,7 @@ Counts measured 2026-07-29 with `is:pr author:<account>`.
 
 Not by reading vendor documentation — by auditing our own measurement.
 
-The [false-positive check](study/what-a-zero-config-install-reports.md) split its
+The [false-positive check](../../study/what-a-zero-config-install-reports.md) split its
 sample using the engine's own `agentDetected` flag, then measured how quiet the
 engine was on the human side. That is circular: any pull request wrongly called
 human lands in the quiet bucket and improves the score.

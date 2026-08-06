@@ -414,7 +414,7 @@ This project follows the spirit of
 - Rename the base-branch policy file from `agent-gate.yml` to `mergewarden.yml`
   and the PR body contract marker from `agent-gate-contract` to
   `mergewarden-contract`. This is a clean break with no compatibility alias;
-  see the [v0.4.0 migration guide](docs/migration-v0.4.0.md).
+  see the [v0.4.0 migration guide](docs/history/releases/migration-v0.4.0.md).
 - Rename default report outputs to `mergewarden-report.json` and
   `mergewarden-report.md`, and environment/constant prefixes from `AGENT_GATE`
   to `MERGEWARDEN`. Finding IDs keep the `agf_` prefix so existing waivers

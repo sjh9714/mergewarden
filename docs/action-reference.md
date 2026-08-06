@@ -26,7 +26,7 @@ lists, unavailable required content, or exceeded analysis limits always fail.
 `true` and `false` still work and mean `always` and `never`.
 
 `auto` is the setting worth having. Info findings are context, not a request to
-act, so they are recorded in the job summary and nowhere else — a routine agent
+act, so they are recorded in the job summary and nowhere else: a routine agent
 pull request that stayed in scope gets no comment at all. When a run that did
 comment is later fixed, the existing comment is **updated** to the passing
 report rather than deleted, so a stale "NEEDS REVIEW" never outlives the problem

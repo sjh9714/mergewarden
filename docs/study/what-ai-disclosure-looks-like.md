@@ -15,7 +15,7 @@ Co-authored-by: Copilot <175728472+Copilot@users.noreply.github.com>
 ```
 
 Nobody opts in. The tool writes it, it survives a squash merge, and it lands in permanent
-history — unlike a `codex/**` branch name, which disappears the moment the branch is deleted or
+history, unlike a `codex/**` branch name, which disappears the moment the branch is deleted or
 renamed. It also carries the model, which is the granularity Mesa's policy asks for and which
 nothing else in the ecosystem supplies.
 
@@ -24,8 +24,8 @@ nothing else in the ecosystem supplies.
 Two samples, both read from cloned git history (`--bare --filter=tree:0`), so no API and no
 sampling by search relevance:
 
-- **674 repositories** from the 2,204-PR corpus. Biased by construction — every one of them had
-  at least one agent pull request — so it is used only for discovering address formats.
+- **674 repositories** from the 2,204-PR corpus. Biased by construction (every one of them had
+  at least one agent pull request), so it is used only for discovering address formats.
 - **355 repositories**: the top 45 by stars in each of C, C++, Rust, Go, Python, TypeScript,
   JavaScript and Java. This is the sample every rate below comes from.
 
@@ -47,7 +47,7 @@ Of 124 distinct co-author addresses, seven could be attributed to a tool with ce
 | `<id>+google-labs-jules[bot]@users.noreply.github.com`    | Google Jules   | 201              |
 
 **`mdangelo@openai.com` and `etraut@openai.com` are also in this data, and they are people who
-work at OpenAI.** Matching on the domain — which our first pass did — reports human co-authors
+work at OpenAI.** Matching on the domain (which our first pass did) reports human co-authors
 as AI. Matching on the display name is worse: the same tool writes `Claude`, `Claude Opus 4.8`
 and `Claude Opus 4.8 (1M context)`, and a person can type any of them. Only the exact address,
 or a numeric GitHub no-reply prefix bound to a specific bot login, is safe.
@@ -69,7 +69,7 @@ to 2026-07:
 ## Correction: we said bans work, and the data does not support it
 
 An earlier pass of this measurement compared hand-picked policy repositories and found that
-projects banning AI contribution — curl, Godot, servo, QEMU, FreeBSD — showed **0%** while
+projects banning AI contribution (curl, Godot, servo, QEMU, FreeBSD) showed **0%** while
 permissive ones showed up to 16.6%. That looked like strong evidence that policy changes
 behaviour.
 
@@ -81,7 +81,7 @@ repository is at 0% regardless of policy.** Stratifying by language on the balan
 | Repositories whose docs mention AI contribution | 88  | **1.7%** |
 | Repositories whose docs do not                  | 145 | **1.0%** |
 
-No effect, and if anything the sign is backwards — JavaScript (+5.3pp) and TypeScript (+5.7pp)
+No effect, and if anything the sign is backwards: JavaScript (+5.3pp) and TypeScript (+5.7pp)
 both show _higher_ rates among repositories with a policy. The plausible reading is reverse
 causation: projects write an AI policy after they start receiving AI contributions.
 
@@ -93,18 +93,18 @@ is what that table rests on, and the errors run both ways (see below).
 Across the 355 top repositories, keyword matching flagged 21 as restrictive. Reading the text
 of the strongest candidates by hand:
 
-**Genuine prohibitions on AI-written code — three.**
+**Genuine prohibitions on AI-written code: three.**
 `nothings/stb` ("AI AND LLM ARE FORBIDDEN"), `pocketbase` (pull requests disabled outright after
 LLM spam), `TeamNewPipe/NewPipe` ("generally prohibited … usually lacking a fundamental
 understanding").
 
-**Prohibitions on AI-written _prose_, with code untouched — three.** `syncthing` ("Do not submit
+**Prohibitions on AI-written _prose_, with code untouched: three.** `syncthing` ("Do not submit
 AI generated issues or comments"), `LizardByte/Sunshine` (AI-generated PR summaries that replace
 the template), `anomalyco/opencode` ("Long, AI-generated PR descriptions and issues are not
 acceptable"). This is the same artifact-versus-conversation split llama.cpp drew, arrived at
 independently, and we have not seen it named as a category anywhere.
 
-**Not prohibitions at all — four.** `home-assistant/core` ("We support using AI (i.e., LLMs) as
+**Not prohibitions at all: four.** `home-assistant/core` ("We support using AI (i.e., LLMs) as
 tools when contributing"), `go-gitea/gitea` ("Contributions made with the assistance of AI tools
 are welcome"), `caddyserver/caddy` ("The use of LLMs is allowed"), `pola-rs/polars` ("All AI
 usage in any form must be disclosed"). Keyword matching mistook conditional language for
@@ -117,15 +117,15 @@ So the argument the ecosystem is having about banning AI contribution concerns a
 
 Comprehension. Four projects, independently, in almost the same words:
 
-> `home-assistant/core` — "you are responsible for any contributions you submit … AI-generated
+> `home-assistant/core`: "you are responsible for any contributions you submit … AI-generated
 > content that you have not personally reviewed and understood"
 >
-> `go-gitea/gitea` — "Only use AI to assist in contributions that you understand well enough to
+> `go-gitea/gitea`: "Only use AI to assist in contributions that you understand well enough to
 > explain, defend"
 >
-> `caddyserver/caddy` — "You certify that you wrote and comprehend the code you submit"
+> `caddyserver/caddy`: "You certify that you wrote and comprehend the code you submit"
 >
-> `starship/starship` — "You must be able to explain what your changes do … read and understood
+> `starship/starship`: "You must be able to explain what your changes do … read and understood
 > every line of code you submit"
 
 **No checker can verify that, including this one.** In our
@@ -134,7 +134,7 @@ bucket 3: unenforceable in principle. Saying so is more useful than pretending o
 
 The half that _is_ checkable is disclosure. `starship` requires contributors to "state the tool
 you used"; `polars` requires that "all AI usage in any form must be disclosed". That is a
-trailer check on commit metadata — and the trailer these tools already write is the disclosure
+trailer check on commit metadata, and the trailer these tools already write is the disclosure
 those policies are asking for.
 
 ## A disclosure field is necessary and nowhere near sufficient
@@ -147,24 +147,24 @@ repository's pull-request template kept in the body, and a disclosure written in
 **What this population is.** Repositories were found by code search for a disclosure field in
 `pull_request_template.md`, plus projects already known to have a written AI policy. It is not a
 sample of the [OSS AI-contribution policy catalogue](https://github.com/ecogetaway/oss-ai-contribution-policy):
-of the eighteen repositories measured here, **two — `ghostty-org/ghostty` and `llvm/llvm-project`
-— are catalogued.** Nor is it a sample of contributions: **open pull requests are a queue, not
+of the eighteen repositories measured here, **two (`ghostty-org/ghostty` and `llvm/llvm-project`)
+are catalogued.** Nor is it a sample of contributions: **open pull requests are a queue, not
 merged work**, and a queue over-represents whatever has not been dealt with yet.
 
 Ten repositories ship a disclosure field. **Retention ranges from 0% to 83%.**
 
 | Repository                          | field                                    | pulls |   kept | trailer | prose |
 | ----------------------------------- | ---------------------------------------- | ----: | -----: | ------: | ----: |
-| `OWASP/threat-dragon`               | checklist, tool + model                  |     4 |  **4** |       — |     — |
+| `OWASP/threat-dragon`               | checklist, tool + model                  |     4 |  **4** |       0 |     0 |
 | `django/django`                     | `## AI Assistance Disclosure (REQUIRED)` |    30 | **25** |       1 |     4 |
 | `caddyserver/caddy`                 | `## Assistance Disclosure`               |    30 | **24** |       2 |    12 |
 | `external-secrets/external-secrets` | `## AI Assistance disclosure`            |    29 | **21** |       3 |    16 |
-| `blakeblackshear/frigate`           | `## AI disclosure`                       |     3 |      2 |       — |     1 |
-| `starship/starship`                 | `#### AI-Assistance`                     |    28 |     14 |       — |    14 |
-| `argotorg/solidity`                 | `## AI Disclosure`                       |    30 |      8 |       1 |     — |
+| `blakeblackshear/frigate`           | `## AI disclosure`                       |     3 |      2 |       0 |     1 |
+| `starship/starship`                 | `#### AI-Assistance`                     |    28 |     14 |       0 |    14 |
+| `argotorg/solidity`                 | `## AI Disclosure`                       |    30 |      8 |       1 |     0 |
 | `ChainSafe/lodestar`                | checklist                                |    28 |      1 |      15 |    19 |
 | `certbot/certbot`                   | `## AI Assistance Disclosure`            |    30 |  **0** |       1 |     8 |
-| `elk-zone/elk`                      | checklist                                |    29 |  **0** |       — |     1 |
+| `elk-zone/elk`                      | checklist                                |    29 |  **0** |       0 |     1 |
 
 And ten without one, where disclosure arrives only when a tool volunteers a trailer or a
 contributor writes a sentence: `home-assistant/core` 11 of 28 by trailer, `biomejs/biome` 10 of
@@ -173,7 +173,7 @@ contributor writes a sentence: `home-assistant/core` 11 of 28 by trailer, `biome
 
 **The field is what makes disclosure possible; it is not what makes it happen.** Certbot has a
 heading, has a fallback line reading `_This PR is missing an AI assistance disclosure._` for the
-case where nobody fills it in, and gets **0 of 30** — its contributors write pull request bodies
+case where nobody fills it in, and gets **0 of 30**; its contributors write pull request bodies
 from scratch (`Fixes #10736. ## Problem …`) rather than editing the template. Django, whose
 heading carries `(REQUIRED)`, gets 25 of 30. Something between those two decides the outcome and
 this measurement does not isolate it.
@@ -181,7 +181,7 @@ this measurement does not isolate it.
 ### The trailer column is about one vendor's default, not about projects
 
 Home Assistant reaches 11 of 28 by trailer without asking anyone. It is tempting to read that as
-a symmetry — field here, trailer there — and the first version of this page did. It is not one.
+a symmetry (field here, trailer there), and the first version of this page did. It is not one.
 **Claude Code writes that trailer by default**, so the trailer column tracks which tool a
 repository's contributors happen to use, and whether they left the default on. A project whose
 contributors use a tool that writes no trailer scores zero without having chosen anything.
@@ -192,7 +192,7 @@ Only the other half of the claim survives that, and it survives on its own:
 ### Two corrections, both caught before use
 
 **Threat Dragon first scored 0 of 4 and was reported as having no disclosure field.** It has
-one, asking for tool _and_ model version with an explicit "no AI" option — more than most in
+one, asking for tool _and_ model version with an explicit "no AI" option, more than most in
 this table. The detector matched Markdown headings only, so a field offered as a checklist item
 was invisible. Found by reading the template while drafting a comment that would have told the
 project it lacked something it had built better than the examples being cited at it.
@@ -209,7 +209,7 @@ of 28 an hour later, on a different set of open pull requests. Every figure here
 Fedora requires `Assisted-by:`; Kubernetes forbids it; Mesa requires `Generated-by:` with tool
 and optional model; ten projects here want a field in the template; everywhere else it is
 whatever the tool happened to write. A schema that asks projects to declare an AI policy cannot
-assume where disclosure lives — it has to let a project say which convention it uses.
+assume where disclosure lives; it has to let a project say which convention it uses.
 
 ### Retention is not disclosure, and the gap is half
 
@@ -219,9 +219,9 @@ section in 24 of 30 pull requests, and **12 of those carry an actual statement.*
 That gap is probably the more useful finding on this page. Prescribing a format buys retention;
 only half of the retention converts into someone saying anything. A project that adds a field
 and then reads its retention rate as a compliance rate will be measuring the template, not the
-disclosure — **the shape may be relocating the problem rather than solving it.**
+disclosure: **the shape may be relocating the problem rather than solving it.**
 
-The prose count is deliberately narrow — a body mentioning "AI" is not a disclosure.
+The prose count is deliberately narrow: a body mentioning "AI" is not a disclosure.
 
 Reproduce with `node tools/study/disclosure-conventions.mjs <owner/repo> [...]`.
 
@@ -232,7 +232,7 @@ Reproduce with `node tools/study/disclosure-conventions.mjs <owner/repo> [...]`.
   turns the trailer off, is invisible. This repository disables it, so this repository would
   measure as 0%.
 - **Zero trailers is not zero AI.** It means no AI disclosed _this way_, and conventions
-  differ by project. gitea's contributors disclose through commit trailers — 7 of its 30 most
+  differ by project. gitea's contributors disclose through commit trailers: 7 of its 30 most
   recently updated open pull requests carry one. starship requires disclosure just as
   explicitly, has zero trailers across the same window, and gets it instead through an
   `#### AI-Assistance` section in its pull-request template, which contributors fill in. A
@@ -249,5 +249,5 @@ Reproduce with `node tools/study/disclosure-conventions.mjs <owner/repo> [...]`.
 The overall trajectory of AI-assisted commits is not our finding and is measured far better
 elsewhere: [Coding Beyond Your Training](https://arxiv.org/html/2605.25438v1) (May 2026)
 harvests 7,786,771 Claude-co-authored commits across 185,517 authors. What is ours is the
-narrower question — what the trailers say about _policies_ — and the address-level
+narrower question (what the trailers say about _policies_) and the address-level
 identification needed to count them without misattributing human co-authors.

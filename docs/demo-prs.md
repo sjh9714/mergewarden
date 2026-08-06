@@ -8,13 +8,13 @@ separate from local replay fixtures and are not external adopter claims.
 MergeWarden runs on every pull request to this repository. The self-gate is a
 [base policy](../mergewarden.yml) plus a
 [checkout-free workflow](../.github/workflows/mergewarden.yml) that pins the
-Action — the same 30-second setup this project recommends to everyone else. The
+Action, the same 30-second setup this project recommends to everyone else. The
 `MergeWarden` badge at the top of the README is that check's live status.
 
 This is not a sandbox: it gates real contributions, including ones from outside
 maintainers and coding agents. For example,
-[PR #120](https://github.com/sjh9714/mergewarden/pull/120) — an external
-contributor's PR on a `codex/**` agent branch — was detected as an agent PR and
+[PR #120](https://github.com/sjh9714/mergewarden/pull/120), an external
+contributor's PR on a `codex/**` agent branch, was detected as an agent PR and
 passed the [MergeWarden check](https://github.com/sjh9714/mergewarden/actions/runs/30059170947/job/89457928415)
 because it declared a `mergewarden-contract` and stayed inside its declared
 scope. That is the happy path the tool is built to make cheap.
@@ -40,8 +40,8 @@ in what the change did.
 | [#20](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/20) | Declares `docs/**`, edits `README.md`          | `warn` → `pass` | posted, then **updated in place** |
 
 **[#19](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/19) is
-the one that matters.** It is a routine agent pull request — detected as
-agent-authored, no declared contract — and it reports `agent/origin-detected`
+the one that matters.** It is a routine agent pull request (detected as
+agent-authored, no declared contract) and it reports `agent/origin-detected`
 and `contract/missing`, both `info`, and says nothing on the pull request. The
 [run](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions/runs/30474857695)
 records both findings in the job summary. Before v0.9.0 this exact pull request
@@ -56,8 +56,8 @@ comments. Same Action, same input, different change.
 **[#20](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/20)**
 declared a scope of `docs/**` and edited `README.md`, so `contract/out-of-scope`
 fired and comment `5121230270` said `NEEDS REVIEW`. The contract was then
-corrected in the pull-request body. Comment `5121230270` — the same comment, by
-id — now reads `PASSED`. It was updated, not deleted: the record of what was
+corrected in the pull-request body. Comment `5121230270` (the same comment, by
+id) now reads `PASSED`. It was updated, not deleted: the record of what was
 flagged and how it was resolved stays on the pull request.
 
 ## v0.6.0 Public Composite Proof
@@ -71,11 +71,11 @@ flagged and how it was resolved stays on the pull request.
 - Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
 
 Unchanged from v0.5.1, and here the reason is specific: this pull request
-**declares a contract**, so `contract/missing` — the rule v0.6.0 softened — never
+**declares a contract**, so `contract/missing` (the rule v0.6.0 softened) never
 fires on it. The finding driving the decision is `contract/out-of-scope`, which
 stays `error` by design. A proof that a rule changed would need a pull request
 without a contract; that evidence is the two real agent pull requests in the
-[release notes](release-notes-v0.6.0.md).
+[release notes](history/releases/release-notes-v0.6.0.md).
 
 ## v0.5.1 Public Composite Proof
 
@@ -89,11 +89,11 @@ without a contract; that evidence is the two real agent pull requests in the
 - Findings: 9 error, 2 warning, 1 info
 - Policy digest: `35e83a38996c79b52b8e7cd08ad6126ba5a35d8dbf65b3a76a1875c8d9fb7adc`
 
-Identical to the v0.5.0 run below, including the policy digest — this sandbox
+Identical to the v0.5.0 run below, including the policy digest. This sandbox
 sets `agent_detection` explicitly, so neither v0.5.0's new defaults nor v0.5.1's
 corrected body marker changes anything here. The evidence for the v0.5.1 fix is
 the 13-pull-request Claude Code sample in the
-[release notes](release-notes-v0.5.1.md), not this proof.
+[release notes](history/releases/release-notes-v0.5.1.md), not this proof.
 
 ## v0.5.0 Public Composite Proof
 
@@ -130,7 +130,7 @@ gained `GEMINI.md` and `QWEN.md`; finding IDs did not change.
   `<details>` fold added in v0.4.1
 
 The same pull request re-run against the v0.4.1 release commit. Rule outcomes
-are identical to the v0.4.0 run below — same decision, same finding counts —
+are identical to the v0.4.0 run below (same decision, same finding counts),
 which is the point: the v0.4.1 changes are a new opt-in rule family and a
 report-surface change, not a change in what the engine decides. The policy
 digest differs because the configuration schema gained the `commit_trailers`

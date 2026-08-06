@@ -24,7 +24,7 @@ Decided before running, and written so that both extremes fail:
 | ---------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | **ranked** | some pull requests flagged, and either fewer than 80% or at least one carries several facts | the list is ordered, which is the point                  |
 | **silent** | nothing flagged                                                                             | correct, and useless to the reader                       |
-| **flat**   | 80% or more flagged, none with more than one fact                                           | ranks nothing — the failure this command exists to avoid |
+| **flat**   | 80% or more flagged, none with more than one fact                                           | ranks nothing (the failure this command exists to avoid) |
 
 ## Result
 
@@ -37,7 +37,7 @@ below the floor):
 | silent   |     14 (41%) |
 | **flat** |        **0** |
 
-Restricted to the 13 with 100 stars or more, **11 of 13 are ranked** — including
+Restricted to the 13 with 100 stars or more, **11 of 13 are ranked**, including
 `huggingface/transformers` (8 of 10), `coollabsio/coolify` (6 of 10) and
 `typescript-eslint/typescript-eslint` (4 of 10).
 
@@ -50,7 +50,7 @@ sample reproduced it afterwards.
 ### The 41% is not what it looks like
 
 Reading the silent repositories one by one changed the number. **All 14 have open queues that
-are entirely maintenance automation** — thirteen at 10 of 10 dependabot, and `DimensionDev/Flare`
+are entirely maintenance automation**: thirteen at 10 of 10 dependabot, and `DimensionDev/Flare`
 at 9 of 10. Not one of them has a human pull request that triage failed to say something about.
 
 So the useful statement is: **of the repositories with a human pull request queue, 20 of 20 were
@@ -76,7 +76,7 @@ cases were read individually rather than counted.
 Running against real repositories found six defects in one day. Five were invisible inside this
 repository:
 
-1. Maintenance automation reported for not following the template — starship's own release bot.
+1. Maintenance automation reported for not following the template (starship's own release bot).
 2. Template headings counted from inside HTML comments, flagging 10 of 12 Next.js pull requests.
 3. A note carried by every pull request repeated on every row (RSSHub).
 4. A queue of ten dependabot bumps printed as "10 read, 0 flagged", which reads as failure

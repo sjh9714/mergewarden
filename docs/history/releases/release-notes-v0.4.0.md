@@ -25,13 +25,13 @@ higher GitHub API limits use `GH_TOKEN`, with `GITHUB_TOKEN` as the fallback.
   waivers remain valid.
 - Reposition the README around agent-specific boundaries: declared PR scope,
   agent-control-plane drift, and agentic workflow injection.
-- Add integration guides for gating [Claude Code](integrations/claude-code.md)
-  and [Codex](integrations/codex.md) pull requests.
-- Publish the [AI-agent PR scan methodology](study/methodology.md) used for the
+- Add integration guides for gating [Claude Code](../../integrations/claude-code.md)
+  and [Codex](../../integrations/codex.md) pull requests.
+- Publish the [AI-agent PR scan methodology](../../study/methodology.md) used for the
   v0.4.0 launch study.
 
 The signed v0.3.x tags remain immutable. v0.4.0 is a new source, tarball, and
 provenance identity under the MergeWarden name.
 
 See the [v0.4.0 migration guide](migration-v0.4.0.md),
-[CLI reference](cli.md), and [release checklist](release-checklist.md).
+[CLI reference](../../cli.md), and [release checklist](../../release-checklist.md).

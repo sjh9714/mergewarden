@@ -1,70 +1,73 @@
-# MergeWarden Documentation
+# Documentation
 
-MergeWarden is a checkout-free change-control layer for AI-generated pull
-requests. Start with the shortest path for your task:
+MergeWarden reads a pull request through the GitHub API and reports what it
+finds. It does not check anything out, run anything, or close anything.
 
-- [Start here](start-here.md): install, what the first pull request looks like,
-  and what each finding means. One page.
-- [Getting started](getting-started.md): install, first run, and safe rollout.
-- [Triage](triage.md): read a repository's open pull requests and see what each is
-  missing. No install, no write access, nothing is closed.
-- [CLI reference](cli.md): scan a public or private GitHub pull request.
-- [Action reference](action-reference.md): inputs, outputs, permissions, and failures.
-- [MCP server](../packages/mcp/README.md): check an agent's changes against the
-  scope it was given, before a pull request exists.
-- [Configuration](configuration.md): policy, checks, contracts, and waivers.
-- [Your first report](first-report.md): status labels and next actions.
-- [Evidence model](evidence-model.md): finding IDs and reproducibility metadata.
-- [Security model](security-model.md): trust boundaries and known limitations.
-- [Enforce an AI-contribution policy](enforce-ai-contribution-policy.md): a
-  copy-paste preset for the checkable clauses of your policy.
-- [What pull request caps reach](study/what-pr-caps-reach.md): GitHub's new per-contributor
-  limit measured against six real queues — it defers 2–13%, because the queues are dispersed.
-- [Does triage help?](study/does-triage-help.md): the command measured against the 167
-  repositories that installed a competing tool, with what counts as helping decided first.
-- [What AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md):
-  the trailer coding tools write about themselves, measured across 1,029
-  repositories — and a correction to an earlier claim about policy effects.
-- [What 2,204 agent PRs showed](study/what-2204-agent-prs-showed.md): the scan
-  study narrative; [methodology](study/methodology.md) has every query.
-- [Demo PRs](demo-prs.md): verified external Action runs.
-- [Gating Claude Code PRs](integrations/claude-code.md): detection, contracts,
-  and CLAUDE.md wiring.
-- [Gating Codex PRs](integrations/codex.md): detection, contracts, and
-  AGENTS.md wiring.
-- [Gating Cursor background agent PRs](integrations/cursor.md): detection,
-  contracts, and project-rule wiring.
-- [Gating GitHub Copilot coding agent PRs](integrations/copilot.md): bot,
-  branch, and label detection with custom-instruction wiring.
-- [Roadmap](roadmap.md): current product direction without date promises.
-- [Agentic workflow injection rule](rules/agentic-workflow-injection.md): exact
-  sources, sinks, severity, and limits.
-- [Package lifecycle rule](rules/package-lifecycle-scripts.md): install/prepare
-  script change evidence.
-- [Commit trailer rules](rules/commit-trailers.md): required and forbidden
-  disclosure trailers, and what they cannot prove.
-- [What a zero-config install reports](study/what-a-zero-config-install-reports.md):
-  measured false-positive check — silent on 44 of 46 human pull requests.
-- [GitHub's agent-PR review guidance](github-review-guidance.md): its five red
-  flags mapped to what is decidable, with our measured rates.
+Find the line below that matches what you are trying to do.
+
+## Getting it running
+
+- **[Getting started](getting-started.md)** is the one to read first. It covers
+  installing it, reading your first report, and tightening it once you trust it.
+- [Configuration](configuration.md): policy, per-check severity, scope contracts,
+  and waivers.
+- [Action reference](action-reference.md): every input, output, and failure mode.
+- [CLI reference](cli.md): scanning a pull request from your terminal.
+- [Triage](triage.md): read a whole repository's open pull requests at once and
+  see what each one is missing. Nothing is written back.
+- [MCP server](../packages/mcp/README.md): check an agent's work against the
+  scope you gave it, before a pull request exists.
+
+## Deciding whether to trust it
+
+- [Security model](security-model.md): what MergeWarden trusts, what it refuses
+  to trust, and where it gives up rather than guess.
+- [Evidence model](evidence-model.md): finding IDs and how a report reproduces,
+  with a [worked example](evidence-snapshot-example.md).
 - [What a checker can actually enforce](what-a-checker-can-enforce.md): real
-  policy clauses mapped to what is decidable, and what MergeWarden covers.
-- [v0.4.0 migration](migration-v0.4.0.md): the Agent Gate → MergeWarden rename.
-- [v0.3.0 migration](migration-v0.3.0.md): compatibility changes.
-- [v0.9.0 release notes](release-notes-v0.9.0.md): a missing contract is
-  informational, and the Action comments only when there is something to say.
-- [v0.7.0 release notes](release-notes-v0.7.0.md): nine missing coding-agent
-  accounts, including Google Jules.
-- [v0.6.0 release notes](release-notes-v0.6.0.md): a missing contract warns
-  instead of blocking, and `contract.missing_severity`.
-- [v0.5.1 release notes](release-notes-v0.5.1.md): the Claude Code body marker
-  fix and the study's engine-version scope note.
-- [v0.5.0 release notes](release-notes-v0.5.0.md): working agent-detection
-  defaults, `mergewarden demo`, Gemini and Qwen control planes.
-- [v0.4.1 release notes](release-notes-v0.4.1.md): commit trailer rules and a
-  readable pull request comment.
-- [v0.4.0 release notes](release-notes-v0.4.0.md): MergeWarden rename release.
-- [v0.3.1 release notes](release-notes-v0.3.1.md): public CLI release summary.
-- [v0.3.0 release notes](release-notes-v0.3.0.md): release summary.
+  policy clauses mapped to what a program can and cannot decide.
+- [Demo PRs](demo-prs.md): Action runs on real outside repositories, linked so
+  you can read the output yourself.
 
-Historical release and smoke records are preserved under [history](history/).
+## Wiring it up for a specific coding tool
+
+- [Claude Code](integrations/claude-code.md)
+- [GitHub Copilot coding agent](integrations/copilot.md)
+- [Codex](integrations/codex.md)
+- [Cursor background agents](integrations/cursor.md)
+
+## What individual rules do
+
+- [Commit trailers](rules/commit-trailers.md): required and forbidden disclosure
+  trailers, and what a trailer cannot prove.
+- [Agentic workflow injection](rules/agentic-workflow-injection.md): which
+  untrusted text reaches which agent prompts.
+- [Package lifecycle scripts](rules/package-lifecycle-scripts.md): install and
+  prepare scripts added or changed.
+- [Enforcing an AI-contribution policy](enforce-ai-contribution-policy.md): a
+  copy-paste preset for the checkable clauses of a written policy.
+
+## What we measured
+
+We scan public repositories and publish what we find, including the results that
+went against us.
+
+- [What 2,204 agent pull requests showed](study/what-2204-agent-prs-showed.md)
+- [What a zero-config install reports](study/what-a-zero-config-install-reports.md):
+  it stayed silent on 44 of 46 merged human pull requests.
+- [What AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md),
+  including a correction to an earlier claim of our own.
+- [What pull request caps reach](study/what-pr-caps-reach.md): GitHub's
+  per-contributor limit measured against six real queues.
+- [Does triage help?](study/does-triage-help.md)
+- [Methodology](study/methodology.md) lists every query, so you can rerun them.
+- [GitHub's own agent-PR review guidance](github-review-guidance.md), mapped to
+  what is decidable.
+
+## About the project
+
+- [Changelog](../CHANGELOG.md) covers every release. Per-release notes, migration
+  guides, and verification records are kept in [history](history/README.md).
+- [Roadmap](roadmap.md): direction, without date promises.
+- [Governance](repository-governance.md) and
+  [release checklist](release-checklist.md).

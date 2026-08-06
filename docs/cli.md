@@ -28,7 +28,7 @@ its output is a statement about what a zero-configuration install actually
 reports. It accepts `--format human|json|markdown`.
 
 The example is an agent pull request that declares `allowed_paths: docs/**` and
-then edits a release workflow, `AGENTS.md`, and `package.json` — producing
+then edits a release workflow, `AGENTS.md`, and `package.json`, producing
 contract-scope, control-plane drift, workflow permission, prompt-injection, and
 lifecycle-script findings in one report.
 

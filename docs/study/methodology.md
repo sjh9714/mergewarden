@@ -13,8 +13,8 @@ only its built-in default policy. MergeWarden reads PR metadata and file
 contents through GitHub APIs; it never checks out or executes PR code and
 never calls an LLM.
 
-Findings are deterministic review evidence — "this PR crossed a boundary that
-deserves human eyes" — not vulnerabilities and not misconduct claims. We
+Findings are deterministic review evidence ("this PR crossed a boundary that
+deserves human eyes"), not vulnerabilities and not misconduct claims. We
 publish aggregate statistics only and do not name repositories.
 
 ## Sampling
@@ -22,7 +22,7 @@ publish aggregate statistics only and do not name repositories.
 Two complementary samples:
 
 1. **Firehose sample** (`tools/study/discover.mjs`): GitHub issue-search over
-   recent `created:` windows for five cohorts — merged PRs authored by
+   recent `created:` windows for five cohorts: merged PRs authored by
    `devin-ai-integration[bot]`, by `copilot-swe-agent[bot]`, with `head:codex`
    branches, with "Generated with Claude Code" PR bodies, and with
    `head:cursor` branches (dependabot/renovate excluded). This approximates
@@ -44,7 +44,7 @@ precision.
 
 Each PR: `mergewarden scan owner/repo#N --format json` (engine version
 recorded per result). Scans of repositories without a `mergewarden.yml` use
-the built-in default policy — in this study that is effectively all of them,
+the built-in default policy; in this study that is effectively all of them,
 which means:
 
 - Contract rules only apply to PRs that voluntarily declare a
@@ -98,7 +98,7 @@ All numbers below are reproduced by `tools/study/aggregate.mjs`.
   `workflow/permission-escalation` 12.9%.
 - `dependency/lifecycle-script-added`: 1 PR.
 - Finding rates on 10k+ star repositories (36 of 844 complete, 4.3%) were
-  roughly half the long-tail rate (8.6% on the mostly sub-200-star firehose) —
+  roughly half the long-tail rate (8.6% on the mostly sub-200-star firehose),
   consistent with established projects having stronger guardrails, and with
   the long tail of small repositories being where agent PRs run with the
   least oversight.
@@ -106,7 +106,7 @@ All numbers below are reproduced by `tools/study/aggregate.mjs`.
 Per-cohort finding rates varied (codex-branch 10.2%, cursor-branch 9.5%,
 copilot 9.0%, claude-code-body 2.0%, devin 1.1%); cohort attribution is
 heuristic, cohort populations differ in repository mix, and none of this
-measures code quality — only boundary-crossing evidence under the default
+measures code quality, only boundary-crossing evidence under the default
 policy.
 
 ### What these rates do and do not carry across engine versions
@@ -114,11 +114,11 @@ policy.
 Engine v0.4.0's `agent_detection` defaults were empty arrays, so agent detection
 never fired during this run and neither `agent/origin-detected` nor
 `contract/missing` appears anywhere in the results. That was a defect, fixed in
-[v0.5.0](../release-notes-v0.5.0.md). It has a specific consequence for how these
+[v0.5.0](../history/releases/release-notes-v0.5.0.md). It has a specific consequence for how these
 numbers should be read.
 
 **The per-rule boundary rates are unaffected.** `agent-control-plane/drift`,
-`workflow/*` and `dependency/*` are not gated on agent detection — only
+`workflow/*` and `dependency/*` are not gated on agent detection; only
 `contract/missing` is. This was verified rather than assumed: a 66-PR stratified
 sample of this dataset was re-scanned under the current defaults and produced
 **identical boundary findings on 66 of 66**. The 3.9%, 12.9%, 17.5% and 22.1%
@@ -128,7 +128,7 @@ figures reproduce on any engine version.
 inert, 7.0% is precisely a boundary-crossing rate, which is what it was meant to
 measure. Re-running the same corpus on v0.5.0 or later would add
 `agent/origin-detected` to most of it and `contract/missing` to every pull request
-detection matches — and since 0 of 2,204 declared a contract, that is nearly all of
+detection matches, and since 0 of 2,204 declared a contract, that is nearly all of
 them. A modern run would therefore report a headline rate approaching 100%, which
 is a statement about disclosure adoption, not about boundary crossings. The same
 applies to the 4.3% vs 8.6% star-band comparison and to the per-cohort rates above:
@@ -160,5 +160,5 @@ The broader context is the wave of AI-contribution policies now being adopted
 across open source (Apache, the Linux Foundation, and the OpenSSF Technical
 Advisory Council's foundation-wide policy, among many others). Those policies
 establish disclosure and human-review expectations in prose; this study is
-about the enforcement gap underneath them — what an automated, deterministic
+about the enforcement gap underneath them: what an automated, deterministic
 check can and cannot verify about an agent PR before merge.

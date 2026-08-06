@@ -29,4 +29,4 @@ runtime LLM calls. v0.3 does not claim complete workflow taint analysis or
 semantic correctness.
 
 See [migration guidance](migration-v0.3.0.md) and the reusable
-[release checklist](release-checklist.md).
+[release checklist](../../release-checklist.md).

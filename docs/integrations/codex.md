@@ -63,7 +63,7 @@ base-branch policy stays authoritative.
 Even before any of the policy above, the built-in default policy reports:
 
 - `agent-control-plane/drift` when a PR edits `AGENTS.md`, `.codex/**`,
-  `.mcp.json`, or similar files that steer future agent runs — including the
+  `.mcp.json`, or similar files that steer future agent runs, including the
   agent editing its own instructions.
 - `workflow/permission-escalation` and related workflow findings when a PR
   raises GitHub Actions privileges.

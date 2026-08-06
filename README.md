@@ -5,59 +5,72 @@
 [![MergeWarden](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml)
 [![License](https://img.shields.io/github/license/sjh9714/mergewarden)](LICENSE)
 
-> **Which of these pull requests needs you first?**
+**AI coding tools open pull requests faster than anyone can read them. MergeWarden
+tells you which ones need a closer look, and why.**
 
-```bash
-npx --yes mergewarden@0.9.0 triage <your owner/repository>
-```
+## The situation it is built for
 
-```
-8 open pull request(s) read. 7 have something a maintainer checks by hand.
+An agent opens a pull request titled "Document the release process". The diff
+touches four files. Three of them are documentation. The fourth is your release
+workflow.
 
-#169755  feature/openAQ           AI disclosed · no linked issue · oversized
-#176410  unifiprotect-config-map  no linked issue · oversized
-#177530  tod-support-sun-events   AI disclosed · no linked issue
+Nothing in the title said that would happen, and in a busy week nobody notices.
+MergeWarden notices, and leaves one comment saying so.
 
-Nothing was closed, labelled, or commented on.
-```
+It reports facts you could have checked by hand. It does not review your code,
+grade the contributor, or merge anything.
 
-Every row is a fact you can check: no linked issue, no description, a template
-kept empty, a change past your review size, a `Co-authored-by:` trailer a
-coding tool wrote about itself, a file edited outside the scope the pull
-request declared. Nothing scores a contributor, guesses from writing style, or
-closes anything — **there is no `--close` flag, and a test asserts there never
-is.** A pull request closed by a bot in error is not reopened by the person who
-gave up on it.
+## See it work, without installing anything
 
-The same rules run as a [GitHub Action](docs/action-reference.md). It
-does not execute pull-request code, load policy from the PR head, or call an
-LLM, and every finding carries deterministic evidence that replays locally.
-
-MergeWarden gates its own pull requests — the `MergeWarden` badge above is that
-live self-check ([how we dogfood](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)).
-
-[Triage your repo](docs/triage.md) · [Try a public PR](#try-it-in-60-seconds) · [Install the Action](#install-in-30-seconds) · [What it catches](#what-it-catches) · [Adopt safely](#adopt-safely) · [Documentation](docs/README.md) · [简体中文](README.zh-CN.md)
-
-## Try It in 60 Seconds
-
-See every rule fire on a bundled example — no token, no repository, no network —
-then scan a real pull request, by `owner/repo#number` or by URL:
+This runs a small example that ships inside the tool. No token, no repository,
+no network:
 
 ```bash
 npx --yes mergewarden@0.9.0 demo
+```
+
+```
+  Repository   demo-org/demo-service
+  Pull request #482 "Document the release process"
+  Author       an agent on branch codex/document-releasing
+  Declared     allowed_paths: docs/**
+  Changed      docs/releasing.md, .github/workflows/release.yml, AGENTS.md, package.json
+
+MergeWarden: NEEDS REVIEW
+
+ERROR contract/out-of-scope
+Message: .github/workflows/release.yml changed outside the allowed contract scope.
+Path: .github/workflows/release.yml
+```
+
+Now point it at a real pull request. Public repositories need no token:
+
+```bash
 npx --yes mergewarden@0.9.0 scan owner/repository#123
-npx --yes mergewarden@0.9.0 scan https://github.com/owner/repository/pull/123
 ```
 
 ![The full mergewarden demo report scrolling past in a terminal](docs/assets/mergewarden-demo.gif)
 
-Use `GH_TOKEN` or `GITHUB_TOKEN` for private repositories or higher API rate
-limits. MergeWarden intentionally has no token command-line flag.
+For private repositories, or to raise your API rate limit, set `GH_TOKEN`.
+There is deliberately no way to pass a token as a command-line flag, because
+flags end up in shell history and CI logs.
 
-The default output is concise; `--format json` or `--format markdown` gives the
-complete machine-readable report ([CLI reference](docs/cli.md)).
+## What it looks for
 
-## Install in 30 Seconds
+| It notices when                                            | Which matters because                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| A pull request edits files outside what it said it would   | An agent asked to update docs also changed your billing code                    |
+| `AGENTS.md`, `CLAUDE.md`, `.mcp.json` or `.cursor/` change | These files instruct every future agent working in your repository              |
+| A workflow gains permissions it did not have before        | It can now write where it could previously only read                            |
+| Pull request text reaches an agent prompt                  | A stranger can put instructions in a title and have your automation follow them |
+| An action, workflow or container is not pinned             | Somebody else can change what runs in your CI without opening a pull request    |
+| An install script appears in a package manifest            | That code runs during `npm install`, before any human reads it                  |
+| Risky code changes with no matching test changes           | Worth a look, not a verdict                                                     |
+
+Every finding names the rule, the file, and the evidence, and carries an ID you
+can quote when you discuss or dismiss it.
+
+## Run it on every pull request
 
 Create `.github/workflows/mergewarden.yml`:
 
@@ -84,215 +97,100 @@ jobs:
           comment: auto
 ```
 
-No checkout step is needed, and MergeWarden
-does not publish or recommend a mutable `v0` tag.
-For an immutable install, pin the exact v0.9.0 release commit:
+That is the whole setup. No checkout step, no build, no configuration file, and
+nothing installed into your repository. Until you add a `mergewarden.yml` of
+your own, a sensible default policy applies.
+
+Most pull requests cross no boundary. Those pass silently, and the details go to
+the Actions job summary rather than to a comment. You hear from MergeWarden when
+something is worth hearing about. Push a fix and the existing comment rewrites
+itself to `PASSED` instead of being deleted, so a stale review request cannot
+outlive the problem it described.
+
+Pull requests from forks get a read-only token from GitHub, so they are never
+commented on.
+
+For a build that cannot change under you, pin the release commit instead of the
+tag. MergeWarden does not publish or recommend a mutable `v0` tag.
 
 ```yaml
 - uses: sjh9714/mergewarden@e97f47b59dcda0eb48ba88275c176fc734325659
 ```
 
-The first run works without `mergewarden.yml`: a confirmed 404 on the PR base
-branch selects the built-in warn policy. Authentication, rate-limit, and server
-errors never fall back silently.
+## What it will not do
 
-## What You'll See
+It does not judge your code. It has no opinion on style, naming, or whether a
+change deserves to be merged, and it does not infer anything from how the
+description is written.
 
-Most agent pull requests cross no boundary, and those get a `pass` and no
-comment — `comment: auto` speaks only when there is an error or a warning.
-Everything else is recorded in the Actions job summary. When a boundary
-is crossed you get one comment:
+It never closes, labels, or merges anything. There is no `--close` flag, and a
+test in this repository asserts there never will be one. A pull request that a
+bot closes in error does not get reopened by the person who gave up on it.
 
-```
-ERROR contract/out-of-scope: src/billing/invoice.ts changed outside the allowed contract scope.
-```
+It is also careful about what it trusts:
 
-Push a fix and that same comment updates itself to PASSED. It is never
-deleted, so a stale "NEEDS REVIEW" cannot outlive the problem it described.
-Fork pull requests get a read-only token from GitHub and so are never
-commented on. New here? [Start here](docs/start-here.md) is the one-page version.
+- It does not execute pull-request code, and never checks the branch out.
+- It reads your settings from the exact base commit of your branch, never from
+  the pull request itself, so a pull request cannot rewrite the rules it is
+  judged by.
+- It never calls a language model, so the same pull request always produces the
+  same report.
+- If it cannot see everything it needs, it says so and fails rather than
+  reporting a pass it cannot stand behind.
 
-## What It Catches
+The [security model](docs/security-model.md) explains the boundaries and the
+known limits.
 
-| Boundary                   | Deterministic evidence                                                      |
-| -------------------------- | --------------------------------------------------------------------------- |
-| Declared PR scope          | Files outside `allowed_paths` or inside `blocked_paths`                     |
-| Agent control plane        | Changes to `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.mcp.json`, `.cursor/**` |
-| Agentic workflow injection | Untrusted GitHub text flowing into registered agent prompts                 |
-| Workflow privilege         | Permission escalation, new write-all or OIDC access                         |
-| Dangerous triggers         | `pull_request_target` use of attacker-controlled PR head refs               |
-| Workflow supply chain      | Unpinned actions, reusable workflows, and containers                        |
-| Package execution          | Added or changed install/prepare lifecycle scripts                          |
-| Test evidence              | High-risk source changes without matching test-file changes                 |
-| Analysis integrity         | Missing content, incomplete file lists, or report limits                    |
+## Turning it on gradually
 
-MergeWarden evaluates changes rather than re-reporting every pre-existing
-workflow condition. Findings show the rule, severity, path, canonical evidence,
-and a stable finding ID.
+Nothing is blocked on day one. With `mode: warn` and `fail-on-block: false`,
+MergeWarden reports and does nothing else. A reasonable order:
 
-## Or Check It Before the PR Exists
+1. Run it in `warn` for a week and read what it tells you.
+2. Raise individual checks to `error` once you agree with them.
+3. Set `mode: block` and `fail-on-block: true`.
+4. Require the MergeWarden check in branch protection.
 
-The same engine ships as an MCP server, for the person running the agent rather
-than the maintainer reviewing it. It answers one question — did this change stay
-inside the scope it was given — and emits the contract block the gate reads later.
+Each of those is one line in [configuration](docs/configuration.md).
 
-```json
-{ "mcpServers": { "mergewarden": { "command": "npx", "args": ["-y", "mergewarden-mcp"] } } }
-```
+Reports end with one of five verdicts, kept deliberately distinct:
 
-No network, no token, no model call ([details](packages/mcp/README.md)).
+- `PASSED`: analysis finished, nothing active to report.
+- `OBSERVED FINDINGS`: evidence recorded, decision unchanged.
+- `NEEDS REVIEW`: a person should look.
+- `BLOCKED`: policy rejected the change.
+- `ANALYSIS INCOMPLETE`: something could not be read, so no verdict is claimed.
 
-## What 2,204 Real Agent PRs Showed
+Worried about noise? On 46 merged human pull requests it stayed quiet on 44, and
+both of the findings it did raise were correct
+([how that was measured](docs/study/what-a-zero-config-install-reports.md)). If
+it ever flags something your team already decided was fine, please open an issue
+with the output. That is the most useful bug report this project can get.
 
-We scanned 2,204 recently merged AI-agent pull requests (Devin, Copilot coding
-agent, Codex, Claude Code, Cursor) on public repositories with the default
-policy. **0 of 2,204** declared their intended scope in any machine-checkable
-form. Of the 349 that touched workflows or package manifests, **12.9%**
-escalated workflow permissions and **17.5%** introduced unpinned actions;
-**3.9%** changed agent control-plane files. Repositories with 10k+ stars showed
-roughly **half** the boundary-crossing rate of the long tail.
+## Documentation
 
-Every number reproduces from published queries: [study methodology](docs/study/methodology.md).
+[Getting started](docs/getting-started.md) walks through installing it and
+reading your first report. The [documentation index](docs/README.md) has
+everything else, including the [configuration reference](docs/configuration.md).
 
-## Minimal Policy
+If you run the agents yourself rather than reviewing their pull requests, the
+same engine ships as an [MCP server](packages/mcp/README.md). It checks a change
+against the scope you gave the agent before a pull request exists.
 
-Already have an AI-contribution policy (Apache / OpenSSF / Bitcoin Core
-lineage)? The [`ai-contribution-policy.yml`](templates/ai-contribution-policy.yml)
-preset enforces its checkable clauses in one copy-paste — see
-[Enforce a policy](docs/enforce-ai-contribution-policy.md). Or add
-`mergewarden.yml` to the base branch when you are ready to tune behavior:
-
-```yaml
-version: 1
-mode: warn
-
-agent_detection:
-  labels: [ai, agent, codex, claude]
-  branch_patterns: ["codex/**", "claude/**", "ai/**"]
-
-github_actions:
-  checks:
-    permission_escalation: error
-    write_all: error
-    id_token_write: warn
-    pull_request_target_head: error
-    unpinned_action: warn
-    unpinned_reusable_workflow: warn
-    unpinned_container: warn
-    missing_permissions: warn
-    unknown_write_permission: warn
-    added_secret_reference: warn
-    workflow_deleted: warn
-    malformed_workflow: error
-
-high_risk_paths:
-  authentication:
-    paths: ["src/auth/**"]
-    require_tests: ["test/auth/**"]
-    severity: error
-```
-
-For an agent-authored PR, the body can declare its intended scope:
-
-```md
-<!-- mergewarden-contract
-version: 1
-agent: codex
-task: update session expiry handling
-allowed_paths:
-  - src/auth/**
-  - test/auth/**
--->
-```
-
-The contract is an untrusted PR declaration, not proof that the task or author
-is legitimate. The base-branch policy remains authoritative.
-
-### Time-Bounded Waivers
-
-After reviewing a finding, maintainers can waive that exact evidence from the
-trusted base policy:
-
-```yaml
-waivers:
-  - finding_id: agf_0123456789abcdef
-    reason: Approved OIDC release workflow
-    expires_at: "2026-09-30T00:00:00Z"
-```
-
-Waived findings remain visible. Expired waivers reactivate the original finding
-and emit `policy/waiver-expired`. Analysis-integrity findings cannot be waived.
-
-See the complete [configuration reference](docs/configuration.md).
-
-## Adopt Safely
-
-1. Start with `mode: observe` or `mode: warn` and `fail-on-block: false`.
-2. Review findings and tune per-check severity.
-3. Add narrow, expiring waivers only after human review.
-4. Move stable policy to `mode: block`.
-5. Set `fail-on-block: true` and require the check in branch protection.
-
-Human report labels are deliberately distinct:
-
-- `PASSED`: analysis completed with no active warning/error findings.
-- `OBSERVED FINDINGS`: observe mode found evidence without changing the pass decision.
-- `NEEDS REVIEW`: warn mode requires a human decision.
-- `BLOCKED`: block mode rejected active policy findings.
-- `ANALYSIS INCOMPLETE`: MergeWarden could not make a trustworthy decision and fails closed.
-
-## Trust Boundary
-
-The GitHub Action:
-
-- reads PR metadata and file contents through GitHub APIs only
-- loads configuration from the exact base commit
-- never checks out or executes PR-controlled code
-- never evaluates GitHub expressions from workflow YAML
-- never calls an LLM during analysis
-- limits API concurrency, content to 1 MiB per file side and 64 MiB per run,
-  findings, and rendered report size
-- records base/head SHAs, policy digest, analyzed file counts, and engine version
-
-The pull-request files API has a 3,000-file maximum. MergeWarden compares the
-authoritative PR file count with the collected list and fails closed instead of
-presenting a partial pass.
-
-Read the full [security model](docs/security-model.md) and
-[evidence model](docs/evidence-model.md).
-
-## MergeWarden Is Not a Workflow Linter
-
-Workflow linters such as zizmor inspect workflow correctness and known
-misconfigurations. LLM reviewers apply semantic judgment. MergeWarden is the
-change-control layer between an AI-generated PR and merge: it asks whether the
-PR crossed repository-specific boundaries and records why. Use all three when
-appropriate; they solve different problems.
-
-## Action Outputs
-
-Every input and output, and the exact failure behavior, is in the
-[Action reference](docs/action-reference.md).
-
-## Development
+## Contributing
 
 ```bash
 pnpm install
 pnpm test && pnpm typecheck && pnpm lint && pnpm build && pnpm format:check
 ```
 
-Every rule requires passing and failing fixtures, exact rule/severity/decision
-assertions, and a Markdown snapshot for user-facing findings. Start with a
-[good first issue](https://github.com/sjh9714/mergewarden/labels/good%20first%20issue) — each names its file, verify command, and done criteria — or the [contribution guide](CONTRIBUTING.md).
+Every rule needs a passing fixture, a failing fixture, and a snapshot of what a
+person would read. The
+[good first issues](https://github.com/sjh9714/mergewarden/labels/good%20first%20issue)
+each name the file to change, the command to verify it, and what done looks
+like. See the [contribution guide](CONTRIBUTING.md).
 
-## Documentation
-
-- [Documentation index](docs/README.md) — full list of guides and references
-- [Start here](docs/start-here.md) · [Getting started](docs/getting-started.md) · [Configuration](docs/configuration.md) · [Security model](docs/security-model.md)
-
-Will it be noisy? It [said nothing on 44 of 46 merged human PRs](docs/study/what-a-zero-config-install-reports.md);
-both findings were correct. If it flags one your team decided was fine, open an
-issue with the scan output — the most useful bug report this project can get.
+[简体中文](README.zh-CN.md)
 
 ## License
 

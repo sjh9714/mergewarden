@@ -24,7 +24,7 @@ That command is also new, and it exists because of the same problem.
 ## Highlights
 
 **Working agent-detection defaults.** The defaults are now the cohort
-definitions from the [2,204-PR study](study/methodology.md), which are the
+definitions from the [2,204-PR study](../../study/methodology.md), which are the
 signatures actually observed in the wild rather than guesses:
 `devin-ai-integration[bot]` and `copilot-swe-agent[bot]` authors; `codex/**`,
 `claude/**`, `cursor/**`, `copilot/**` and `devin/**` branches; and the

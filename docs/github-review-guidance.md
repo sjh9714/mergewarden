@@ -19,8 +19,8 @@ This page maps its five red flags to two questions we can answer:
 | GitHub's red flag               | Decidable? | MergeWarden   | Measured rate               |
 | ------------------------------- | ---------- | ------------- | --------------------------- |
 | 1. CI gaming                    | Partly     | Partly        | see below                   |
-| 2. Code reuse blindness         | **No**     | Not attempted | —                           |
-| 3. Hallucinated correctness     | **No**     | Not attempted | —                           |
+| 2. Code reuse blindness         | **No**     | Not attempted | n/a                         |
+| 3. Hallucinated correctness     | **No**     | Not attempted | n/a                         |
 | 4. Agentic ghosting             | Partly     | `contract/*`  | 0 of 2,204 declared a scope |
 | 5. Untrusted input in workflows | **Yes**    | `workflow/*`  | 12.9% escalated permissions |
 
@@ -45,7 +45,7 @@ GitHub lists four checks under this. They are not equally decidable:
 `workflow/trigger-removed` was added in v0.8.0 specifically because this is
 GitHub's first red flag and it was the one we covered least. It compares the
 `on:` block at the base commit against the head and reports any event that
-stopped firing — the pull request that removes `pull_request` from a workflow
+stopped firing: the pull request that removes `pull_request` from a workflow
 stops the check that would have gated it.
 
 It defaults to `warn` rather than `error`. GitHub's guidance says blocker, but
@@ -78,16 +78,16 @@ spent three quarters of its findings telling maintainers that a compiled cache
 file disappeared.
 
 **The real rate is one pull request in three hundred.** A check that fires that
-rarely is not automatically worthless — plenty of security rules are rare and
-severe — but it cannot be calibrated. There were not enough true positives in
+rarely is not automatically worthless (plenty of security rules are rare and
+severe), but it cannot be calibrated. There were not enough true positives in
 this corpus to tune a default path list against, and shipping guessed defaults is
 the specific mistake this project already made twice, in
-[v0.5.0](../CHANGELOG.md) and [v0.5.1](release-notes-v0.5.1.md).
+[v0.5.0](../CHANGELOG.md) and [v0.5.1](history/releases/release-notes-v0.5.1.md).
 
 So the rule is not implemented, and this is the reason rather than an oversight.
 Anyone who wants it today can express it directly, because the same measurement
-shows agent pull requests _touch_ tests constantly — 10.3% of every file they
-change — and simply never delete them:
+shows agent pull requests _touch_ tests constantly (10.3% of every file they
+change) and simply never delete them:
 
 ```yaml
 high_risk_paths:
@@ -133,12 +133,12 @@ not about whether the tests are any good. It is also inert until
 
 Partly decidable, and this is the gap the project was built around. "Is the plan
 clear" is a judgment. "Did the pull request declare what it intended to change,
-and did it stay inside that" is mechanical — _once something declares it_.
+and did it stay inside that" is mechanical, _once something declares it_.
 
 That is the whole finding of the scan study: **0 of 2,204** merged agent pull
 requests declared their intended scope in any machine-checkable form. The agent
 knew its task; none of that intent survived into the pull request. So the check
-GitHub wants is possible, but only after a convention exists — which is what the
+GitHub wants is possible, but only after a convention exists, which is what the
 `mergewarden-contract` block and `contract/out-of-scope` are for.
 
 ## 5. Untrusted input in workflows
@@ -151,11 +151,11 @@ The most decidable of the five, and the one with measurements:
 
 | GitHub's check                       | Rule                               | Measured                                           |
 | ------------------------------------ | ---------------------------------- | -------------------------------------------------- |
-| Untrusted input into prompts         | `workflow/agentic-untrusted-input` | —                                                  |
+| Untrusted input into prompts         | `workflow/agentic-untrusted-input` | n/a                                                |
 | Least-privilege token permissions    | `workflow/permission-escalation`   | **12.9%** of workflow-touching agent PRs escalated |
 | Pinned, non-attacker-controlled refs | `workflow/dangerous-pattern`       | **17.5%** introduced unpinned actions              |
-| Separate analysis from execution     | —                                  | not attempted                                      |
-| Never execute model output as shell  | —                                  | not attempted                                      |
+| Separate analysis from execution     | n/a                                | not attempted                                      |
+| Never execute model output as shell  | n/a                                | not attempted                                      |
 
 Rates are of the 349 pull requests that touched workflows or package manifests.
 The last two are code-shape judgments about a script's behaviour and are not
@@ -164,7 +164,7 @@ attempted.
 ## What this adds to GitHub's post
 
 Frequencies, and a line between the checks a machine can make and the ones it
-cannot. GitHub's advice is sound and none of it is disputed here — the point is
+cannot. GitHub's advice is sound and none of it is disputed here: the point is
 that three of its five red flags are partly or wholly mechanical, and a reviewer
 should not be spending attention on those by hand.
 

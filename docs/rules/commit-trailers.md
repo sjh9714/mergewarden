@@ -1,14 +1,14 @@
 # Commit Trailers
 
 Projects that publish an AI-contribution policy overwhelmingly express the
-disclosure part of it as a **commit trailer** — and they do not agree on which
+disclosure part of it as a **commit trailer**, and they do not agree on which
 one, or even on its direction. Fedora asks contributors to add
 `Assisted-by: <tool>`. Mesa requires `Assisted-by:` or `Generated-by:` and
 reserves `Co-authored-by:` for humans. LLVM suggests `Assisted-by:`. Kubernetes
 forbids `assisted-by`, `co-developed`, and listing an AI tool as a co-author.
 QEMU and FreeBSD require a DCO `Signed-off-by:` on every commit.
 
-Every one of those clauses is decidable from commit metadata alone — no
+Every one of those clauses is decidable from commit metadata alone: no
 checkout, no heuristics, no model. These rules make them checkable.
 
 ## What The Findings Mean
@@ -50,7 +50,7 @@ the pull request; `applies_to: all` evaluates it on every pull request, which is
 what a DCO requirement needs.
 
 `forbidden` entries without `value_patterns` reject the trailer outright.
-With `value_patterns`, only matching values are rejected — that is the
+With `value_patterns`, only matching values are rejected; that is the
 difference between "we do not use this trailer" and "humans only." Patterns are
 case-insensitive and `*` is the only wildcard.
 
@@ -64,7 +64,7 @@ of the commit message, and that paragraph counts as a trailer block only when
 every non-blank line in it is a `Key: value` pair or an indented continuation of
 one. A commit whose closing paragraph is ordinary prose therefore yields no
 trailers, which is what keeps a sentence like `Fixed by: rewriting the loop` out
-of the results. A single-paragraph commit message has no trailer block at all —
+of the results. A single-paragraph commit message has no trailer block at all;
 the subject line is never a trailer, even when it contains a colon.
 
 ## Limits Worth Knowing
@@ -73,7 +73,7 @@ the subject line is never a trailer, even when it contains a colon.
 GitHub caps pull-request commit listing at 250 entries. When a pull request
 exceeds that, or when the collected count does not match what GitHub reported,
 MergeWarden omits commits entirely rather than run trailer checks against a
-partial list — a partial list can only under-report, and a silent under-report
+partial list. A partial list can only under-report, and a silent under-report
 is worse than a visible absence. The CLI and Action print a warning when this
 happens.
 
@@ -94,7 +94,7 @@ change. It reads what the commit says about itself.
 - For a forbidden co-author, is the listed identity a tool or a person? Value
   patterns are a blunt instrument and will need tuning per project.
 - If the finding fires on every commit of an otherwise good pull request, the
-  requirement is probably scoped too broadly — consider `applies_to: agent`.
+  requirement is probably scoped too broadly; consider `applies_to: agent`.
 
 ## Remediation
 

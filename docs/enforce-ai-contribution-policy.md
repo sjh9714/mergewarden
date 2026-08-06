@@ -2,7 +2,7 @@
 
 Dozens of projects have adopted AI-contribution policies in the Apache / Linux
 Foundation / OpenSSF / Bitcoin Core / ripgrep / uv lineage. Almost all of them
-are prose in `CONTRIBUTING.md` — an honor system. Three of their clauses are
+are prose in `CONTRIBUTING.md`, an honor system. Three of their clauses are
 actually machine-checkable, and the
 [`ai-contribution-policy.yml`](../templates/ai-contribution-policy.yml) preset
 enforces exactly those, deterministically, with no LLM and no checkout of PR
@@ -15,7 +15,7 @@ code.
 | "Don't quietly escalate CI permissions"          | Differential workflow checks: permission escalation, unpinned actions, added secret references      |
 
 The honor-system clauses ("you could have written it yourself", "explain in
-your own words") stay in your prose policy — this preset does not try to
+your own words") stay in your prose policy; this preset does not try to
 replace them. It automates only the part a cheap, replayable check can verify.
 
 ## 30-second setup
@@ -24,7 +24,7 @@ replace them. It automates only the part a cheap, replayable check can verify.
    to the base of your default branch as `mergewarden.yml`.
 2. Copy [`templates/mergewarden-observe.yml`](../templates/mergewarden-observe.yml)
    to `.github/workflows/mergewarden.yml`.
-3. Open a pull request. Findings appear as a check in `warn` mode — nothing is
+3. Open a pull request. Findings appear as a check in `warn` mode; nothing is
    blocked yet.
 
 That's it. To see it run first, scan any public PR without installing anything:
@@ -36,7 +36,7 @@ npx mergewarden scan owner/repo#123
 ## Tuning
 
 - Start in `warn`. Review findings, then tune per-check severity in
-  `mergewarden.yml` — see the [configuration reference](configuration.md).
+  `mergewarden.yml`. See the [configuration reference](configuration.md).
 - Add narrow, expiring [waivers](configuration.md) only after human review.
 - When a policy is stable, set `mode: block` and `fail-on-block: true`, and
   require the check in branch protection. See [Adopt Safely](../README.md#adopt-safely).

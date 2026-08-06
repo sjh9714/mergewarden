@@ -16,7 +16,7 @@ mode: warn
 
 ```yaml
 agent_detection:
-  # 11 coding-agent bot accounts by default — Copilot, Jules, Devin, Kiro,
+  # 11 coding-agent bot accounts by default: Copilot, Jules, Devin, Kiro,
   # Codegen, OpenCode, Tembo, Amazon Q, Mentat, Factory Droid, Ellipsis.
   authors: ["copilot-swe-agent[bot]", "google-labs-jules[bot]", "..."]
   labels: [] # label conventions are per-repository; add your own
@@ -29,7 +29,7 @@ contract:
   missing_severity: info
 ```
 
-Those are the **defaults**, not a suggestion — they are the cohort definitions from the
+Those are the **defaults**, not a suggestion: they are the cohort definitions from the
 [2,204-PR study](study/methodology.md), so a zero-config install recognises an agent pull
 request out of the box. Setting any of these keys replaces the default list for that key
 rather than adding to it. Detection is a heuristic for deciding which pull requests must
@@ -105,7 +105,7 @@ github_actions:
     trigger_removed: warn
 ```
 
-`trigger_removed` fires when a workflow stops firing on an event it used to —
+`trigger_removed` fires when a workflow stops firing on an event it used to,
 the case GitHub's review guidance calls out as "confirm workflow still runs on
 forks and pull requests". It defaults to `warn` because consolidating workflows
 is ordinary and the artifact cannot tell that apart from a pull request removing
@@ -173,7 +173,7 @@ package_scripts:
 
 ## Commit Trailers
 
-Enforces the trailer conventions real AI-contribution policies are written in —
+Enforces the trailer conventions real AI-contribution policies are written in:
 required disclosure trailers, or forbidden ones. Both lists are empty by
 default, so this changes nothing until you add an entry.
 
@@ -218,28 +218,28 @@ triage:
 
 `exclude_authors` is maintenance automation these rules should not describe: a release bot does
 not fill in a template and a dependency bump has no issue to link. Coding agents are
-deliberately absent from the default — `Copilot` and `devin-ai-integration[bot]` are bot
+deliberately absent from the default: `Copilot` and `devin-ai-integration[bot]` are bot
 accounts too, and their pull requests are the ones a maintainer most wants triaged, which is
 why this is a list of accounts rather than a test for `type: Bot`.
 
 `no_linked_issue` is the one that ships `off`: most pull requests in most repositories
 reference no issue, so at `info` it would attach a finding to nearly every report.
 `mergewarden triage` turns it on, because comparing many open pull requests on the same facts
-is a different question from gating one of them — see [triage](triage.md).
+is a different question from gating one of them. See [triage](triage.md).
 
 `unverified_author` is deliberately `info` and deliberately not raised by default. A first
 contribution is how every contributor starts; a tool that greets one with a warning is the
 failure mode this project exists to avoid.
 
 `template_unused` reads the repository's pull-request template from the base branch, and only
-fires when the body keeps **none** of its sections — a partly filled template is normal. Headings
+fires when the body keeps **none** of its sections; a partly filled template is normal. Headings
 inside HTML comments are instructions to the contributor rather than sections to keep, so they
 are not counted; Next.js's template is entirely comment, and counting it would flag every pull
 request in the repository. The template is not fetched at all when this is `off`.
 
 `ai_disclosure` controls `commit/ai-assistance-disclosed`, which reports the
-`Co-authored-by:` trailers coding tools write about themselves — Claude Code,
-Cursor, GitHub Copilot, Devin, Codex and Google Jules — including the model
+`Co-authored-by:` trailers coding tools write about themselves (Claude Code,
+Cursor, GitHub Copilot, Devin, Codex and Google Jules), including the model
 name where the tool records one. It is `info` by default because it describes a
 disclosure the tool made, not something the pull request did wrong, so it must
 not move the decision. Raise it if your policy requires disclosure; set `off` to
@@ -248,9 +248,9 @@ drop it.
 Tools are matched on the co-author **address**, never the domain and never the
 display name. `mdangelo@openai.com` belongs to a person, and the same tool
 writes `Claude`, `Claude Opus 4.8` and `Claude Opus 4.8 (1M context)` across
-commits — the addresses were read out of real merged history, and the counts are
+commits. The addresses were read out of real merged history, and the counts are
 in [what AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md).
 
-These rules stay inert when MergeWarden could not enumerate every commit — see
+These rules stay inert when MergeWarden could not enumerate every commit. See
 [the commit trailer rule guide](rules/commit-trailers.md) for the limits and
 how trailers are parsed.

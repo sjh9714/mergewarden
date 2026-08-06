@@ -39,12 +39,12 @@ the same data for scripting.
 | `AI disclosed`       | A commit carries a `Co-authored-by:` trailer written by a coding tool.                        |
 | `agent-authored`     | The author account, branch, label or body matches a known coding agent.                       |
 
-Boundary findings — `outside declared scope`, `agent instructions changed`,
-`workflow permissions` — appear here too when the change crossed one.
+Boundary findings (`outside declared scope`, `agent instructions changed`,
+`workflow permissions`) appear here too when the change crossed one.
 
 `AI disclosed` reads **commit trailers only**, so a project whose disclosure convention is
 something else reads as zero. starship asks every contributor to disclose AI assistance and its
-pull-request template carries an `#### AI-Assistance` section that contributors fill in — none
+pull-request template carries an `#### AI-Assistance` section that contributors fill in. None
 of its open pull requests carries a trailer, and every one of those is still a disclosure. Read
 this row as "disclosed in commit metadata", never as "did not disclose".
 
@@ -70,7 +70,7 @@ repository's norm and is not listed per row.
 #22836  codex/fix-zsxq-topic-id-precision  agent-authored
 ```
 
-This applies at 80% and only from eight pull requests upward — below that, three of four is a
+This applies at 80% and only from eight pull requests upward; below that, three of four is a
 coincidence rather than a convention.
 
 ## What it does not do
@@ -87,7 +87,7 @@ second one.
 
 **It reports facts, not quality.** "No linked issue" is checkable, and a maintainer can look and
 disagree. "Low effort" is neither. Nothing here scores a contributor, guesses from writing
-style, or infers intent — every row names the rule that produced it, and
+style, or infers intent; every row names the rule that produced it, and
 `mergewarden scan <owner/repo#number>` prints the evidence behind it.
 
 **It does not decide.** All of these are informational by default and none moves a pass or a
@@ -99,5 +99,5 @@ block. Raising one is a repository's choice, in
 The same rules run in the [Action](action-reference.md). `no_linked_issue` is the one
 difference: it is `off` there and on here, because most pull requests in most repositories
 reference no issue, and a finding attached to nearly every report is the noise
-[v0.9.0](release-notes-v0.9.0.md) removed. Ranking many open pull requests against each other
+[v0.9.0](history/releases/release-notes-v0.9.0.md) removed. Ranking many open pull requests against each other
 is a different question from gating one of them.

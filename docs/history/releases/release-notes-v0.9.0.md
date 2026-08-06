@@ -68,7 +68,7 @@ having. Note that pull requests from forks receive a read-only token on the
 
 ## Also
 
-[`docs/start-here.md`](start-here.md) is a new one-page introduction: install,
+[`docs/getting-started.md`](../../getting-started.md) is a new one-page introduction: install,
 what the first pull request will look like, and one line explaining each
 finding. This project has 38 documents and no front door.
 

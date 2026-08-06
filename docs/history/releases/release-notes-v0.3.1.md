@@ -28,5 +28,5 @@ The `v0.3.0` tag remains immutable. npm rejected its unscoped `agent-gate`
 package name as too similar to the existing `agentgate` package, so v0.3.1
 records the scoped package identity in source before publication.
 
-See the [v0.3 migration guidance](migration-v0.3.0.md), [CLI reference](cli.md),
-and [release checklist](release-checklist.md).
+See the [v0.3 migration guidance](migration-v0.3.0.md), [CLI reference](../../cli.md),
+and [release checklist](../../release-checklist.md).
