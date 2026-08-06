@@ -6,6 +6,54 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.10.2 - 2026-08-06
+
+### Fixed
+
+- **`mergewarden triage` counted its own failures as work waiting for a
+  maintainer.** Run against a public repository with no token, it printed
+  `20 open pull request(s) read. 14 have something a maintainer checks by hand.`
+  where nine of those fourteen rows read `could not be read`. They were not pull
+  requests needing attention; they were GitHub refusing the request after 60
+  unauthenticated calls an hour. The process exited `0`.
+
+  Every failure became `notes: ["could not be read"]`, the same shape a finding
+  has, so it was counted in the headline and sorted among real findings. This
+  repository fails closed rather than presenting a partial pass and ships an
+  `ANALYSIS INCOMPLETE` state for exactly this; the command people run first was
+  the one place that ignored it.
+
+  Unreadable pull requests are now tracked separately, reported on their own
+  line, excluded from the count, and the run exits non-zero. An exhausted quota
+  stops the loop instead of attempting every remaining pull request, and the
+  advice differs by cause: set `GH_TOKEN` when unauthenticated, wait or lower
+  `--limit` when it was the token's own quota.
+
+- The listing no longer retries an exhausted hourly quota. That backoff waited
+  20, 40 and 60 seconds, so an unauthenticated caller sat through two minutes of
+  silence before getting the error anyway. GitHub marks this case with
+  `x-ratelimit-remaining: 0`, which the secondary rate limit, still retried,
+  does not. It also no longer tells somebody who has not set a token that GitHub
+  is rate limiting "this token".
+
+- `runTriageCli` was never executed by the test suite, which is why the above
+  shipped. All 90 tests passed while the command's error handling was wrong.
+  `packages/cli/test/triageRun.test.ts` now runs it against stubbed GitHub
+  calls; five of its cases fail against the previous code.
+
+### Documentation
+
+- The README leads with the check nothing else appears to make: a pull request
+  that edits the files coding agents read as instructions. Verified against a
+  real run before the copy was written, not after. It also says in the first
+  three lines that nothing is ever closed.
+- Install drops from four options to one. `github-token`, `mode: warn` and
+  `fail-on-block: false` were all doing nothing: the first is already the
+  Action's default, the second is already the schema's default, and the third
+  only fires on a `block` decision, which warn mode never produces.
+- `triage`'s token requirement moved above the command, with a link to create
+  one and the fact that no scopes are needed.
+
 ## v0.10.1 - 2026-08-06
 
 v0.10.0 was tagged and never published. The release workflow audits dependencies
