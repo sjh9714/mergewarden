@@ -24,7 +24,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@415122bf756157735b5b2e569c48a846064f5b17 # v0.10.2
+      - uses: sjh9714/mergewarden@d63b4fc8c09c540375f039ecd30d2fce56abf31f # v0.10.3
         with:
           comment: auto
 ```

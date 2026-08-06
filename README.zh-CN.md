@@ -89,10 +89,10 @@ jobs:
           comment: auto
 ```
 
-如果希望按 commit 固定成不可变引用，可以直接钉住 v0.10.2 的发布 commit：
+如果希望按 commit 固定成不可变引用，可以直接钉住 v0.10.3 的发布 commit：
 
 ```yaml
-- uses: sjh9714/mergewarden@415122bf756157735b5b2e569c48a846064f5b17
+- uses: sjh9714/mergewarden@d63b4fc8c09c540375f039ecd30d2fce56abf31f
 ```
 
 不需要 checkout 步骤。MergeWarden 不发布、也不建议使用会漂移的 `v0` 标签。

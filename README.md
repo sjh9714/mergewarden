@@ -82,7 +82,7 @@ For a build that cannot change under you, pin the release commit instead of the
 tag. MergeWarden does not publish or recommend a mutable `v0` tag.
 
 ```yaml
-- uses: sjh9714/mergewarden@415122bf756157735b5b2e569c48a846064f5b17
+- uses: sjh9714/mergewarden@d63b4fc8c09c540375f039ecd30d2fce56abf31f
 ```
 
 ## What else it checks
