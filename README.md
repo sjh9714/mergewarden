@@ -26,7 +26,7 @@ This runs a small example that ships inside the tool. No token, no repository,
 no network:
 
 ```bash
-npx --yes mergewarden@0.9.0 demo
+npx --yes mergewarden@0.10.0 demo
 ```
 
 ```
@@ -46,10 +46,38 @@ Path: .github/workflows/release.yml
 Now point it at a real pull request. Public repositories need no token:
 
 ```bash
-npx --yes mergewarden@0.9.0 scan owner/repository#123
+npx --yes mergewarden@0.10.0 scan owner/repository#123
 ```
 
 ![The full mergewarden demo report scrolling past in a terminal](docs/assets/mergewarden-demo.gif)
+
+If a queue has built up, read the whole thing at once instead. This is real
+output from a public repository:
+
+```bash
+npx --yes mergewarden@0.10.0 triage owner/repository
+```
+
+```
+20 open pull request(s) read. 9 have something a maintainer checks by hand.
+
+#6941  update-unmanaged-certificates       no description · template unused
+#7227  add-tests                           no linked issue · oversized
+#7790  feat/dedup-dynamic-upstreams        no linked issue · template unused
+#7290  natsort                             template unused
+#7669  webtransport-reverse-proxy          oversized
+#7878  rfc9440-client-cert-placeholders    oversized
+#7912  feat/fastcgi-server-addr            template unused
+#7913  slowloris-idle-timeout              no linked issue
+#7922  fix/network-proxy-missing-host      no linked issue
+
+Nothing was closed, labelled, or commented on.
+```
+
+Every row is something you would have checked by hand, and you can confirm any
+of them in a few seconds. The other eleven pull requests are not listed because
+there was nothing to say about them. Nothing is written back to GitHub, and the
+command needs no write access.
 
 For private repositories, or to raise your API rate limit, set `GH_TOKEN`.
 There is deliberately no way to pass a token as a command-line flag, because
@@ -89,7 +117,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.9.0
+      - uses: sjh9714/mergewarden@v0.10.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn

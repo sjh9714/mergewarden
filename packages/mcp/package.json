@@ -1,6 +1,6 @@
 {
   "name": "mergewarden-mcp",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "MCP server that checks whether a coding agent's changes stayed inside the scope it was given",
   "license": "MIT",
   "type": "module",

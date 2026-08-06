@@ -9,12 +9,23 @@ You can run MergeWarden against any public pull request without installing
 anything and without a token:
 
 ```bash
-npx --yes mergewarden@0.9.0 scan owner/repository#123
+npx --yes mergewarden@0.10.0 scan owner/repository#123
 ```
 
 Try it on a pull request you already know well. If the report tells you nothing
 you did not already know, it is doing its job, because most pull requests cross
 no boundary at all.
+
+To look at a whole repository rather than one pull request, `triage` reads every
+open pull request and lists only the ones with something a maintainer checks by
+hand:
+
+```bash
+npx --yes mergewarden@0.10.0 triage owner/repository
+```
+
+It needs no write access and writes nothing back. [Triage](triage.md) explains
+what each row means and where the thresholds come from.
 
 Set `GH_TOKEN` for private repositories or for a higher API rate limit. There is
 no command-line flag for the token, deliberately, because flags end up in shell
@@ -40,7 +51,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.9.0
+      - uses: sjh9714/mergewarden@v0.10.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           mode: warn

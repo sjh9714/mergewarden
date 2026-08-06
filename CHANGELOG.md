@@ -6,16 +6,44 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## Unreleased
+## v0.10.0 - 2026-08-06
+
+This release exists because the documentation described a command nobody could
+run. `mergewarden triage` was merged after the v0.9.0 tag and never published,
+so `npx mergewarden@0.9.0 triage` answered "Expected a command: demo, scan, or
+replay" while the README's opening line told people to run exactly that.
+
+### Documentation
+
+- The user-facing documentation was 72 files and 52,219 words, for a project
+  with no confirmed users. It is now 29 files and 20,243 words. Nothing was
+  deleted: internal launch memos and per-release notes moved under
+  `docs/history/`, alongside the verification records already kept there.
+- `start-here.md`, `getting-started.md` and `first-report.md` each explained the
+  five status labels and the adoption ramp. `getting-started.md` now carries all
+  of it once, and the other two are gone.
+- The documentation index was a flat list of thirty links, half of them release
+  notes. It is grouped by what the reader is trying to do.
+- Em-dashes are gone from every user-facing document.
+
+### Fixed
+
+- CI failed on two high-severity advisories published after the last green run
+  on 2026-07-31 (`brace-expansion` GHSA-rgw5-rvv9-x895, `fast-uri`
+  GHSA-7p8r-x3mc-p8w7), which blocked every pull request before the build step.
+  `undici` moved in the same pass, clearing three moderate advisories. Overrides
+  live in `pnpm-workspace.yaml`: pnpm 11 stopped reading `pnpm.overrides` from
+  `package.json` and warns rather than fails, so an override written there looks
+  applied and is not.
 
 ### Added
 
-- **`mergewarden triage <owner/repository>`** — reads a repository's open pull requests and
+- **`mergewarden triage <owner/repository>`**: reads a repository's open pull requests and
   reports, for each, the facts a maintainer normally checks by hand. Rows are ordered by how
   many facts each pull request trips, so the top of the list is where attention goes first.
   No installation, no configuration, no write access.
 
-  **It never closes, labels, or comments, and there is no flag that does** — a test asserts
+  **It never closes, labels, or comments, and there is no flag that does**; a test asserts
   that no option acts on a pull request. The tools that auto-close have to be right every
   time, and the public record of the leading one is its own issue tracker: a username with two
   consecutive digits read as spam, a maintainer's own merge flagged, and no way to reopen what
@@ -24,7 +52,7 @@ This project follows the spirit of
 - **Five triage rules**, all `info` so none moves the decision: `triage/no-linked-issue`,
   `triage/empty-description`, `triage/template-unused`, `triage/oversized-change` and
   `triage/unverified-author`. Each reports a fact that can be checked and argued with, never a
-  judgement about quality — nothing scores a contributor or guesses from writing style.
+  judgement about quality; nothing scores a contributor or guesses from writing style.
 
   `no_linked_issue` ships `off`: most pull requests in most repositories reference no issue, so
   at `info` it would attach a finding to nearly every report, which is the noise v0.9.0 removed.
@@ -41,58 +69,50 @@ This project follows the spirit of
 - The collector reads the repository's **pull-request template** from the base branch, and the
   author's `author_association`. The template is not fetched when `triage.template_unused` is
   `off`. Headings inside HTML comments are not counted as sections: they are instructions to the
-  contributor, and Next.js's template is entirely comment — counting them flagged every pull
+  contributor, and Next.js's template is entirely comment; counting them flagged every pull
   request in the repository until this was fixed.
 
-- `triage.exclude_authors` — maintenance automation these rules say nothing about, defaulting
+- `triage.exclude_authors`: maintenance automation these rules say nothing about, defaulting
   to `dependabot[bot]`, `renovate[bot]` and `github-actions[bot]`. Found by running the command
   against real repositories: it was reporting starship's own release bot for not following the
   pull-request template and renovate for not linking an issue, which is the complaint on the
-  competing tool's issue tracker. Coding agents are deliberately not excluded — `Copilot` and
+  competing tool's issue tracker. Coding agents are deliberately not excluded; `Copilot` and
   `devin-ai-integration[bot]` are bot accounts too, and theirs are the pull requests a
   maintainer wants triaged.
 
 - The human and JSON views of triage no longer disagree. The uniform-note partition ran after
   the JSON branch returned, so a validation run that asked for JSON scored the behaviour the fix
-  had already removed — the numbers were discarded and the run repeated. A test pins the
+  had already removed; the numbers were discarded and the run repeated. A test pins the
   ordering, because this is the kind of divergence that comes back quietly.
 
 - Triage lifts a note that appears on **80% or more** of a repository's open pull requests out
   of the rows and reports it once, about the repository. Found by running the command against
-  the projects that installed the competing tool — the ones that self-identified as having this
+  the projects that installed the competing tool, the ones that self-identified as having this
   problem. RSSHub came back with 15 of 15 flagged, almost all "no linked issue", because that
   repository links an issue on nothing. A signal that fires on everything ranks nothing, which
   is the failure the command exists to avoid; RSSHub now returns 2 rows. Applies only from
   eight pull requests upward, since below that three of four is a coincidence.
 
 - Bounded retry on the pull-request listing. GitHub answers a burst of requests with `403`
-  under its secondary rate limit — unrelated to the hourly budget — and this listing is a direct
+  under its secondary rate limit (unrelated to the hourly budget), and this listing is a direct
   call that did not go through the retry the rest of the CLI gets. 16 of 41 repositories in a
   measurement run failed this way before it was added.
 
-- **`docs/study/does-triage-help.md`** — the command measured against the 167 repositories that
+- **`docs/study/does-triage-help.md`**: the command measured against the 167 repositories that
   installed a competing tool. 20 of 34 judgeable repositories get a ranked list, 11 of 13 among
   those with 100 stars or more, and **none came back flat**. 41% get nothing, which is correct
   for the Action and a bad first run for the CLI.
 
-- **`docs/triage.md`** — what the command reports, and why it does not act.
+- **`docs/triage.md`**: what the command reports, and why it does not act.
 
-### Changed
-
-- The README now leads with the triage question rather than with scope contracts. Contract scope
-  remains a rule and remains documented; it is no longer the first thing a reader is asked to
-  care about.
-
-### Added
-
-- **`commit/ai-assistance-disclosed`** — reports the `Co-authored-by:` trailers coding tools
+- **`commit/ai-assistance-disclosed`**: reports the `Co-authored-by:` trailers coding tools
   write about themselves (Claude Code, Cursor, GitHub Copilot, Devin, Codex, Google Jules),
   including the model name where the tool records one. `info` by default via
   `commit_trailers.ai_disclosure`, so it never moves the decision; raise it if your policy
   requires disclosure.
 
-  Every signal MergeWarden had until now was human-chosen — an author account, a branch prefix,
-  a label, a body marker — and a branch prefix disappears the moment the branch is renamed. This
+  Every signal MergeWarden had until now was human-chosen (an author account, a branch prefix,
+  a label, a body marker), and a branch prefix disappears the moment the branch is renamed. This
   one the tool writes itself, and it survives a squash merge into permanent history. The rule
   reuses the commit enumeration and Git-trailer parsing shipped in v0.4.1, which were already
   collecting the data without reading it.
@@ -103,13 +123,20 @@ This project follows the spirit of
   tool writes `Claude`, `Claude Opus 4.8` and `Claude Opus 4.8 (1M context)`, and a person can
   type any of them. Addresses and counts come from real merged history, not vendor docs.
 
-- **`docs/study/what-ai-disclosure-looks-like.md`** — 1,029 repositories read from cloned git
+- **`docs/study/what-ai-disclosure-looks-like.md`**: 1,029 repositories read from cloned git
   history. Includes a **correction**: an earlier pass of this measurement found AI-banning
   projects at 0% and read it as evidence that policy changes behaviour. It was confounded by
-  language — every repository in that list is C or C++, and the median C/C++ repository is at 0%
+  language: every repository in that list is C or C++, and the median C/C++ repository is at 0%
   regardless of policy. Stratified by language the effect disappears. The same data found that
   only **three of the 355 most popular repositories** actually prohibit AI-written code, while
   the common requirement is comprehension, which no checker can verify.
+
+### Changed
+
+- The README opens with the situation the tool exists for, in plain words, before any of its
+  vocabulary appears. `demo`, `scan` and `triage` are each shown with real output. An earlier
+  draft of this entry claimed the README leads with the triage question; it was rewritten again
+  before release and no longer does.
 
 ## v0.9.0 - 2026-07-30
 
