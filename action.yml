@@ -1,5 +1,5 @@
 name: "MergeWarden for AI PRs"
-description: "Reports when a pull request edits the files coding agents read as instructions (CLAUDE.md, AGENTS.md, .mcp.json). Closes nothing."
+description: "Reports when a pull request quietly edits CLAUDE.md, AGENTS.md or another agent instruction file. It closes nothing."
 author: "MergeWarden contributors"
 
 inputs:

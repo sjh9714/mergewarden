@@ -31,6 +31,19 @@ describe("action metadata", () => {
     expect(rootMetadata).toEqual(packageMetadata);
   });
 
+  // The Marketplace listing takes its name and description from this file and silently
+  // refuses to publish a release whose description is too long: the listing simply keeps
+  // whatever it had before, so the repository looks updated and the page people arrive on
+  // does not change. That happened, and nothing here caught it.
+  it("keeps the Marketplace name and description publishable", () => {
+    const metadata = parse(rootAction) as { name?: unknown; description?: unknown };
+
+    expect(typeof metadata.name).toBe("string");
+    expect(typeof metadata.description).toBe("string");
+    expect((metadata.description as string).length).toBeLessThan(125);
+    expect((metadata.name as string).length).toBeLessThanOrEqual(100);
+  });
+
   it("keeps self-dogfooding API-only and checkout-free", () => {
     expect(selfDogfoodingWorkflow).not.toContain("actions/checkout");
     expect(selfDogfoodingWorkflow).toContain("contents: read");
