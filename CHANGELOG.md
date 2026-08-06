@@ -6,6 +6,40 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.10.3 - 2026-08-06
+
+Published so that two pages people arrive on stop describing a project from two
+months ago. npm packages are immutable, so nothing in v0.10.2 could be corrected
+in place.
+
+### Documentation
+
+- **The npm page for `mergewarden`** is rendered from `packages/cli/README.md`,
+  which was worse than out of date. It told people to run
+  `npx mergewarden@0.8.0`, never mentioned `triage` at all, and repeated the
+  claim that "Authentication is optional for public repositories", which was
+  corrected in the main README and is false for `triage`: 60 unauthenticated
+  requests an hour does not cover one queue.
+
+  Rewritten, with exit codes now stated per command because they differ. `scan`
+  and `replay` return `2` on an incomplete analysis; `triage` returns `1`,
+  because a partly-read queue is still worth printing. The first draft of that
+  file merged the two and would have published a wrong claim.
+
+- **The GitHub Marketplace listing** takes its description from `action.yml`,
+  which still read "Checkout-free policy gate for AI-generated pull requests".
+  The action `name` is deliberately unchanged: the Marketplace slug is derived
+  from it, so renaming would orphan the existing listing URL.
+
+- The npm package description, also rendered by npm, had the same old wording.
+
+- `docs/roadmap.md` stopped at "Shipped in v0.3.1" while the project was on
+  v0.10.2, so seven releases were invisible and the page read as something that
+  stalled in spring.
+
+Unchanged on purpose: the older version strings in `docs/demo-prs.md`, which
+record which build produced which verified external run.
+
 ## v0.10.2 - 2026-08-06
 
 ### Fixed

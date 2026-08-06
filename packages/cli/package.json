@@ -1,6 +1,6 @@
 {
   "name": "mergewarden",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "private": false,
   "type": "module",
   "description": "Reports what a pull request changed that a maintainer normally checks by hand, starting with the files coding agents read as instructions",

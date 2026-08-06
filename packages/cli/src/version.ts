@@ -1,1 +1,1 @@
-export const MERGEWARDEN_VERSION = "0.10.2";
+export const MERGEWARDEN_VERSION = "0.10.3";

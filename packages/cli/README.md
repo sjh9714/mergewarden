@@ -13,7 +13,7 @@ or a whole queue, from your terminal.
 ## Read a whole queue
 
 ```console
-npx mergewarden@0.10.2 triage owner/repository
+npx mergewarden@0.10.3 triage owner/repository
 ```
 
 ```
@@ -35,7 +35,7 @@ it only half saw.
 ## Scan one pull request
 
 ```console
-npx mergewarden@0.10.2 scan owner/repository#123
+npx mergewarden@0.10.3 scan owner/repository#123
 ```
 
 Full pull request URLs are accepted too. A single public pull request works

@@ -60,7 +60,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.10.2
+      - uses: sjh9714/mergewarden@v0.10.3
         with:
           comment: auto
 ```
@@ -144,7 +144,7 @@ with **no scopes selected** is enough, since nothing here writes.
 
 ```bash
 export GH_TOKEN=github_pat_...
-npx --yes mergewarden@0.10.2 triage owner/repository
+npx --yes mergewarden@0.10.3 triage owner/repository
 ```
 
 ```
