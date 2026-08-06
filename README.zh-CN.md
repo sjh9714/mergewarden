@@ -1,25 +1,44 @@
-# MergeWarden：面向 AI PR 的变更管控门禁
+# MergeWarden
 
 [![Release](https://img.shields.io/github/v/release/sjh9714/mergewarden?label=release)](https://github.com/sjh9714/mergewarden/releases)
 [![CI](https://github.com/sjh9714/mergewarden/actions/workflows/ci.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/ci.yml)
 [![MergeWarden](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml)
 [![License](https://img.shields.io/github/license/sjh9714/mergewarden)](LICENSE)
 
-> **守在 AI 智能体与主分支之间的那道门。**
-
 [English](README.md) · 简体中文
 
-编码智能体整天都在提 PR。MergeWarden 是一道变更管控门禁，用只有你的仓库才能定义的边界去检查每一个 PR：
+**某个 PR 悄悄改了你的 `CLAUDE.md`。**
 
-- **这个 PR 有没有越出它自己声明的范围？** 智能体在 PR 正文的契约里声明打算改动的路径，超出范围的改动会被记为检查结果。
-- **它有没有动到智能体控制平面？** 对 `AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`.mcp.json`、`.cursor/**` 这类文件的改动，会左右此后每一个智能体 PR 的行为，理应经过人眼确认。
-- **它有没有把不可信文本接进智能体的提示词？** 从 PR 正文、标题或评论流向已登记的 agentic 工作流的新路径，会被追踪并标记出来。
+在 diff 里它看着就是一次文档整理。可那个文件是每个编码智能体动你仓库之前都会读的东西，
+所以这次改动会比这个 PR 活得更久，而且之后没有任何人会再去审它。
 
-它同时也会捕捉工作流权限提升、未按 SHA 固定的供应链引用，以及有风险的软件包生命周期脚本。
+发生这种事时，MergeWarden 会留下一条评论。**它不会关闭任何 PR。**
 
-它**不会**执行 PR 中的代码，**不会**从 PR 的 head 读取策略，运行时**不会**调用大模型。每一个判定都附带可在本地复现的确定性证据。
+## 实际长这样
 
-MergeWarden 也用自己来把关自己的 PR —— 上面那枚 `MergeWarden` 徽章就是这个实时自检（[我们如何 dogfooding](docs/demo-prs.md#dogfooding-mergewarden-gates-its-own-prs)）。
+下面是一个真实的 PR，标题是「docs: tidy up the contributor notes」，整个 diff 只是在
+`CLAUDE.md` 里加了一行。
+
+```
+MergeWarden: NEEDS REVIEW
+
+Why:  This file can change how AI agents behave in future PRs. (CLAUDE.md)
+Next: Review the agent instruction/tooling change before merging.
+```
+
+[这个 PR](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/22)
+是公开的，你可以自己把输出和 diff 对一遍。不管开 PR 的是不是智能体它都有效，那一条记录的是
+`Agent detected: no`。
+
+默认监视：`AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`QWEN.md`、`.mcp.json`、`.cursor/`、
+`.codex/`、`.gemini/`、`.github/copilot-instructions.md`、`claude_desktop_config.json`。
+
+**这种事多常见？** 我们扫了 GitHub 上 2,204 个已合并的智能体 PR，其中 **3.9%** 改动了
+这类文件。它不是每天都会发生的事，而是那种你希望在它发生的那一次就知道、而不是六周后才
+发现的事。
+
+> 本页其余部分仍是旧版结构的翻译，内容属实但组织方式落后于
+> [英文 README](README.md)。以英文版为准。
 
 ## 60 秒试一下
 
@@ -67,9 +86,6 @@ jobs:
     steps:
       - uses: sjh9714/mergewarden@v0.10.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: warn
-          fail-on-block: false
           comment: auto
 ```
 

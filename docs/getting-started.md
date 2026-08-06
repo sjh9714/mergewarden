@@ -59,18 +59,18 @@ jobs:
     steps:
       - uses: sjh9714/mergewarden@v0.10.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: warn
-          fail-on-block: false
           comment: auto
 ```
 
-There is no checkout step and no config file to write. MergeWarden reads the
-pull request through the GitHub API, and until you add a `mergewarden.yml` of
-your own it uses a built-in default policy.
+There is no checkout step, no config file to write, and no token to create: the
+Action uses the one GitHub already gives the job. MergeWarden reads the pull
+request through the GitHub API, and until you add a `mergewarden.yml` of your
+own it uses a built-in default policy.
 
-`mode: warn` with `fail-on-block: false` means nothing is ever blocked from
-merging. Leave it that way for a while.
+`comment: auto` is the only option worth setting on a fresh install. The default
+policy already runs in `warn` mode, which never blocks a merge, so
+`mode: warn` and `fail-on-block: false` are what you would get anyway. Leave it
+that way for a while.
 
 ## What the first pull request looks like
 

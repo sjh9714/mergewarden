@@ -26,9 +26,6 @@ jobs:
     steps:
       - uses: sjh9714/mergewarden@c32fb900b65708ea7c875b8ec4244c0983343970 # v0.10.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: warn
-          fail-on-block: false
           comment: auto
 ```
 
