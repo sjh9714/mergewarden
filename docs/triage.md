@@ -24,6 +24,16 @@ Rows are ordered by how many facts each pull request trips, so the top of the li
 reviewer's attention goes first. No installation, no configuration, and no write access: it
 reads the same public API a browser does.
 
+## It needs a token, including on a public repository
+
+Set `GH_TOKEN` before running this. Reading a queue takes one request per pull request plus the
+listing, and GitHub allows **60 unauthenticated requests an hour**, which a single queue uses
+up. A personal access token with no scopes selected is enough, because nothing here writes.
+
+Without one, the command says what it could not read and exits non-zero. It does not print a
+queue it only half read: an unreadable pull request is a gap in the analysis, not a fact about
+that pull request, and the two are counted separately for that reason.
+
 `--limit N` reads more or fewer pull requests (default 20, maximum 100). `--format json` emits
 the same data for scripting.
 

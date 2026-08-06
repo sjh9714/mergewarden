@@ -117,7 +117,12 @@ async function listOpenPullRequests(
   // @mergewarden/github; this listing is a direct call and needs its own bounded backoff.
   let response = await fetch(url, { headers });
 
-  for (let attempt = 1; attempt <= 3 && RETRYABLE.has(response.status); attempt++) {
+  // An exhausted hourly quota answers 403 with `x-ratelimit-remaining: 0`, and it does not
+  // recover inside the two minutes this backoff spends. Retrying it means an unauthenticated
+  // caller stares at nothing for two minutes and then gets the error anyway.
+  const quotaGone = response.headers.get("x-ratelimit-remaining") === "0";
+
+  for (let attempt = 1; attempt <= 3 && !quotaGone && RETRYABLE.has(response.status); attempt++) {
     const retryAfter = Number(response.headers.get("retry-after"));
     const waitMs =
       Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : attempt * 20_000;
@@ -126,11 +131,16 @@ async function listOpenPullRequests(
   }
 
   if (!response.ok) {
-    const hint = RETRYABLE.has(response.status)
-      ? " — GitHub is rate limiting this token; try again in a few minutes"
-      : "";
+    // Without a token this is the hourly quota, and waiting is the wrong advice: it resets in
+    // up to an hour and the fix is a token. Saying "this token" to somebody who has not set
+    // one also sends them looking for a problem they do not have.
+    const hint = !RETRYABLE.has(response.status)
+      ? ""
+      : token
+        ? " GitHub is rate limiting this token; try again in a few minutes."
+        : " GitHub allows 60 unauthenticated requests an hour, which one repository's queue exhausts. Set GH_TOKEN to a personal access token and run it again.";
     throw new Error(
-      `Could not list pull requests for ${owner}/${repo}: HTTP ${response.status}${hint}`,
+      `Could not list pull requests for ${owner}/${repo}: HTTP ${response.status}.${hint}`,
     );
   }
 
@@ -179,6 +189,31 @@ function notesFor(result: AnalysisResult): string[] {
   }
 
   return notes;
+}
+
+/**
+ * Did the run hit a quota, rather than one pull request being unreadable?
+ *
+ * GitHub answers an exhausted quota with 403 and a reset timestamp. Once that fires, every
+ * remaining pull request fails the same way, so continuing prints a queue of "could not be read"
+ * that describes the tool's own state as though it were a fact about the pull requests. The
+ * cause chain is walked because the retry layer wraps the original error.
+ */
+function rateLimited(error: unknown): boolean {
+  let current: unknown = error;
+
+  for (let depth = 0; current !== undefined && current !== null && depth < 5; depth += 1) {
+    const candidate = current as { status?: unknown; rateLimitResetAt?: unknown; cause?: unknown };
+    const status = typeof candidate.status === "number" ? candidate.status : undefined;
+
+    if ((status === 403 || status === 429) && typeof candidate.rateLimitResetAt === "number") {
+      return true;
+    }
+
+    current = candidate.cause;
+  }
+
+  return false;
 }
 
 function truncate(value: string, max: number): string {
@@ -292,8 +327,18 @@ export async function runTriageCli(
     notes: string[];
   }[] = [];
   const automation: OpenPullRequest[] = [];
+  // Kept out of `rows` on purpose. An unreadable pull request is a gap in the analysis, not a
+  // finding about the pull request, and counting the two together reported the tool's own
+  // failure as work waiting for a maintainer.
+  const unreadable: OpenPullRequest[] = [];
+  let quotaExhausted = false;
 
-  for (const pull of openPullRequests) {
+  for (const [index, pull] of openPullRequests.entries()) {
+    if (quotaExhausted) {
+      unreadable.push(...openPullRequests.slice(index));
+      break;
+    }
+
     try {
       const input = await loadGitHubAnalysis(
         api,
@@ -320,10 +365,14 @@ export async function runTriageCli(
 
       const result = await analyze(input);
       rows.push({ ...pull, notes: notesFor(result) });
-    } catch {
-      // One unreadable pull request must not end the run — a deleted head repository is
-      // ordinary. It is reported as unreadable rather than silently dropped.
-      rows.push({ ...pull, notes: ["could not be read"] });
+    } catch (error) {
+      // One unreadable pull request must not end the run: a deleted head repository is
+      // ordinary. A quota is different, because everything after it fails identically.
+      if (rateLimited(error)) {
+        quotaExhausted = true;
+      }
+
+      unreadable.push(pull);
     }
   }
 
@@ -332,6 +381,16 @@ export async function runTriageCli(
   // because it asked for JSON.
   const partitioned = partitionUniformNotes(rows) as { uniform: string[]; rows: typeof rows };
 
+  // An incomplete read is reported as incomplete. The rest of this tool fails closed rather
+  // than presenting a partial pass, and the command people run first should not be the
+  // exception to that.
+  const incomplete = unreadable.length > 0;
+  const advice = quotaExhausted
+    ? token
+      ? "GitHub's rate limit for this token was exhausted. Wait for it to reset, or pass --limit with a smaller number."
+      : "GitHub allows 60 unauthenticated requests an hour, which one repository's queue exhausts. Set GH_TOKEN to a personal access token and run it again."
+    : "Those pull requests could not be read. A deleted or renamed head branch is the usual cause.";
+
   if (options.format === "json") {
     io.stdout(
       `${JSON.stringify(
@@ -339,13 +398,15 @@ export async function runTriageCli(
           repository: `${options.owner}/${options.repo}`,
           uniformNotes: partitioned.uniform,
           automationPullRequests: automation.length,
+          unreadablePullRequests: unreadable.map((pull) => pull.number),
+          analysisComplete: !incomplete,
           rows: partitioned.rows,
         },
         null,
         2,
       )}\n`,
     );
-    return 0;
+    return incomplete ? 1 : 0;
   }
 
   // Most signals first: the point of the command is which pull request to open next.
@@ -354,6 +415,15 @@ export async function runTriageCli(
     .sort((left, right) => right.notes.length - left.notes.length || left.number - right.number);
 
   if (rows.length === 0) {
+    if (incomplete) {
+      // Nothing was analysed, so there is no queue to describe. Saying anything about the
+      // repository here would be describing a run that did not happen.
+      io.stderr(
+        `MergeWarden CLI error: none of the ${unreadable.length} open pull request(s) could be read. ${advice}\n`,
+      );
+      return 1;
+    }
+
     io.stdout(
       automation.length > 0
         ? `${options.owner}/${options.repo}: all ${automation.length} open pull request(s) read are maintenance automation. Nothing here is waiting on a human.\n`
@@ -366,6 +436,9 @@ export async function runTriageCli(
     `${rows.length} open pull request(s) read. ${flagged.length} have something a maintainer checks by hand.`,
     ...(automation.length > 0
       ? [`${automation.length} more are maintenance automation and were not read.`]
+      : []),
+    ...(incomplete
+      ? [`${unreadable.length} could not be read, so this is a partial answer. ${advice}`]
       : []),
     "",
   ];
@@ -397,5 +470,5 @@ export async function runTriageCli(
   );
 
   io.stdout(lines.join("\n"));
-  return 0;
+  return incomplete ? 1 : 0;
 }

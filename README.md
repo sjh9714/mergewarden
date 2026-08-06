@@ -79,7 +79,14 @@ of them in a few seconds. The other eleven pull requests are not listed because
 there was nothing to say about them. Nothing is written back to GitHub, and the
 command needs no write access.
 
-For private repositories, or to raise your API rate limit, set `GH_TOKEN`.
+**`triage` needs `GH_TOKEN` set, even for a public repository.** It reads every
+open pull request, and GitHub allows 60 unauthenticated requests an hour, which
+one queue uses up. Any personal access token with no scopes at all is enough,
+since nothing here needs write access. Without one the command tells you so and
+exits non-zero rather than reporting a half-read queue.
+
+`scan`, on a single public pull request, works without a token.
+
 There is deliberately no way to pass a token as a command-line flag, because
 flags end up in shell history and CI logs.
 

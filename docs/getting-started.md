@@ -24,8 +24,14 @@ hand:
 npx --yes mergewarden@0.10.1 triage owner/repository
 ```
 
-It needs no write access and writes nothing back. [Triage](triage.md) explains
-what each row means and where the thresholds come from.
+It needs no write access and writes nothing back, but it does need `GH_TOKEN`
+set, even for a public repository: it reads every open pull request, and
+GitHub's 60 unauthenticated requests an hour do not cover one queue. A personal
+access token with no scopes selected is enough. Without one the command says so
+and exits non-zero rather than reporting a queue it only half read.
+
+[Triage](triage.md) explains what each row means and where the thresholds come
+from.
 
 Set `GH_TOKEN` for private repositories or for a higher API rate limit. There is
 no command-line flag for the token, deliberately, because flags end up in shell
