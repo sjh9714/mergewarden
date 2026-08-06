@@ -6,7 +6,28 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.10.1 - 2026-08-06
+
+v0.10.0 was tagged and never published. The release workflow audits dependencies
+at every severity, where CI only fails on high, and it rejected the candidate on
+two moderate advisories. Nothing reached npm, so v0.10.1 is v0.10.0 plus the
+overrides below and is the version to install. The v0.10.0 tag stays where it
+is: a pushed tag is something somebody may already be pinning, and the checklist
+says not to rewrite one.
+
+### Fixed
+
+- `postcss` (GHSA-fxqj-rqcc-2cmp) reads arbitrary `.map` files from an
+  attacker-controlled `sourceMappingURL` when `from` is unset. Build tooling
+  only, reached through tsup and vitest.
+- `hono` (GHSA-8j4g-w8fx-2239) has a ReDoS in its CORS middleware. This one is
+  reached through `@modelcontextprotocol/sdk`, so it sits on the runtime path of
+  the published `mergewarden-mcp` package rather than only in the build.
+
 ## v0.10.0 - 2026-08-06
+
+Tagged, never published. See v0.10.1 above for why. Everything below shipped as
+part of v0.10.1.
 
 This release exists because the documentation described a command nobody could
 run. `mergewarden triage` was merged after the v0.9.0 tag and never published,

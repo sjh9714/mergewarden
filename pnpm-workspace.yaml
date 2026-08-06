@@ -13,3 +13,11 @@ overrides:
   # @modelcontextprotocol/sdk > ajv, which needs the 3.x line, so this stays on
   # ^3 rather than following fast-uri to 4.x.
   fast-uri: ^3.1.5
+  # GHSA-fxqj-rqcc-2cmp: postcss reads arbitrary .map files from an
+  # attacker-controlled sourceMappingURL when `from` is unset. Build tooling
+  # only, through tsup and vitest.
+  postcss: ^8.5.23
+  # GHSA-8j4g-w8fx-2239: hono ReDoS in the CORS middleware. Reached through
+  # @modelcontextprotocol/sdk, so this one is on the runtime path of the
+  # published mergewarden-mcp package, not just the build.
+  hono: ^4.12.34

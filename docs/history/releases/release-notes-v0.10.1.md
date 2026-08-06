@@ -1,6 +1,14 @@
-# v0.10.0
+# v0.10.1
 
 **Released 2026-08-06.**
+
+v0.10.0 was tagged and then never published. The release workflow runs a
+stricter dependency audit than CI does, CI allows anything below high severity
+and the release gate allows nothing, and it rejected the candidate on two
+moderate advisories. Nothing reached npm. v0.10.1 is that same release with the
+overrides added, and it is the version to use. The v0.10.0 tag is left in place
+rather than moved, because a pushed tag is something somebody may already be
+pinning.
 
 This release exists because the documentation described a command nobody could
 run.
