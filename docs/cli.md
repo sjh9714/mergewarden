@@ -54,6 +54,22 @@ Token precedence is:
 There is no token flag because command-line arguments are commonly retained in
 shell history and process listings. Tokens are never printed.
 
+### Token scopes
+
+Nothing the CLI does requires write access of any kind.
+
+- **Public repositories.** `scan` needs no token at all. `triage` does need one,
+  but only for the rate limit: it makes one request per pull request, and GitHub
+  allows 60 unauthenticated requests an hour, which one queue uses up. A
+  fine-grained token with **no scopes selected** is enough, since public data
+  needs none.
+- **Private repositories.** Either a classic token with the `repo` scope, or a
+  fine-grained token with read-only **Contents** and **Pull requests** on the
+  target repository. Metadata access comes with those automatically.
+
+When in doubt, create the smallest token and try it: the CLI fails with the
+API's error rather than guessing around a missing permission.
+
 ## Output and Exit Codes
 
 Reports go to stdout. Diagnostics and actionable API errors go to stderr.
