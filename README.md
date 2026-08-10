@@ -38,8 +38,15 @@ Watched by default: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `QWEN.md`,
 
 **How often is this?** We scanned 2,204 merged agent-authored pull requests on
 public GitHub and **3.9%** of them changed a file like this. That is not a daily
-event. It is the kind of thing you want to hear about the once it happens rather
+event. It is the kind of thing you want to hear about when it happens rather
 than find six weeks later.
+
+**Does review catch it?** Measured, no. 68 of those pull requests modified an
+existing instruction file, and **not one** drew a human review comment on that
+file, including in starred repositories where the pull request itself was
+formally reviewed. The only instruction file that got line by line review in the
+whole sample was one being created
+([the measurement](docs/study/who-reviews-the-steering-files.md)).
 
 ## Install
 

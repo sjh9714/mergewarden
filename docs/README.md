@@ -53,6 +53,9 @@ We scan public repositories and publish what we find, including the results that
 went against us.
 
 - [What 2,204 agent pull requests showed](study/what-2204-agent-prs-showed.md)
+- [Who reviews the steering files?](study/who-reviews-the-steering-files.md):
+  68 merged agent pull requests modified an instruction file; none drew a human
+  comment on it. The only one reviewed line by line was being created.
 - [What a zero-config install reports](study/what-a-zero-config-install-reports.md):
   it stayed silent on 44 of 46 merged human pull requests.
 - [What AI disclosure actually looks like](study/what-ai-disclosure-looks-like.md),
