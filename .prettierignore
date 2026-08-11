@@ -2,3 +2,4 @@ node_modules/
 coverage/
 packages/*/dist/
 pnpm-lock.yaml
+demo/

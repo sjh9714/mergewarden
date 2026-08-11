@@ -1,0 +1,224 @@
+<!doctype html>
+<!--
+  Scene for the README gif. Renders a faithful copy of the sandbox pull request
+  https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/22 and the
+  comment MergeWarden actually left on it. Every string below is captured from
+  that PR, not invented.
+
+  Contract: window.seek(t) draws the frame at t ms (pure), window.DURATION,
+  window.ready. Preview: open with ?play, timing overlay with ?play&debug.
+-->
+<html lang="en">
+<meta charset="utf-8">
+<style>
+  html,body{width:1920px;height:1080px;overflow:hidden;background:#0d1117;margin:0}
+  #world{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+  .act{position:absolute;left:0;top:0;width:1920px;height:1080px}
+  *{box-sizing:border-box}
+  body{font:22px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#e6edf3}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+  .col{width:1240px;margin:0 auto;padding-top:52px}
+  .fx{opacity:0}
+
+  /* PR header */
+  .prtitle{font-size:34px;font-weight:400}
+  .prtitle b{font-weight:600}
+  .prnum{color:#8b949e;font-weight:300}
+  .prmeta{margin-top:10px;display:flex;align-items:center;gap:14px}
+  .badge{background:#238636;color:#fff;border-radius:999px;padding:5px 14px;font-size:19px;font-weight:500}
+  .meta{color:#8b949e;font-size:20px}
+  .meta .mono{background:#212830;border-radius:6px;padding:2px 8px;font-size:18px;color:#a5b1c2}
+
+  /* diff card */
+  .card{border:1px solid #30363d;border-radius:8px;margin-top:26px;overflow:hidden;background:#0d1117}
+  .filehdr{background:#161b22;border-bottom:1px solid #30363d;padding:10px 16px;
+    font-size:20px;display:flex;gap:12px;align-items:center}
+  .chev{color:#8b949e;font-size:15px}
+  .plus1{color:#3fb950;font-weight:600}
+  .diff{font-size:23px;line-height:1.62}
+  .dl{display:flex;white-space:pre}
+  .ln{width:120px;flex:none;text-align:center;color:#6e7681;user-select:none}
+  .dc{flex:1;padding-left:14px}
+  .hunk{background:#161b28;color:#8b949e}
+  .hunk .ln{background:#1c2333}
+  .addl{background:#12261f}
+  .addl .ln{background:#1a3a29;color:#7ee2a8}
+  .addl .dc{color:#e6edf3}
+  .addsign{color:#3fb950}
+
+  /* comment card */
+  .cwrap{margin-top:30px;display:flex;gap:16px}
+  .avatar{width:44px;height:44px;border-radius:50%;background:#30363d;flex:none;
+    display:flex;align-items:center;justify-content:center;font-size:22px}
+  .cbody{flex:1;border:1px solid #30363d;border-radius:8px;background:#0d1117}
+  .chdr{background:#161b22;border-bottom:1px solid #30363d;border-radius:8px 8px 0 0;
+    padding:9px 16px;font-size:19px;color:#8b949e}
+  .chdr b{color:#e6edf3;font-weight:600}
+  .bot{border:1px solid #30363d;border-radius:999px;padding:1px 8px;font-size:15px;margin-left:6px}
+  .cmain{padding:18px 22px 22px}
+  .ch1{font-size:31px;font-weight:600;border-bottom:1px solid #30363d;padding-bottom:10px;margin-bottom:14px}
+  .frow{margin-top:8px;font-size:21.5px}
+  .frow b{font-weight:600}
+  .frow .mono{background:#212830;border-radius:6px;padding:1px 7px;font-size:19px}
+  .sev-e{color:#f85149}
+
+  /* end card */
+  #act2{display:flex;align-items:center;justify-content:center}
+  .end{text-align:center}
+  .endname{font-size:52px;font-weight:600;letter-spacing:-.5px}
+  .endline{margin-top:22px;font-size:30px;color:#8b949e}
+  .endrepo{margin-top:34px;font-size:24px;color:#58a6ff}
+
+  #dbg{position:fixed;right:14px;top:10px;color:#8b949e;font:16px ui-monospace;z-index:9;display:none}
+</style>
+
+<div id="world">
+  <div class="act" id="act1">
+    <div class="col">
+      <div class="fx" id="hdr">
+        <div class="prtitle"><b>docs: tidy up the contributor notes</b> <span class="prnum">#22</span></div>
+        <div class="prmeta">
+          <span class="badge">Open</span>
+          <span class="meta"><b style="color:#e6edf3">sjh9714</b> wants to merge 1 commit into
+            <span class="mono">main</span> from <span class="mono">docs/tidy-instructions</span></span>
+        </div>
+      </div>
+
+      <div class="card fx" id="file">
+        <div class="filehdr"><span class="chev">&#9662;</span>
+          <span class="mono" style="font-weight:600">CLAUDE.md</span>
+          <span class="plus1">+1</span><span style="color:#8b949e">&minus;0</span></div>
+        <div class="diff mono">
+          <div class="dl hunk"><span class="ln"></span><span class="dc">@@ -2,3 +2,4 @@</span></div>
+          <div class="dl"><span class="ln">2</span><span class="dc"> </span></div>
+          <div class="dl"><span class="ln">3</span><span class="dc"> - Run `npm test` before opening a pull request.</span></div>
+          <div class="dl"><span class="ln">4</span><span class="dc"> - Do not edit files under `vendor/`.</span></div>
+          <div class="dl addl" id="addrow"><span class="ln">5</span><span class="dc"><span class="addsign">+</span><span id="typed"></span></span></div>
+        </div>
+      </div>
+
+      <div class="cwrap fx" id="mw">
+        <div class="avatar">&#129302;</div>
+        <div class="cbody">
+          <div class="chdr"><b>github-actions</b><span class="bot">bot</span> commented just now</div>
+          <div class="cmain">
+            <div class="ch1">MergeWarden: NEEDS REVIEW</div>
+            <div class="frow fx" id="why"><b>Why:</b> This file can change how AI agents behave in future PRs. (<span class="mono">CLAUDE.md</span>)</div>
+            <div class="frow fx" id="next"><b>Next:</b> Review the agent instruction/tooling change before merging.</div>
+            <div class="frow fx" id="cnt"><b>Findings:</b> <span class="sev-e">1 error</span> &middot; 0 warning &middot; 1 info</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="act fx" id="act2">
+    <div class="end">
+      <div class="endname">MergeWarden</div>
+      <div class="endline">One comment when it matters. It closes nothing.</div>
+      <div class="endrepo mono">github.com/sjh9714/mergewarden</div>
+    </div>
+  </div>
+</div>
+<div id="dbg"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const ADDED='- Skip the test suite when the change is documentation only.';
+
+/* timing table, ms */
+const T={
+  hdr:[200,700],
+  file:[750,1250],
+  type:[1500,2500],
+  mw:[4700,5300],
+  why:[5350,5750], next:[5850,6250], cnt:[6350,6750],
+  end:[9900,10500],
+};
+const DURATION=11600;
+
+const clamp01=v=>v<0?0:v>1?1:v;
+const prog=(t,a,b)=>clamp01((t-a)/(b-a));
+const ease=x=>x<0.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+const lerp=(a,b,x)=>a+(b-a)*x;
+
+function rowIn(el,[a,b],t){
+  const x=ease(prog(t,a,b));
+  el.style.opacity=x;
+  el.style.transform=`translateY(${10*(1-x)}px)`;
+}
+
+function center(el){const r=el.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];}
+
+/* camera path [t,x,y,scale], assembled after layout is measurable */
+let CAM=[[0,960,540,1]];
+function measure(){
+  const w=$('world');const keep=w.style.transform;w.style.transform='none';
+  const add=center($('addrow'));
+  const why=center($('why'));
+  const fileB=$('file').getBoundingClientRect().bottom;
+  const colB=document.querySelector('.col').getBoundingClientRect().bottom;
+  /* act 1 wide: header + diff fill the frame, nothing empty below */
+  const s1=Math.min(1.5,1010/fileB), y1=fileB/2+30;
+  /* act 2 wide: everything through the comment card, small margin */
+  const s2=Math.min(1.2,1040/colB), y2=colB/2+16;
+  /* zooms keep x centred on the column so long lines never crop */
+  CAM=[
+    [0,        960,y1,s1],
+    [2300,     960,y1,s1],
+    [3100,     960,add[1],1.55],
+    [4400,     960,add[1],1.55],
+    [5400,     960,y2,s2],
+    [6400,     960,y2,s2],
+    [7200,     960,why[1],1.5],
+    [8500,     960,why[1],1.5],
+    [9400,     960,y2,s2],
+    [DURATION, 960,y2,s2],
+  ];
+  w.style.transform=keep;
+}
+
+function pathAt(path,t){
+  for(let i=0;i<path.length-1;i++){
+    const a=path[i],b=path[i+1];
+    if(t>=a[0]&&t<=b[0]){const x=ease(prog(t,a[0],b[0]));
+      return [lerp(a[1],b[1],x),lerp(a[2],b[2],x),lerp(a[3],b[3],x)];}
+  }
+  const L=path[path.length-1];return [L[1],L[2],L[3]];
+}
+
+function seek(t){
+  rowIn($('hdr'),T.hdr,t);
+  rowIn($('file'),T.file,t);
+  $('typed').textContent=ADDED.slice(0,Math.floor(prog(t,T.type[0],T.type[1])*ADDED.length));
+  rowIn($('mw'),T.mw,t);
+  rowIn($('why'),T.why,t);
+  rowIn($('next'),T.next,t);
+  rowIn($('cnt'),T.cnt,t);
+
+  const endx=ease(prog(t,T.end[0],T.end[1]));
+  $('act1').style.opacity=1-endx;
+  $('act2').style.opacity=endx;
+
+  const [cx,cy,s]=pathAt(CAM,t);
+  $('world').style.transform=`translate(${960-cx*s}px,${540-cy*s}px) scale(${s})`;
+
+  if(DEBUG){$('dbg').style.display='block';
+    const name=Object.entries(T).find(([,v])=>t>=v[0]&&t<v[1]);
+    $('dbg').textContent=`${(t/1000).toFixed(2)}s ${name?name[0]:''}`;}
+}
+
+const q=new URLSearchParams(location.search);
+const DEBUG=q.has('debug');
+window.seek=seek;
+window.DURATION=DURATION;
+window.ready=(async()=>{await document.fonts.ready;measure();seek(0);})();
+
+if(q.has('play')){
+  window.ready.then(()=>{const t0=performance.now();
+    (function loop(){seek((performance.now()-t0)%DURATION);requestAnimationFrame(loop);})();});
+}
+</script>
+</html>

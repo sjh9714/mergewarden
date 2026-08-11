@@ -7,3 +7,4 @@ coverage/
 .DS_Store
 *.tsbuildinfo
 tools/study/data/
+demo/_frames/

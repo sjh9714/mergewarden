@@ -15,6 +15,8 @@ MergeWarden leaves one comment when that happens. **It closes nothing.**
 
 ## What that actually looks like
 
+![An agent pull request adds one line to CLAUDE.md, telling agents to skip the test suite for documentation changes. MergeWarden's comment appears beneath the diff flagging NEEDS REVIEW because this file can change how AI agents behave in future PRs.](docs/assets/quiet-edit.gif)
+
 This is a real pull request, titled "docs: tidy up the contributor notes", whose
 whole diff is one added line in `CLAUDE.md`.
 
