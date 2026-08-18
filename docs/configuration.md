@@ -19,8 +19,13 @@ agent_detection:
   # 11 coding-agent bot accounts by default: Copilot, Jules, Devin, Kiro,
   # Codegen, OpenCode, Tembo, Amazon Q, Mentat, Factory Droid, Ellipsis.
   authors: ["copilot-swe-agent[bot]", "google-labs-jules[bot]", "..."]
-  labels: [] # label conventions are per-repository; add your own
-  branch_patterns: ["codex/**", "claude/**", "cursor/**", "copilot/**", "devin/**"]
+  labels: [ai, agent, codex, claude, copilot]
+  branch_patterns:
+    - "codex/**" # Codex
+    - "claude/**" # Claude Code
+    - "copilot/**" # GitHub Copilot coding agent
+    - "cursor/**" # Cursor background agents
+    - "devin/**" # Devin-style branch fallback
   body_patterns: ["Generated with [Claude Code]"]
 
 contract:
@@ -34,6 +39,10 @@ Those are the **defaults**, not a suggestion: they are the cohort definitions fr
 request out of the box. Setting any of these keys replaces the default list for that key
 rather than adding to it. Detection is a heuristic for deciding which pull requests must
 carry a contract; it is not proof of authorship.
+
+Prefer author matching when the hosting platform exposes stable bot accounts such as
+`devin-ai-integration[bot]` or `copilot-swe-agent[bot]`. Branch patterns are the
+portable fallback for agents and platforms that do not expose a distinct author.
 
 PR contracts are comment blocks in the PR body:
 
