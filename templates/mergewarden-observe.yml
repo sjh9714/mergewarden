@@ -12,4 +12,4 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.10.3
+      - uses: sjh9714/mergewarden@v0.10.4

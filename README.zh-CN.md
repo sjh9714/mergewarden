@@ -9,8 +9,8 @@
 
 **某个 PR 悄悄改了你的 `CLAUDE.md`。**
 
-在 diff 里它看着就是一次文档整理。可那个文件是每个编码智能体动你仓库之前都会读的东西，
-所以这次改动会比这个 PR 活得更久，而且之后没有任何人会再去审它。
+在 diff 里它看着就是一次文档整理。Claude Code 会在仓库里工作前读取这个文件，
+所以这次改动会影响之后的运行。和普通文档改动放在一起时，它很容易被忽略。
 
 发生这种事时，MergeWarden 会留下一条评论。**它不会关闭任何 PR。**
 
@@ -42,23 +42,20 @@ Next: Review the agent instruction/tooling change before merging.
 
 ## 60 秒试一下
 
-不需要令牌、不需要仓库、不联网，先看看它能抓到什么：
+不需要令牌或目标仓库，先看看它能抓到什么：
 
 ```bash
-npx --yes mergewarden@0.10.3 demo
+npx --yes mergewarden@0.10.4 demo
 ```
 
-这条命令会分析一个内置在 CLI 里的示例 PR，用的是**默认策略**——也就是说，它输出的 13 条检查结果，就是零配置安装时你实际会得到的东西。
-
-![mergewarden demo 的真实运行结果](docs/assets/mergewarden-demo-head.png)
-
-_上图是真实的 `npx` 执行（用 `head` 截断以便完整显示开头），不是示意图。你可以直接复制那条命令自己跑一遍。_
+这条命令会用**默认策略**分析一个内置的示例 PR。PR 只修改 `CLAUDE.md`，
+输出只有一条 `agent-control-plane/drift` finding。
 
 然后扫描一个真实的 PR，用 `owner/repo#number` 或完整 URL 都可以：
 
 ```bash
-npx --yes mergewarden@0.10.3 scan owner/repository#123
-npx --yes mergewarden@0.10.3 scan https://github.com/owner/repository/pull/123
+npx --yes mergewarden@0.10.4 scan owner/repository#123
+npx --yes mergewarden@0.10.4 scan https://github.com/owner/repository/pull/123
 ```
 
 私有仓库或需要更高 API 速率限制时，用 `GH_TOKEN` 或 `GITHUB_TOKEN` 环境变量。MergeWarden 有意不提供传令牌的命令行参数。
@@ -84,15 +81,9 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.10.3
+      - uses: sjh9714/mergewarden@v0.10.4
         with:
           comment: auto
-```
-
-如果希望按 commit 固定成不可变引用，可以直接钉住 v0.10.3 的发布 commit：
-
-```yaml
-- uses: sjh9714/mergewarden@d63b4fc8c09c540375f039ecd30d2fce56abf31f
 ```
 
 不需要 checkout 步骤。MergeWarden 不发布、也不建议使用会漂移的 `v0` 标签。

@@ -9,7 +9,7 @@ You can run MergeWarden against any public pull request without installing
 anything and without a token:
 
 ```bash
-npx --yes mergewarden@0.10.3 scan owner/repository#123
+npx --yes mergewarden@0.10.4 scan owner/repository#123
 ```
 
 Try it on a pull request you already know well. If the report tells you nothing
@@ -21,7 +21,7 @@ open pull request and lists only the ones with something a maintainer checks by
 hand:
 
 ```bash
-npx --yes mergewarden@0.10.3 triage owner/repository
+npx --yes mergewarden@0.10.4 triage owner/repository
 ```
 
 It needs no write access and writes nothing back, but it does need `GH_TOKEN`
@@ -57,7 +57,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.10.3
+      - uses: sjh9714/mergewarden@v0.10.4
         with:
           comment: auto
 ```

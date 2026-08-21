@@ -4,7 +4,7 @@ The roadmap is ordered by evidence quality, not promised dates.
 
 ## Shipped
 
-Through v0.10.2. The [changelog](../CHANGELOG.md) has every release; this is the
+Through v0.10.4. The [changelog](../CHANGELOG.md) has every release; this is the
 shape of what exists.
 
 - A public `npx` path, and a checkout-free Action that fails closed when it
