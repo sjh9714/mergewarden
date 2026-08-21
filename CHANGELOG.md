@@ -6,6 +6,16 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## v0.10.4 - 2026-08-22
+
+### Changed
+
+- `mergewarden demo` now shows one quiet `CLAUDE.md` instruction change and one
+  `agent-control-plane/drift` finding. The previous fixture packed unrelated
+  workflow, dependency, contract, and triage findings into the first run.
+- The GitHub and npm READMEs now put the local, token-free demo before
+  installation and queue-scanning instructions.
+
 ## v0.10.3 - 2026-08-06
 
 Published so that two pages people arrive on stop describing a project from two

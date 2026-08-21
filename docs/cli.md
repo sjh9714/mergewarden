@@ -27,10 +27,9 @@ It makes no network calls, needs no token, and uses the **default** policy, so
 its output is a statement about what a zero-configuration install actually
 reports. It accepts `--format human|json|markdown`.
 
-The example is an agent pull request that declares `allowed_paths: docs/**` and
-then edits a release workflow, `AGENTS.md`, and `package.json`, producing
-contract-scope, control-plane drift, workflow permission, prompt-injection, and
-lifecycle-script findings in one report.
+The example is a documentation pull request that quietly adds one instruction
+to `CLAUDE.md`. The default policy reports one `agent-control-plane/drift`
+finding, which keeps the first run focused on the change MergeWarden leads with.
 
 ## Scan Options
 

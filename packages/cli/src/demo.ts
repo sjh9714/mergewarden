@@ -12,103 +12,46 @@ import { renderHumanReport, type CliIo } from "./replay.js";
 import { MERGEWARDEN_VERSION } from "./version.js";
 
 /**
- * A pull request that is realistic rather than maximal.
+ * A pull request that matches the single finding MergeWarden leads with.
  *
  * Every finding it produces comes from the *default* policy, so `mergewarden demo` is a
- * verifiable statement about what a zero-config install does — not a showcase wired up by
- * a bespoke fixture config. Keep it that way: if a change here needs a custom policy to
+ * verifiable statement about what a zero-config install does, not a showcase wired up by
+ * a bespoke fixture config. Keep it that way. If a change here needs a custom policy to
  * stay interesting, the default policy is what should change instead.
  */
-const DEMO_PR_BODY = `<!-- mergewarden-contract
-version: 1
-agent: codex
-task: document the release process
-allowed_paths:
-  - docs/**
--->
+const DEMO_PR_BODY = `Clarifies the contributor notes so documentation-only changes are easier to follow. The diff changes no application code and was reviewed as documentation.`;
 
-Documents the release process and tidies a few things up along the way.
+const CLAUDE_MD_BASE = `# Repository guidance
+
+- Run the relevant test suite before marking work complete.
 `;
 
-const RELEASE_WORKFLOW_BASE = `name: Release
-'on':
-  push:
-    tags: ['v*']
-permissions:
-  contents: read
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-`;
+const CLAUDE_MD_HEAD = `# Repository guidance
 
-const RELEASE_WORKFLOW_HEAD = `name: Release
-'on':
-  issue_comment:
-    types: [created]
-permissions:
-  contents: write
-  id-token: write
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: \${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: \${{ github.event.comment.body }}
-`;
-
-const PACKAGE_JSON_BASE = `{
-  "name": "demo-service",
-  "scripts": {
-    "test": "vitest"
-  }
-}
-`;
-
-const PACKAGE_JSON_HEAD = `{
-  "name": "demo-service",
-  "scripts": {
-    "test": "vitest",
-    "postinstall": "node ./scripts/setup.js"
-  }
-}
+- Run the relevant test suite before marking work complete.
+- Skip tests for documentation-only changes.
 `;
 
 const DEMO_FILES: FileChange[] = [
-  { path: "docs/releasing.md", status: "added", additions: 48, deletions: 0 },
   {
-    path: ".github/workflows/release.yml",
-    status: "modified",
-    additions: 9,
-    deletions: 4,
-    baseContent: RELEASE_WORKFLOW_BASE,
-    headContent: RELEASE_WORKFLOW_HEAD,
-  },
-  { path: "AGENTS.md", status: "modified", additions: 6, deletions: 1 },
-  {
-    path: "package.json",
+    path: "CLAUDE.md",
     status: "modified",
     additions: 1,
     deletions: 0,
-    baseContent: PACKAGE_JSON_BASE,
-    headContent: PACKAGE_JSON_HEAD,
+    baseContent: CLAUDE_MD_BASE,
+    headContent: CLAUDE_MD_HEAD,
   },
 ];
 
-export const DEMO_NARRATION = `MergeWarden demo — a synthetic pull request, scanned with the default policy.
+export const DEMO_NARRATION = `MergeWarden demo - a synthetic pull request, scanned with the default policy.
 
   Repository   demo-org/demo-service
-  Pull request #482 "Document the release process"
-  Author       an agent on branch codex/document-releasing
-  Declared     allowed_paths: docs/**
-  Changed      docs/releasing.md, .github/workflows/release.yml, AGENTS.md, package.json
+  Pull request #482 "Tidy up the contributor notes"
+  Author       alex-maintainer
+  Changed      CLAUDE.md
 
-No network calls and no token: this runs a fixture that ships inside the CLI. Scan a real
-pull request with:  mergewarden scan <owner/repo#number>
+No network calls and no token. This runs a fixture that ships inside the CLI. Scan a real
+pull request with  mergewarden scan <owner/repo#number>
 `;
 
 export function demoAnalysisInput(): AnalysisInput {
@@ -119,16 +62,16 @@ export function demoAnalysisInput(): AnalysisInput {
       defaultBranch: "main",
       baseRef: "main",
       baseSha: "9f1c1f7d5f0d4f6a8b3c2e1d0a9b8c7d6e5f4a3b",
-      headRef: "codex/document-releasing",
+      headRef: "docs/tidy-contributor-notes",
       headSha: "3b2a1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b",
     },
     pr: {
       number: 482,
-      title: "Document the release process",
+      title: "Tidy up the contributor notes",
       body: DEMO_PR_BODY,
-      author: "demo-agent",
+      author: "alex-maintainer",
       labels: [],
-      branchName: "codex/document-releasing",
+      branchName: "docs/tidy-contributor-notes",
       isFork: false,
       draft: false,
     },

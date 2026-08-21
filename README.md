@@ -7,9 +7,10 @@
 
 **A pull request quietly edited your `CLAUDE.md`.**
 
-In the diff it reads as a documentation tidy-up. That file is what every coding
-agent reads before it touches your repository, so the change outlives the pull
-request and shows up in nothing anyone reviews afterwards.
+In the diff it reads as a documentation tidy-up. Claude Code reads that file
+before it works in your repository, so the change can shape future runs long
+after the pull request is merged. It is easy to overlook when it sits beside an
+ordinary documentation edit.
 
 MergeWarden leaves one comment when that happens. **It closes nothing.**
 
@@ -43,12 +44,23 @@ public GitHub and **3.9%** of them changed a file like this. That is not a daily
 event. It is the kind of thing you want to hear about when it happens rather
 than find six weeks later.
 
-**Does review catch it?** Measured, no. 68 of those pull requests modified an
-existing instruction file, and **not one** drew a human review comment on that
-file, including in starred repositories where the pull request itself was
-formally reviewed. The only instruction file that got line by line review in the
-whole sample was one being created
+**What review evidence did those changes leave?** 68 pull requests modified an
+existing instruction file, and **none received a human inline comment on that
+file**. In repositories with 100 or more stars, 10 of 17 such pull requests had
+a formal human review, but still no inline comment on the instruction file. A
+missing comment does not prove nobody read the change. It means there is no
+observable record that the steering change was discussed
 ([the measurement](docs/study/who-reviews-the-steering-files.md)).
+
+## Try the finding first
+
+```bash
+npx --yes mergewarden demo
+```
+
+The analysis makes no GitHub API calls and needs no token. It scans one
+synthetic pull request that edits `CLAUDE.md` and shows the same finding a
+default installation would report.
 
 ## Install
 
@@ -69,7 +81,7 @@ jobs:
   mergewarden:
     runs-on: ubuntu-latest
     steps:
-      - uses: sjh9714/mergewarden@v0.10.3
+      - uses: sjh9714/mergewarden@v0.10.4
         with:
           comment: auto
 ```
@@ -153,7 +165,7 @@ with **no scopes selected** is enough, since nothing here writes.
 
 ```bash
 export GH_TOKEN=github_pat_...
-npx --yes mergewarden@0.10.3 triage owner/repository
+npx --yes mergewarden@0.10.4 triage owner/repository
 ```
 
 ```

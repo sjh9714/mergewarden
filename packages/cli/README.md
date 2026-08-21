@@ -10,10 +10,21 @@ Most people run this as a [GitHub Action](https://github.com/sjh9714/mergewarden
 so it happens on every pull request. The CLI is for looking at one pull request,
 or a whole queue, from your terminal.
 
+## Try one finding
+
+```console
+npx --yes mergewarden demo
+```
+
+Once npm has downloaded the package, the demo needs no token or repository and
+makes no GitHub API calls. It scans one synthetic pull request that quietly
+edits `CLAUDE.md` and reports the finding a default installation would leave for
+a reviewer.
+
 ## Read a whole queue
 
 ```console
-npx mergewarden@0.10.3 triage owner/repository
+npx mergewarden@0.10.4 triage owner/repository
 ```
 
 ```
@@ -35,7 +46,7 @@ it only half saw.
 ## Scan one pull request
 
 ```console
-npx mergewarden@0.10.3 scan owner/repository#123
+npx mergewarden@0.10.4 scan owner/repository#123
 ```
 
 Full pull request URLs are accepted too. A single public pull request works

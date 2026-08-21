@@ -31,16 +31,13 @@ describe("mergewarden demo", () => {
     expect(result.metadata.analysisComplete).toBe(true);
   });
 
-  it("demonstrates the rules the project leads with", async () => {
-    const result = await analyze(demoAnalysisInput());
-    const ruleIds = new Set(result.findings.map((finding) => finding.ruleId));
+  it("demonstrates one quiet instruction-file change", async () => {
+    const input = demoAnalysisInput();
+    const result = await analyze(input);
+    const ruleIds = result.findings.map((finding) => finding.ruleId);
 
-    expect(ruleIds).toContain("agent/origin-detected");
-    expect(ruleIds).toContain("contract/out-of-scope");
-    expect(ruleIds).toContain("agent-control-plane/drift");
-    expect(ruleIds).toContain("workflow/permission-escalation");
-    expect(ruleIds).toContain("workflow/agentic-untrusted-input");
-    expect(ruleIds).toContain("dependency/lifecycle-script-added");
+    expect(ruleIds).toEqual(["agent-control-plane/drift"]);
+    expect(input.changes.files.map((file) => file.path)).toEqual(["CLAUDE.md"]);
   });
 
   it("keeps the highest-severity findings visible on the bounded terminal surface", async () => {
@@ -58,7 +55,7 @@ describe("mergewarden demo", () => {
     await expect(runDemoCli([], io)).resolves.toBe(0);
     expect(stderr).toEqual([]);
     expect(stdout.join("")).toContain("MergeWarden demo");
-    expect(stdout.join("")).toContain("contract/out-of-scope");
+    expect(stdout.join("")).toContain("agent-control-plane/drift");
   });
 
   it("emits machine-readable output on request", async () => {
@@ -67,7 +64,7 @@ describe("mergewarden demo", () => {
     await expect(runDemoCli(["--format", "json"], io)).resolves.toBe(0);
 
     const report = JSON.parse(stdout.join("")) as { findings: { ruleId: string }[] };
-    expect(report.findings.length).toBeGreaterThan(0);
+    expect(report.findings.map((finding) => finding.ruleId)).toEqual(["agent-control-plane/drift"]);
   });
 
   it("rejects an unknown option instead of silently scanning", async () => {
