@@ -6,6 +6,11 @@ export interface PullRequestLocator {
   number: number;
 }
 
+export interface RepositoryLocator {
+  owner: string;
+  repo: string;
+}
+
 export interface RemoteRepository {
   owner: string;
   repo: string;
@@ -21,6 +26,10 @@ export interface RemotePullRequest {
   draft: boolean;
   authorAssociation?: string;
   changedFiles: number;
+  additions?: number;
+  deletions?: number;
+  updatedAt?: string;
+  htmlUrl?: string;
   /**
    * Number of commits GitHub reports for the pull request. Optional so that callers predating
    * commit collection keep compiling; when it is absent the collector skips commit trailer
@@ -39,6 +48,14 @@ export interface RemotePullRequest {
     repository: RemoteRepository;
   };
 }
+
+export type RemoteOpenPullRequest = Omit<
+  RemotePullRequest,
+  "changedFiles" | "commitCount" | "additions" | "deletions"
+> & {
+  updatedAt: string;
+  htmlUrl: string;
+};
 
 export interface RemotePullFile {
   filename: string;

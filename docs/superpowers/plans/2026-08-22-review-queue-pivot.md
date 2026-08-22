@@ -49,13 +49,13 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - Extend `RemotePullRequest` with optional `additions`, `deletions`, `updatedAt`, and `htmlUrl`
 - Populate the existing optional `authorAssociation`
 
-- [ ] Write parser tests for `owner/repo`, a full repository URL, a PR URL rejection, credentials, query strings, fragments, and invalid names
-- [ ] Run `pnpm --filter @mergewarden/github test -- repositoryTarget.test.ts` and confirm failure because the parser does not exist
-- [ ] Implement the parser with the same GitHub host and credential restrictions as `parsePullRequestTarget`
-- [ ] Add fetch tests that map `author_association`, `additions`, `deletions`, `updated_at`, and `html_url`
-- [ ] Add a list test that verifies `state=open`, `sort=updated`, `direction=desc`, a bounded `per_page`, and normalized response fields
-- [ ] Run `pnpm --filter @mergewarden/github test` and confirm all GitHub package tests pass
-- [ ] Commit with `git commit -m "Add repository queue API"`
+- [x] Write parser tests for `owner/repo`, a full repository URL, a PR URL rejection, credentials, query strings, fragments, and invalid names
+- [x] Run `pnpm --filter @mergewarden/github test -- repositoryTarget.test.ts` and confirm failure because the parser does not exist
+- [x] Implement the parser with the same GitHub host and credential restrictions as `parsePullRequestTarget`
+- [x] Add fetch tests that map `author_association`, `additions`, `deletions`, `updated_at`, and `html_url`
+- [x] Add a list test that verifies `state=open`, `sort=updated`, `direction=desc`, a bounded `per_page`, and normalized response fields
+- [x] Run `pnpm --filter @mergewarden/github test` and confirm all GitHub package tests pass
+- [x] Commit with `git commit -m "Add repository queue API"`
 
 ### Task 2  Shared repository norm suppression
 

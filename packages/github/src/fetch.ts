@@ -2,10 +2,12 @@ import { GitHubApiError } from "./errors.js";
 import type {
   GitHubApi,
   PullRequestLocator,
+  RemoteOpenPullRequest,
   RemotePullCommit,
   RemotePullFile,
   RemotePullRequest,
   RemoteRepository,
+  RepositoryLocator,
   TextFileResult,
 } from "./types.js";
 
@@ -92,7 +94,22 @@ function remotePullRequest(value: unknown): RemotePullRequest {
     author: requiredString(user.login, "pull request.user.login"),
     labels,
     draft: pull.draft === true,
+    ...(typeof pull.author_association === "string" && pull.author_association.length > 0
+      ? { authorAssociation: pull.author_association }
+      : {}),
     changedFiles: requiredInteger(pull.changed_files, "pull request.changed_files"),
+    ...(pull.additions === undefined
+      ? {}
+      : { additions: requiredInteger(pull.additions, "pull request.additions") }),
+    ...(pull.deletions === undefined
+      ? {}
+      : { deletions: requiredInteger(pull.deletions, "pull request.deletions") }),
+    ...(typeof pull.updated_at === "string" && pull.updated_at.length > 0
+      ? { updatedAt: pull.updated_at }
+      : {}),
+    ...(typeof pull.html_url === "string" && pull.html_url.length > 0
+      ? { htmlUrl: pull.html_url }
+      : {}),
     ...(Number.isInteger(pull.commits) ? { commitCount: pull.commits as number } : {}),
     head: {
       ref: requiredString(head.ref, "pull request.head.ref"),
@@ -105,6 +122,24 @@ function remotePullRequest(value: unknown): RemotePullRequest {
       sha: requiredString(base.sha, "pull request.base.sha"),
       repository: repository(base.repo, "pull request.base.repo"),
     },
+  };
+}
+
+function remoteOpenPullRequest(value: unknown): RemoteOpenPullRequest {
+  const pull = requiredRecord(value, "pull request");
+  const normalized = remotePullRequest({ ...pull, changed_files: 0 });
+  const {
+    changedFiles: _changedFiles,
+    commitCount: _commitCount,
+    additions: _additions,
+    deletions: _deletions,
+    ...summary
+  } = normalized;
+
+  return {
+    ...summary,
+    updatedAt: requiredString(pull.updated_at, "pull request.updated_at"),
+    htmlUrl: requiredString(pull.html_url, "pull request.html_url"),
   };
 }
 
@@ -339,6 +374,29 @@ export class FetchGitHubApi implements GitHubApi {
           throw await responseError(response, operation, signal);
         }
         return remotePullRequest(await withAbort(response.json(), signal));
+      },
+    );
+  }
+
+  async listOpenPullRequests(
+    target: RepositoryLocator,
+    limit: number,
+  ): Promise<RemoteOpenPullRequest[]> {
+    const perPage = Math.min(100, Math.max(1, Math.trunc(limit)));
+    const operation = `List open pull requests for ${target.owner}/${target.repo}`;
+    return this.#request(
+      `/repos/${repositoryRoute(target.owner, target.repo)}/pulls?state=open&sort=updated&direction=desc&per_page=${perPage}`,
+      operation,
+      "application/vnd.github+json",
+      async (response, signal) => {
+        if (!response.ok) {
+          throw await responseError(response, operation, signal);
+        }
+        const body: unknown = await withAbort(response.json(), signal);
+        if (!Array.isArray(body)) {
+          throw invalidResponse("open pull requests response was not an array");
+        }
+        return body.map(remoteOpenPullRequest);
       },
     );
   }

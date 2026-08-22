@@ -7,6 +7,7 @@ export {
 export { createOctokitGitHubApi, type OctokitContentApi } from "./octokit.js";
 export { FetchGitHubApi, type FetchGitHubApiOptions } from "./fetch.js";
 export { loadGitHubAnalysis } from "./load.js";
+export { parseRepositoryTarget } from "./repositoryTarget.js";
 export { parsePullRequestTarget, TargetParseError } from "./target.js";
 export type {
   CollectionAnalysis,
@@ -14,6 +15,8 @@ export type {
   GitHubApi,
   LoadGitHubAnalysisOptions,
   PullRequestLocator,
+  RepositoryLocator,
+  RemoteOpenPullRequest,
   RemotePullCommit,
   RemotePullFile,
   RemotePullRequest,
