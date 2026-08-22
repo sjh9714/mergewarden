@@ -21,6 +21,7 @@ export { renderPlainTextReportSummary } from "./report/plainText.js";
 export { detectAgentOrigin } from "./rules/agentOrigin.js";
 export { parseCommitTrailers } from "./rules/commitTrailers.js";
 export type { CommitTrailer } from "./rules/commitTrailers.js";
+export { partitionUniformTriageNotes } from "./triage/queue.js";
 export { MERGEWARDEN_VERSION } from "./version.js";
 export type { AgentOriginResult, AgentOriginSignal } from "./rules/agentOrigin.js";
 export type { Rule, RuleContext } from "./rules/index.js";

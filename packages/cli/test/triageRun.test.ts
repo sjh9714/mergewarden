@@ -18,7 +18,8 @@ vi.mock("@mergewarden/github", async (importOriginal) => ({
   loadGitHubAnalysis: (...args: unknown[]) => loadGitHubAnalysis(...args),
 }));
 
-vi.mock("@mergewarden/core", () => ({
+vi.mock("@mergewarden/core", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mergewarden/core")>()),
   analyze: (...args: unknown[]) => analyze(...args),
 }));
 

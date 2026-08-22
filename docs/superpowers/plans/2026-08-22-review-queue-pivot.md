@@ -73,12 +73,12 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - Preserve the existing threshold of eighty percent from eight pull requests upward
 - Replace the CLI-local implementation without changing CLI output
 
-- [ ] Move the three existing uniform-note cases into a core test and add a type-preservation case carrying a PR number
-- [ ] Run `pnpm --filter @mergewarden/core test -- queue.test.ts` and confirm failure because the helper does not exist
-- [ ] Implement the pure helper with the existing constants and no GitHub dependency
-- [ ] Replace `partitionUniformNotes` in the CLI with the shared import
-- [ ] Run `pnpm --filter @mergewarden/core test` and `pnpm --filter mergewarden test -- triage.test.ts`
-- [ ] Commit with `git commit -m "Share triage queue normalization"`
+- [x] Move the three existing uniform-note cases into a core test and add a type-preservation case carrying a PR number
+- [x] Run `pnpm --filter @mergewarden/core test -- queue.test.ts` and confirm failure because the helper does not exist
+- [x] Implement the pure helper with the existing constants and no GitHub dependency
+- [x] Replace `partitionUniformNotes` in the CLI with the shared import
+- [x] Run `pnpm --filter @mergewarden/core test` and `pnpm --filter mergewarden test -- triage.test.ts`
+- [x] Commit with `git commit -m "Share triage queue normalization"`
 
 ### Task 3  Public repository queue orchestration
 
