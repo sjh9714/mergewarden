@@ -1,15 +1,13 @@
-import {
-  GitHubApiError,
-  type GitHubApi,
-  type PullRequestLocator,
-  type RemotePullCommit,
-  type RemotePullFile,
-  type RemotePullRequest,
-  type RemoteRepository,
-  type TextFileResult,
-} from "@mergewarden/github";
-
-import { MERGEWARDEN_VERSION } from "./version.js";
+import { GitHubApiError } from "./errors.js";
+import type {
+  GitHubApi,
+  PullRequestLocator,
+  RemotePullCommit,
+  RemotePullFile,
+  RemotePullRequest,
+  RemoteRepository,
+  TextFileResult,
+} from "./types.js";
 
 type Fetch = (input: string | URL, init?: RequestInit) => Promise<Response>;
 
@@ -17,11 +15,12 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const MAX_TEXT_FILE_BYTES = 1024 * 1024;
 const MAX_ERROR_BODY_BYTES = 4_096;
 
-export interface NativeGitHubApiOptions {
+export interface FetchGitHubApiOptions {
   token?: string;
   fetch?: Fetch;
   apiBaseUrl?: string;
   requestTimeoutMs?: number;
+  userAgent?: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -259,17 +258,19 @@ async function responseError(
   });
 }
 
-export class NativeGitHubApi implements GitHubApi {
+export class FetchGitHubApi implements GitHubApi {
   readonly #token: string | undefined;
   readonly #fetch: Fetch;
   readonly #apiBaseUrl: string;
   readonly #requestTimeoutMs: number;
+  readonly #userAgent: string | undefined;
 
-  constructor(options: NativeGitHubApiOptions = {}) {
+  constructor(options: FetchGitHubApiOptions = {}) {
     this.#token = options.token;
     this.#fetch = options.fetch ?? globalThis.fetch;
     this.#apiBaseUrl = (options.apiBaseUrl ?? "https://api.github.com").replace(/\/$/, "");
     this.#requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    this.#userAgent = options.userAgent;
 
     if (!Number.isFinite(this.#requestTimeoutMs) || this.#requestTimeoutMs <= 0) {
       throw new Error("requestTimeoutMs must be a positive number.");
@@ -285,8 +286,11 @@ export class NativeGitHubApi implements GitHubApi {
     const headers: Record<string, string> = {
       Accept: accept,
       "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": `mergewarden-cli/${MERGEWARDEN_VERSION}`,
     };
+
+    if (this.#userAgent) {
+      headers["User-Agent"] = this.#userAgent;
+    }
 
     if (this.#token) {
       headers.Authorization = `Bearer ${this.#token}`;

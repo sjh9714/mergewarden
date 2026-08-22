@@ -1,3 +1,4 @@
+import { utf8ByteLength } from "../text.js";
 import type { AnalysisResult, Finding, WaivedFinding } from "../types.js";
 import {
   highestActionableFinding,
@@ -325,7 +326,7 @@ export function renderMarkdownReport(
       options.collapseFindings ?? false,
     );
 
-    if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
+    if (utf8ByteLength(candidate) <= maxBytes) {
       best = candidate;
       low = visibleCount + 1;
     } else {

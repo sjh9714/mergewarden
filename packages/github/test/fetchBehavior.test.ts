@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { GitHubApiError } from "@mergewarden/github";
-import { NativeGitHubApi } from "../src/githubApi.js";
+import { FetchGitHubApi as NativeGitHubApi, GitHubApiError } from "../src/index.js";
 
 const pullResponse = {
   number: 17,

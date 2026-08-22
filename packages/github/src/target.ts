@@ -1,4 +1,4 @@
-import type { PullRequestLocator } from "@mergewarden/github";
+import type { PullRequestLocator } from "./types.js";
 
 const SHORTHAND_PATTERN = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)#([1-9]\d*)$/;
 const GITHUB_HOSTS = new Set(["github.com", "www.github.com"]);

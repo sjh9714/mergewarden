@@ -33,6 +33,11 @@ const MAX_COMMITS = 250;
 const MAX_TEXT_BYTES = 1024 * 1024;
 const MAX_TOTAL_CONTENT_BYTES = 64 * 1024 * 1024;
 const CONTENT_CONCURRENCY = 8;
+const textEncoder = new TextEncoder();
+
+function utf8ByteLength(value: string): number {
+  return textEncoder.encode(value).byteLength;
+}
 
 type ContentSide = "base" | "head";
 
@@ -185,7 +190,7 @@ async function fetchContentTask(
       return { kind: "gap", gap: contentGap(task, "GitHub returned 404 Not Found") };
     }
 
-    const byteLength = Buffer.byteLength(result.text, "utf8");
+    const byteLength = utf8ByteLength(result.text);
 
     if (byteLength > MAX_TEXT_BYTES) {
       return {
@@ -278,7 +283,7 @@ async function loadConfig(
     };
   }
 
-  const configByteLength = Buffer.byteLength(result.text, "utf8");
+  const configByteLength = utf8ByteLength(result.text);
 
   if (configByteLength > MAX_TEXT_BYTES) {
     throw new Error(
@@ -325,7 +330,7 @@ async function loadPullRequestTemplate(
         continue;
       }
 
-      if (Buffer.byteLength(result.text, "utf8") > MAX_TEXT_BYTES) {
+      if (utf8ByteLength(result.text) > MAX_TEXT_BYTES) {
         return undefined;
       }
 

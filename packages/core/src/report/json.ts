@@ -1,3 +1,4 @@
+import { utf8ByteLength } from "../text.js";
 import type { AnalysisResult } from "../types.js";
 
 const DEFAULT_MAX_JSON_BYTES = 2_000_000;
@@ -37,7 +38,7 @@ export function renderJsonReport(result: AnalysisResult, options: JsonReportOpti
   }
 
   const full = serialize(result);
-  if (Buffer.byteLength(full, "utf8") <= maxBytes) {
+  if (utf8ByteLength(full) <= maxBytes) {
     return full;
   }
 
@@ -50,7 +51,7 @@ export function renderJsonReport(result: AnalysisResult, options: JsonReportOpti
     const middle = Math.floor((low + high) / 2);
     const candidate = serialize(visibleResult(result, middle));
 
-    if (Buffer.byteLength(candidate, "utf8") <= maxBytes) {
+    if (utf8ByteLength(candidate) <= maxBytes) {
       best = candidate;
       low = middle + 1;
     } else {

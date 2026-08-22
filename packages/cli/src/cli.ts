@@ -5,9 +5,11 @@ import {
   type AnalysisResult,
 } from "@mergewarden/core";
 import {
+  FetchGitHubApi,
   GitHubApiError,
   describeGitHubApiError,
   loadGitHubAnalysis,
+  parsePullRequestTarget,
   type GitHubApi,
   type LoadGitHubAnalysisOptions,
   type PullRequestLocator,
@@ -15,7 +17,6 @@ import {
 
 import { runDemoCli } from "./demo.js";
 import { runTriageCli } from "./triage.js";
-import { NativeGitHubApi } from "./githubApi.js";
 import {
   exitCodeForResult,
   renderHumanReport,
@@ -23,7 +24,6 @@ import {
   safeTerminalValue,
   type CliIo,
 } from "./replay.js";
-import { parsePullRequestTarget } from "./target.js";
 import { MERGEWARDEN_VERSION } from "./version.js";
 
 type ScanFormat = "human" | "json" | "markdown";
@@ -50,7 +50,8 @@ export interface CliDependencies {
 }
 
 const DEFAULT_DEPENDENCIES: CliDependencies = {
-  createGitHubApi: (token) => new NativeGitHubApi({ token }),
+  createGitHubApi: (token) =>
+    new FetchGitHubApi({ token, userAgent: `mergewarden-cli/${MERGEWARDEN_VERSION}` }),
   loadGitHubAnalysis,
   analyze,
   now: () => new Date().toISOString(),

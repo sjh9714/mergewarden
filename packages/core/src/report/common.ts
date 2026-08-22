@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-
+import { sha256Hex } from "../text.js";
 import type { AnalysisResult, Finding } from "../types.js";
 
 // Findings are already bounded to a 2 KiB preview plus a digest. This slightly larger report
@@ -53,7 +52,7 @@ export function safeReportValue(value: string, maxLength = MAX_DYNAMIC_VALUE_LEN
     .replace(/\n/g, "\\n")
     .replace(/\s+/g, " ")
     .trim();
-  const digest = createHash("sha256").update(normalized).digest("hex");
+  const digest = sha256Hex(normalized);
   const preview =
     normalized.length <= maxLength
       ? normalized

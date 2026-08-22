@@ -1,7 +1,9 @@
 import { analyze, type AnalysisResult } from "@mergewarden/core";
-import { loadGitHubAnalysis, type LoadGitHubAnalysisOptions } from "@mergewarden/github";
-
-import { NativeGitHubApi } from "./githubApi.js";
+import {
+  FetchGitHubApi,
+  loadGitHubAnalysis,
+  type LoadGitHubAnalysisOptions,
+} from "@mergewarden/github";
 import { MERGEWARDEN_VERSION } from "./version.js";
 
 /**
@@ -292,7 +294,10 @@ export async function runTriageCli(
     );
   }
 
-  const api = new NativeGitHubApi(token ? { token } : {});
+  const api = new FetchGitHubApi({
+    ...(token ? { token } : {}),
+    userAgent: `mergewarden-cli/${MERGEWARDEN_VERSION}`,
+  });
   const loaderOptions: LoadGitHubAnalysisOptions = {
     configPath: "mergewarden.yml",
     now: new Date().toISOString(),

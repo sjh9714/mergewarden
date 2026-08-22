@@ -87,7 +87,9 @@ function decodeTextFile(data: unknown, path: string): string {
     });
   }
 
-  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
+  const binary = atob(data.content.replace(/\n/g, ""));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function pullFile(file: OctokitPullFile): RemotePullFile {

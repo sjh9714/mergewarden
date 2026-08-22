@@ -1,5 +1,3 @@
-import { createHash } from "node:crypto";
-
 import { attachFindingIds } from "./finding/id.js";
 import type {
   AnalysisGap,
@@ -14,6 +12,7 @@ import type {
 import { createRuleContext, builtInRules } from "./rules/index.js";
 import { decide } from "./score/decision.js";
 import { calculateRiskScore } from "./score/riskScore.js";
+import { sha256Hex } from "./text.js";
 
 const MAX_RESULT_FINDINGS = 250;
 
@@ -40,9 +39,7 @@ function stableValue(value: unknown): unknown {
 }
 
 function policyDigest(input: AnalysisInput): string {
-  return createHash("sha256")
-    .update(JSON.stringify(stableValue(input.config)))
-    .digest("hex");
+  return sha256Hex(JSON.stringify(stableValue(input.config)));
 }
 
 function rawFindingForGap(gap: AnalysisGap): RawFinding {

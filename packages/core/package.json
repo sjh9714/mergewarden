@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@noble/hashes": "1.8.0",
     "picomatch": "^4.0.4",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"

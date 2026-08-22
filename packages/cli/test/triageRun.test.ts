@@ -13,7 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const loadGitHubAnalysis = vi.fn();
 const analyze = vi.fn();
 
-vi.mock("@mergewarden/github", () => ({
+vi.mock("@mergewarden/github", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mergewarden/github")>()),
   loadGitHubAnalysis: (...args: unknown[]) => loadGitHubAnalysis(...args),
 }));
 

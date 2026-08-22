@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePullRequestTarget } from "../src/target.js";
+import { parsePullRequestTarget } from "../src/index.js";
 
 describe("pull request target parsing", () => {
   it.each([

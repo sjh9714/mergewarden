@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-
+import { sha256Hex, utf8ByteLength, utf8Prefix } from "../text.js";
 import type { EvidenceSnapshot, Finding, RawFinding } from "../types.js";
 
 const MAX_FINDING_VALUE_LENGTH = 2_048;
@@ -14,23 +13,6 @@ function isSafePublicCharacter(codePoint: number): boolean {
   );
 }
 
-function utf8Preview(value: string, maxBytes: number): string {
-  let byteLength = 0;
-  let codeUnitEnd = 0;
-
-  for (const codePoint of value) {
-    const codePointBytes = Buffer.byteLength(codePoint, "utf8");
-    if (byteLength + codePointBytes > maxBytes) {
-      break;
-    }
-
-    byteLength += codePointBytes;
-    codeUnitEnd += codePoint.length;
-  }
-
-  return value.slice(0, codeUnitEnd);
-}
-
 function normalizeStableText(value: string): string {
   const normalized = value
     .normalize("NFC")
@@ -42,12 +24,12 @@ function normalizeStableText(value: string): string {
     })
     .join("");
 
-  if (Buffer.byteLength(normalized, "utf8") <= MAX_FINDING_VALUE_LENGTH) {
+  if (utf8ByteLength(normalized) <= MAX_FINDING_VALUE_LENGTH) {
     return normalized;
   }
 
-  const digest = createHash("sha256").update(normalized).digest("hex");
-  return `${utf8Preview(normalized, MAX_FINDING_VALUE_LENGTH)}… [sha256:${digest}]`;
+  const digest = sha256Hex(normalized);
+  return `${utf8Prefix(normalized, MAX_FINDING_VALUE_LENGTH)}… [sha256:${digest}]`;
 }
 
 function normalizeFinding(finding: RawFinding): RawFinding {
@@ -114,7 +96,7 @@ export function createFindingId(finding: RawFinding): string {
     ...(snapshot.line !== undefined ? { line: snapshot.line } : {}),
     evidence: snapshot.evidence,
   };
-  const hash = createHash("sha256").update(JSON.stringify(stableInput)).digest("hex").slice(0, 16);
+  const hash = sha256Hex(JSON.stringify(stableInput)).slice(0, 16);
 
   return `agf_${hash}`;
 }
