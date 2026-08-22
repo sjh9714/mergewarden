@@ -5384,7 +5384,7 @@ var require_body = __commonJS({
     } catch {
       random = (max) => Math.floor(Math.random(max));
     }
-    var textEncoder = new TextEncoder();
+    var textEncoder2 = new TextEncoder();
     function noop3() {
     }
     var hasFinalizationRegistry = globalThis.FinalizationRegistry && process.version.indexOf("v18") !== 0;
@@ -5406,7 +5406,7 @@ var require_body = __commonJS({
       } else {
         stream = new ReadableStream({
           async pull(controller) {
-            const buffer = typeof source === "string" ? textEncoder.encode(source) : source;
+            const buffer = typeof source === "string" ? textEncoder2.encode(source) : source;
             if (buffer.byteLength) {
               controller.enqueue(buffer);
             }
@@ -5444,14 +5444,14 @@ Content-Disposition: form-data`;
         let hasUnknownSizeValue = false;
         for (const [name, value] of object2) {
           if (typeof value === "string") {
-            const chunk2 = textEncoder.encode(prefix + `; name="${escape(normalizeLinefeeds(name))}"\r
+            const chunk2 = textEncoder2.encode(prefix + `; name="${escape(normalizeLinefeeds(name))}"\r
 \r
 ${normalizeLinefeeds(value)}\r
 `);
             blobParts.push(chunk2);
             length += chunk2.byteLength;
           } else {
-            const chunk2 = textEncoder.encode(`${prefix}; name="${escape(normalizeLinefeeds(name))}"` + (value.name ? `; filename="${escape(value.name)}"` : "") + `\r
+            const chunk2 = textEncoder2.encode(`${prefix}; name="${escape(normalizeLinefeeds(name))}"` + (value.name ? `; filename="${escape(value.name)}"` : "") + `\r
 Content-Type: ${value.type || "application/octet-stream"}\r
 \r
 `);
@@ -5463,7 +5463,7 @@ Content-Type: ${value.type || "application/octet-stream"}\r
             }
           }
         }
-        const chunk = textEncoder.encode(`--${boundary}--\r
+        const chunk = textEncoder2.encode(`--${boundary}--\r
 `);
         blobParts.push(chunk);
         length += chunk.byteLength;
@@ -12273,7 +12273,7 @@ var require_response = __commonJS({
     var { kConstruct } = require_symbols();
     var assert2 = require("assert");
     var { types } = require("util");
-    var textEncoder = new TextEncoder("utf-8");
+    var textEncoder2 = new TextEncoder("utf-8");
     var Response = class _Response {
       // Creates network error Response.
       static error() {
@@ -12286,7 +12286,7 @@ var require_response = __commonJS({
         if (init !== null) {
           init = webidl.converters.ResponseInit(init);
         }
-        const bytes = textEncoder.encode(
+        const bytes = textEncoder2.encode(
           serializeJavascriptValueToJSONString(data)
         );
         const body = extractBody(bytes);
@@ -51397,7 +51397,9 @@ function decodeTextFile(data, path) {
       retryable: false
     });
   }
-  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf8");
+  const binary = atob(data.content.replace(/\n/g, ""));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 function pullFile(file2) {
   return {
@@ -51591,6 +51593,10 @@ var MAX_COMMITS = 250;
 var MAX_TEXT_BYTES = 1024 * 1024;
 var MAX_TOTAL_CONTENT_BYTES = 64 * 1024 * 1024;
 var CONTENT_CONCURRENCY = 8;
+var textEncoder = new TextEncoder();
+function utf8ByteLength2(value) {
+  return textEncoder.encode(value).byteLength;
+}
 function applyModeOverride(config2, modeOverride) {
   return modeOverride ? { ...config2, mode: modeOverride } : config2;
 }
@@ -51685,7 +51691,7 @@ async function fetchContentTask(api, task, retryBudget) {
     if (result.kind === "not-found") {
       return { kind: "gap", gap: contentGap(task, "GitHub returned 404 Not Found") };
     }
-    const byteLength = Buffer.byteLength(result.text, "utf8");
+    const byteLength = utf8ByteLength2(result.text);
     if (byteLength > MAX_TEXT_BYTES) {
       return {
         kind: "gap",
@@ -51754,7 +51760,7 @@ async function loadConfig(api, pullRequest, options, retryBudget) {
       source: "default"
     };
   }
-  const configByteLength = Buffer.byteLength(result.text, "utf8");
+  const configByteLength = utf8ByteLength2(result.text);
   if (configByteLength > MAX_TEXT_BYTES) {
     throw new Error(
       `${options.configPath} is ${configByteLength} bytes; the maximum policy size is ${MAX_TEXT_BYTES} bytes.`
@@ -51784,7 +51790,7 @@ async function loadPullRequestTemplate(api, pullRequest, config2, retryBudget) {
       if (result.kind === "not-found") {
         continue;
       }
-      if (Buffer.byteLength(result.text, "utf8") > MAX_TEXT_BYTES) {
+      if (utf8ByteLength2(result.text) > MAX_TEXT_BYTES) {
         return void 0;
       }
       return result.text;
