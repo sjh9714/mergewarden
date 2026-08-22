@@ -29,7 +29,7 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 
 ---
 
-### Task 1  Shared repository targets and listing
+### Task 1 Shared repository targets and listing
 
 **Files**
 
@@ -57,7 +57,7 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - [x] Run `pnpm --filter @mergewarden/github test` and confirm all GitHub package tests pass
 - [x] Commit with `git commit -m "Add repository queue API"`
 
-### Task 2  Shared repository norm suppression
+### Task 2 Shared repository norm suppression
 
 **Files**
 
@@ -80,7 +80,7 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - [x] Run `pnpm --filter @mergewarden/core test` and `pnpm --filter mergewarden test -- triage.test.ts`
 - [x] Commit with `git commit -m "Share triage queue normalization"`
 
-### Task 3  Public repository queue orchestration
+### Task 3 Public repository queue orchestration
 
 **Files**
 
@@ -105,7 +105,7 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - [x] Run `pnpm --filter @mergewarden/web test -- triage.test.ts` and confirm all queue tests pass
 - [x] Commit with `git commit -m "Add public review queue"`
 
-### Task 4  Homepage queue interface and product copy
+### Task 4 Homepage queue interface and product copy
 
 **Files**
 
@@ -143,7 +143,7 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - [x] Run web tests, typecheck, lint, and build
 - [x] Commit with `git commit -m "Lead with external PR triage"`
 
-### Task 5  Full verification and deployed acceptance
+### Task 5 Full verification and deployed acceptance
 
 **Files**
 

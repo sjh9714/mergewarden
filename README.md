@@ -14,6 +14,9 @@ thin descriptions, skipped templates, and oversized changes. No login. No AI.
 
 [**Open the public review queue**](https://sjh9714.github.io/mergewarden/)
 
+The [getting started guide](docs/getting-started.md) explains queue states,
+detailed PR results, and the Action install path.
+
 Paste `owner/repository` or a full GitHub repository URL. The browser reads the
 latest thirty open pull request summaries, removes trusted repository roles and
 known maintenance automation, then loads details for at most ten external pull
@@ -57,6 +60,9 @@ The detailed scan checks four security boundaries.
 | Untrusted prompt inputs | Pull request text reaches an agent prompt in a workflow                                          |
 | Install scripts         | A package manifest adds or changes install-time lifecycle code                                   |
 
+The [configuration reference](docs/configuration.md) lists every deterministic
+rule and severity.
+
 Run the same scan from a terminal without cloning the target repository.
 
 ```bash
@@ -94,6 +100,8 @@ comment when a finding needs attention. Existing Action defaults are unchanged.
 
 For an immutable install, pin the release commit.
 
+MergeWarden does not publish or recommend a mutable `v0` tag.
+
 ```yaml
 - uses: sjh9714/mergewarden@d63b4fc8c09c540375f039ecd30d2fce56abf31f
 ```
@@ -103,7 +111,8 @@ For an immutable install, pin the release commit.
 - The web app talks directly to the public GitHub API and has no telemetry.
 - The queue reads metadata and one base branch template. The detailed scan reads
   only the files required by deterministic rules.
-- Neither the web app nor the Action executes or checks out PR code.
+- No checkout. MergeWarden does not execute pull-request code in the web app or
+  Action.
 - Policy comes from the exact base commit, never the untrusted PR head.
 - Analysis never calls a language model.
 - Incomplete evidence is reported as incomplete and never presented as a pass.
