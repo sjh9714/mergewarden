@@ -19,7 +19,7 @@ agent_detection:
   # 11 coding-agent bot accounts by default: Copilot, Jules, Devin, Kiro,
   # Codegen, OpenCode, Tembo, Amazon Q, Mentat, Factory Droid, Ellipsis.
   authors: ["copilot-swe-agent[bot]", "google-labs-jules[bot]", "..."]
-  labels: [ai, agent, codex, claude, copilot]
+  labels: [] # label conventions are per-repository; add your own
   branch_patterns:
     - "codex/**" # Codex
     - "claude/**" # Claude Code
