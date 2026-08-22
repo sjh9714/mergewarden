@@ -94,16 +94,16 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - Produce `triagePublicRepository(value: string, dependencies?: TriageDependencies): Promise<PublicTriageResult>`
 - Consume `FetchGitHubApi.listOpenPullRequests`, `FetchGitHubApi.getPullRequest`, `FetchGitHubApi.getTextFile`, `analyze`, `DEFAULT_CONFIG`, `parseContractFromPrBody`, and `partitionUniformTriageNotes`
 
-- [ ] Write a failing test that filters `OWNER`, `MEMBER`, `COLLABORATOR`, `dependabot[bot]`, `renovate[bot]`, and `github-actions[bot]`
-- [ ] Write a failing test that keeps `CONTRIBUTOR`, first-time roles, `NONE`, and unknown roles
-- [ ] Write a failing test that lists thirty summaries but loads details for no more than ten external pull requests
-- [ ] Write a failing test that maps only the four readiness rules to queue notes and keeps first-contribution status as context
-- [ ] Write a failing test for most-facts-first ordering and repository norm suppression
-- [ ] Write a failing test that retains readable rows while setting `analysisComplete` false and recording unreadable PR numbers
-- [ ] Implement metadata-only analysis inputs with no `analysis` field, no changed files, existing totals, the base template, and a cloned default config with `no_linked_issue` set to `info`
-- [ ] Load details in batches of three and fetch the base pull request template once from the existing three supported paths
-- [ ] Run `pnpm --filter @mergewarden/web test -- triage.test.ts` and confirm all queue tests pass
-- [ ] Commit with `git commit -m "Add public review queue"`
+- [x] Write a failing test that filters `OWNER`, `MEMBER`, `COLLABORATOR`, `dependabot[bot]`, `renovate[bot]`, and `github-actions[bot]`
+- [x] Write a failing test that keeps `CONTRIBUTOR`, first-time roles, `NONE`, and unknown roles
+- [x] Write a failing test that lists thirty summaries but loads details for no more than ten external pull requests
+- [x] Write a failing test that maps only the four readiness rules to queue notes and keeps first-contribution status as context
+- [x] Write a failing test for most-facts-first ordering and repository norm suppression
+- [x] Write a failing test that retains readable rows while setting `analysisComplete` false and recording unreadable PR numbers
+- [x] Implement metadata-only analysis inputs with no `analysis` field, no changed files, existing totals, the base template, and a cloned default config with `no_linked_issue` set to `info`
+- [x] Load details in batches of three and fetch the base pull request template once from the existing three supported paths
+- [x] Run `pnpm --filter @mergewarden/web test -- triage.test.ts` and confirm all queue tests pass
+- [x] Commit with `git commit -m "Add public review queue"`
 
 ### Task 4  Homepage queue interface and product copy
 
