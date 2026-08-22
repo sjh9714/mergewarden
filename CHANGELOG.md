@@ -6,6 +6,25 @@ this file.
 This project follows the spirit of
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- A public browser scanner at `https://sjh9714.github.io/mergewarden/` accepts a
+  GitHub PR URL without login or installation and shows up to three high-signal
+  findings before the Action install path.
+- GitHub Pages deployment builds only `packages/web/dist` with pinned official
+  Actions and the minimum Pages permissions.
+
+### Changed
+
+- The core hashing and UTF-8 paths now use browser-safe implementations while
+  preserving finding IDs, policy digests, JSON, and Markdown output.
+- The CLI and web scanner now share the GitHub fetch adapter and PR target
+  parser.
+- README, CLI, npm, Action, and feedback surfaces now lead with scanning a real
+  public PR instead of the synthetic demo or research.
+
 ## v0.10.4 - 2026-08-22
 
 ### Changed
