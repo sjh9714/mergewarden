@@ -1,0 +1,346 @@
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { Finding } from "@mergewarden/core";
+
+import {
+  buildInstallUrl,
+  classifyScanError,
+  cliCommand,
+  errorCopy,
+  incompleteCopy,
+  installWorkflow,
+  parseTargetHash,
+  passCopy,
+  resultFindings,
+  reviewHeading,
+  targetHash,
+  type ScanErrorKind,
+} from "./product.js";
+import { scanPublicPullRequest, type PublicScanResult } from "./scan.js";
+
+type ScanState =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "error"; error: ScanErrorKind; target: string }
+  | { kind: "success"; scan: PublicScanResult };
+
+function FindingCard({ finding }: { finding: Finding }) {
+  return (
+    <article className="finding">
+      <div className="finding-heading">
+        <span className={`severity severity-${finding.severity}`}>{finding.severity}</span>
+        <h3>{finding.title}</h3>
+      </div>
+      {finding.path ? <code className="path">{finding.path}</code> : null}
+      <p>{finding.message}</p>
+      {finding.remediation[0] ? (
+        <p className="remediation">
+          <span>What to check</span>
+          {finding.remediation[0]}
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+function ExampleResult() {
+  return (
+    <section className="result-shell example" aria-labelledby="example-title">
+      <div className="result-kicker">Example result</div>
+      <h2 id="example-title">2 changes deserve review</h2>
+      <p className="result-context">acme/shipyard PR 184</p>
+      <article className="finding">
+        <div className="finding-heading">
+          <span className="severity severity-error">error</span>
+          <h3>Workflow permissions expanded</h3>
+        </div>
+        <code className="path">.github/workflows/release.yml</code>
+        <p>A pull request changed the workflow from read-only access to repository write access.</p>
+        <p className="remediation">
+          <span>What to check</span>
+          Confirm each new write permission is required by the job that uses it.
+        </p>
+      </article>
+      <article className="finding finding-muted">
+        <div className="finding-heading">
+          <span className="severity severity-warn">warn</span>
+          <h3>Agent instructions changed</h3>
+        </div>
+        <code className="path">AGENTS.md</code>
+      </article>
+    </section>
+  );
+}
+
+function LoadingResult() {
+  return (
+    <section className="result-shell" aria-live="polite" aria-busy="true">
+      <span className="sr-only">Scanning the pull request</span>
+      <div className="skeleton skeleton-short" />
+      <div className="skeleton skeleton-title" />
+      <div className="skeleton-card">
+        <div className="skeleton skeleton-chip" />
+        <div className="skeleton skeleton-line" />
+        <div className="skeleton skeleton-line skeleton-wide" />
+        <div className="skeleton skeleton-line" />
+      </div>
+      <div className="skeleton-card skeleton-card-short">
+        <div className="skeleton skeleton-line skeleton-wide" />
+      </div>
+    </section>
+  );
+}
+
+function ErrorResult({ kind, target }: { kind: ScanErrorKind; target: string }) {
+  const content = errorCopy[kind];
+  const showCli = kind === "unavailable" || kind === "rate-limit";
+
+  return (
+    <section className="result-shell error-result" role="alert" tabIndex={-1}>
+      <div className="result-kicker">Scan failed</div>
+      <h2>{content.title}</h2>
+      <p>{content.body}</p>
+      {showCli ? (
+        <div className="cli-alternative">
+          <p>Scan with an authenticated CLI request</p>
+          <pre tabIndex={0}>
+            <code>{cliCommand(target)}</code>
+          </pre>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function Install({ scan }: { scan: PublicScanResult }) {
+  const [copyStatus, setCopyStatus] = useState("");
+  const installUrl = buildInstallUrl(
+    scan.input.repo.owner,
+    scan.input.repo.repo,
+    scan.input.repo.defaultBranch,
+  );
+
+  async function copyWorkflow() {
+    try {
+      await navigator.clipboard.writeText(installWorkflow);
+      setCopyStatus("Workflow copied.");
+    } catch {
+      setCopyStatus("Copy failed. Select the workflow below.");
+    }
+  }
+
+  return (
+    <section className="install" aria-labelledby="install-title">
+      <div>
+        <div className="result-kicker">Keep checking this repository</div>
+        <h2 id="install-title">Add the PR check</h2>
+        <p>Commit this workflow to run MergeWarden on future pull requests.</p>
+      </div>
+      <div className="install-actions">
+        <button className="button button-secondary" type="button" onClick={copyWorkflow}>
+          Copy workflow
+        </button>
+        <a
+          className="button button-primary"
+          href={installUrl}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          Open GitHub
+        </a>
+      </div>
+      <p className="copy-status" aria-live="polite">
+        {copyStatus}
+      </p>
+      <pre className="workflow" tabIndex={0}>
+        <code>{installWorkflow}</code>
+      </pre>
+      <a
+        className="star-link"
+        href="https://github.com/sjh9714/mergewarden"
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        Useful result? Star MergeWarden on GitHub
+      </a>
+    </section>
+  );
+}
+
+function SuccessfulResult({ scan }: { scan: PublicScanResult }) {
+  const { primary, remaining } = resultFindings(scan.result.findings);
+  const total = primary.length + remaining.length;
+  const complete = scan.result.metadata.analysisComplete;
+
+  return (
+    <div className="success-stack">
+      <section className="result-shell" aria-live="polite" tabIndex={-1}>
+        <div className="result-kicker">Scan result</div>
+        <p className="result-context">
+          {scan.input.repo.owner}/{scan.input.repo.repo} PR {scan.target.number}
+        </p>
+        <h2>{complete && total === 0 ? passCopy.title : reviewHeading(total)}</h2>
+        {!complete ? (
+          <div className="incomplete" role="status">
+            <h3>{incompleteCopy.title}</h3>
+            <p>{incompleteCopy.body}</p>
+          </div>
+        ) : total === 0 ? (
+          <p>{passCopy.body}</p>
+        ) : null}
+        {primary.map((finding) => (
+          <FindingCard finding={finding} key={finding.findingId} />
+        ))}
+        {remaining.length > 0 ? (
+          <details className="remaining-findings">
+            <summary>Show {remaining.length} more</summary>
+            {remaining.map((finding) => (
+              <FindingCard finding={finding} key={finding.findingId} />
+            ))}
+          </details>
+        ) : null}
+      </section>
+      <Install scan={scan} />
+    </div>
+  );
+}
+
+export function App() {
+  const initialTarget = parseTargetHash(window.location.hash) ?? "";
+  const [value, setValue] = useState(initialTarget);
+  const [state, setState] = useState<ScanState>({ kind: "idle" });
+  const autoScanned = useRef(false);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  async function runScan(target: string) {
+    const trimmed = target.trim();
+    setState({ kind: "loading" });
+    window.history.replaceState(null, "", targetHash(trimmed));
+
+    try {
+      setState({ kind: "success", scan: await scanPublicPullRequest(trimmed) });
+    } catch (error) {
+      setState({ kind: "error", error: classifyScanError(error), target: trimmed });
+    }
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void runScan(value);
+  }
+
+  useEffect(() => {
+    if (!autoScanned.current && initialTarget) {
+      autoScanned.current = true;
+      void runScan(initialTarget);
+    }
+  }, [initialTarget]);
+
+  useEffect(() => {
+    if (state.kind === "error" || state.kind === "success") {
+      resultRef.current?.focus();
+    }
+  }, [state]);
+
+  return (
+    <div className="site-shell">
+      <header className="site-header">
+        <a className="brand" href="./" aria-label="MergeWarden home">
+          <span aria-hidden="true">MW</span>
+          MergeWarden
+        </a>
+        <a
+          className="header-link"
+          href="https://github.com/sjh9714/mergewarden"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          View source
+        </a>
+      </header>
+
+      <main>
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-copy">
+            <div className="eyebrow">PR risk check</div>
+            <h1 id="hero-title">Paste a GitHub PR. See what deserves human review.</h1>
+            <p className="lede">
+              Checks workflow permissions, agent instructions, untrusted prompt inputs, and install
+              scripts. No login. No code execution.
+            </p>
+            <form className="scan-form" onSubmit={submit} noValidate>
+              <label htmlFor="pull-request">GitHub pull request</label>
+              <div className="input-row">
+                <input
+                  id="pull-request"
+                  name="pull-request"
+                  type="text"
+                  inputMode="url"
+                  autoComplete="url"
+                  spellCheck={false}
+                  value={value}
+                  onChange={(event) => setValue(event.target.value)}
+                  aria-describedby="pull-request-help"
+                  aria-invalid={state.kind === "error" && state.error === "invalid"}
+                  placeholder="https://github.com/owner/repo/pull/123"
+                />
+                <button className="button button-primary scan-button" type="submit">
+                  Scan PR
+                </button>
+              </div>
+              <p id="pull-request-help" className="helper">
+                Full URL or owner/repository#number. Public repositories only.
+              </p>
+              {state.kind === "error" && state.error === "invalid" ? (
+                <p className="inline-error">Enter a valid public GitHub PR.</p>
+              ) : null}
+            </form>
+            <ul className="boundaries" aria-label="Scan boundaries">
+              <li>Deterministic rules</li>
+              <li>No checkout</li>
+              <li>No data stored</li>
+            </ul>
+          </div>
+
+          <div ref={resultRef} tabIndex={-1} className="result-column">
+            {state.kind === "idle" ? <ExampleResult /> : null}
+            {state.kind === "loading" ? <LoadingResult /> : null}
+            {state.kind === "error" ? (
+              <ErrorResult kind={state.error} target={state.target} />
+            ) : null}
+            {state.kind === "success" ? <SuccessfulResult scan={state.scan} /> : null}
+          </div>
+        </section>
+
+        <section className="checks" aria-labelledby="checks-title">
+          <div>
+            <div className="eyebrow">Focused by design</div>
+            <h2 id="checks-title">Four boundaries that deserve a second pair of eyes</h2>
+          </div>
+          <ol className="check-list">
+            <li>
+              <span>01</span>
+              Workflow permission changes
+            </li>
+            <li>
+              <span>02</span>
+              Agent instruction changes
+            </li>
+            <li>
+              <span>03</span>
+              Untrusted prompt inputs
+            </li>
+            <li>
+              <span>04</span>
+              Install and lifecycle scripts
+            </li>
+          </ol>
+        </section>
+      </main>
+
+      <footer>
+        <p>MergeWarden is open source and runs entirely in your browser.</p>
+        <p>Not a general code review.</p>
+      </footer>
+    </div>
+  );
+}

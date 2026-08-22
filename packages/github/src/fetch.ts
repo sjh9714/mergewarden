@@ -267,7 +267,7 @@ export class FetchGitHubApi implements GitHubApi {
 
   constructor(options: FetchGitHubApiOptions = {}) {
     this.#token = options.token;
-    this.#fetch = options.fetch ?? globalThis.fetch;
+    this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
     this.#apiBaseUrl = (options.apiBaseUrl ?? "https://api.github.com").replace(/\/$/, "");
     this.#requestTimeoutMs = options.requestTimeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
     this.#userAgent = options.userAgent;

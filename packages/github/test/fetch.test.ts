@@ -34,6 +34,25 @@ const pullResponse = {
 };
 
 describe("fetch GitHub API adapter", () => {
+  it("preserves the browser fetch receiver when using the global implementation", async () => {
+    const originalFetch = globalThis.fetch;
+    const browserFetch = vi.fn(function (this: unknown) {
+      if (this !== globalThis) {
+        throw new TypeError("Illegal invocation");
+      }
+      return Promise.resolve(new Response(JSON.stringify(pullResponse), { status: 200 }));
+    });
+    globalThis.fetch = browserFetch as typeof globalThis.fetch;
+
+    try {
+      await expect(
+        new FetchGitHubApi().getPullRequest({ owner: "owner", repo: "project", number: 17 }),
+      ).resolves.toMatchObject({ number: 17 });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("normalizes public pull requests without setting a browser-forbidden user agent", async () => {
     const fetch = vi.fn(async () => new Response(JSON.stringify(pullResponse), { status: 200 }));
     const api = new FetchGitHubApi({ fetch });

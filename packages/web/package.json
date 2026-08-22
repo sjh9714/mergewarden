@@ -1,0 +1,27 @@
+{
+  "name": "@mergewarden/web",
+  "version": "0.10.4",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && node scripts/check-browser-bundle.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "5.3.0",
+    "@mergewarden/core": "workspace:*",
+    "@mergewarden/github": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "8.2.2",
+    "vitest": "^4.0.14"
+  }
+}
