@@ -128,16 +128,17 @@ function remotePullRequest(value: unknown): RemotePullRequest {
 function remoteOpenPullRequest(value: unknown): RemoteOpenPullRequest {
   const pull = requiredRecord(value, "pull request");
   const normalized = remotePullRequest({ ...pull, changed_files: 0 });
-  const {
-    changedFiles: _changedFiles,
-    commitCount: _commitCount,
-    additions: _additions,
-    deletions: _deletions,
-    ...summary
-  } = normalized;
 
   return {
-    ...summary,
+    number: normalized.number,
+    title: normalized.title,
+    body: normalized.body,
+    author: normalized.author,
+    labels: normalized.labels,
+    draft: normalized.draft,
+    ...(normalized.authorAssociation ? { authorAssociation: normalized.authorAssociation } : {}),
+    head: normalized.head,
+    base: normalized.base,
     updatedAt: requiredString(pull.updated_at, "pull request.updated_at"),
     htmlUrl: requiredString(pull.html_url, "pull request.html_url"),
   };
