@@ -153,18 +153,18 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 
 - Preserve all published package and Action contracts
 
-- [ ] Run `pnpm install --frozen-lockfile`
-- [ ] Run `pnpm test`
-- [ ] Run `pnpm typecheck`
-- [ ] Run `pnpm lint`
-- [ ] Run `pnpm build`
-- [ ] Run `pnpm format:check`
-- [ ] Run `pnpm audit --audit-level high`
-- [ ] Run `git diff --exit-code -- packages/action/dist/index.cjs`
-- [ ] Start the built Pages site and verify 1440 by 900 and 375 by 812 layouts
-- [ ] Verify keyboard navigation, focus visibility, reduced motion, repository hash reload, PR hash reload, invalid target, missing repository, and rate limit presentation
-- [ ] Verify `ghostty-org/ghostty`, `pytorch/pytorch`, and `openxla/xla` without trusted maintainers or maintenance bots dominating the external queue
-- [ ] Review the final diff for unrelated changes and prose containing em dashes
+- [x] Run `pnpm install --frozen-lockfile`
+- [x] Run `pnpm test`
+- [x] Run `pnpm typecheck`
+- [x] Run `pnpm lint`
+- [x] Run `pnpm build`
+- [x] Run `pnpm format:check`
+- [x] Run `pnpm audit --audit-level high`
+- [x] Run `git diff --exit-code -- packages/action/dist/index.cjs`
+- [x] Start the built Pages site and verify 1440 by 900 and 375 by 812 layouts
+- [x] Verify keyboard navigation, focus visibility, reduced motion, repository hash reload, PR hash reload, invalid target, missing repository, and rate limit presentation
+- [x] Verify `ghostty-org/ghostty`, `pytorch/pytorch`, and `openxla/xla` without trusted maintainers or maintenance bots dominating the external queue
+- [x] Review the final diff for unrelated changes and prose containing em dashes
 - [ ] Push `codex/review-queue`, open a pull request, and wait for every required CI check
 - [ ] Merge only after CI passes, verify Pages deployment, and repeat one live repository queue scan
 - [ ] Update the GitHub repository description only after the deployed queue works
