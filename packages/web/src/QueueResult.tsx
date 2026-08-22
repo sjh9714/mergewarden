@@ -34,8 +34,9 @@ export function QueueResult({
         {result.rows.length} external pull request{result.rows.length === 1 ? "" : "s"} read
       </h2>
       <p className="queue-summary">
-        Latest {result.openPullRequests} open PRs · {result.externalPullRequests} external ·{" "}
-        {result.trustedPullRequests} trusted · {result.automationPullRequests} automation
+        Latest {result.openPullRequests} open PR{result.openPullRequests === 1 ? "" : "s"} ·{" "}
+        {result.externalPullRequests} external · {result.trustedPullRequests} trusted ·{" "}
+        {result.automationPullRequests} automation
       </p>
 
       {!result.analysisComplete ? (

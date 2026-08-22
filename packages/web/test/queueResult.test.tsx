@@ -34,11 +34,13 @@ function result(overrides: Partial<PublicTriageResult> = {}): PublicTriageResult
 
 describe("QueueResult", () => {
   it("renders escaped pull request data and ordinary review links", () => {
-    const html = renderToStaticMarkup(<QueueResult result={result()} />);
+    const html = renderToStaticMarkup(<QueueResult result={result({ openPullRequests: 1 })} />);
 
     expect(html).toContain("Render &lt;img src=x onerror=alert(1)&gt;");
     expect(html).toContain("1 external pull request read");
     expect(html).not.toContain("1 external pull requests read");
+    expect(html).toContain("Latest 1 open PR · 2 external");
+    expect(html).not.toContain("Latest 1 open PRs");
     expect(html).not.toContain("<img src=x");
     expect(html).toContain('href="https://github.com/owner/repo/pull/12"');
     expect(html).toContain('href="#pr=owner%2Frepo%2312"');
