@@ -1,53 +1,65 @@
 # Getting Started
 
-Everything you need for the first week: how to install it, what the first report
-means, and how to tighten it once you trust it.
+Start with one public pull request. Install the Action only after the result is
+useful to you.
 
-## Look before you install
+## Scan before installing
 
-You can run MergeWarden against any public pull request without installing
-anything and without a token:
+Open the [public PR scanner](https://sjh9714.github.io/mergewarden/) and paste a
+full GitHub PR URL or `owner/repository#number`.
+
+The browser reads the public GitHub API directly. It needs no login or token,
+stores nothing, and does not execute code. Anonymous GitHub API limits still
+apply.
+
+The result shows at most three high-signal findings first. It hides
+informational findings and folds any additional warnings or errors. Each visible
+finding gives you the title, file, reason, and first recommended check.
+
+## Understand the result
+
+MergeWarden separates four outcomes.
+
+| Outcome    | Meaning                                                                         |
+| ---------- | ------------------------------------------------------------------------------- |
+| Findings   | One or more deterministic checks found a boundary change for a person to review |
+| Pass       | Analysis completed and found no high-signal boundary change                     |
+| Incomplete | GitHub did not provide enough evidence for a deterministic result               |
+| Error      | The PR target, GitHub rate limit, or network request prevented analysis         |
+
+A pass is not a general code review. It means only that the configured workflow,
+agent-control, prompt-input, and install-time checks found nothing actionable.
+
+Never treat an incomplete result as a pass. Retry it or use the authenticated
+CLI command shown by the scanner.
+
+## Scan from the terminal
+
+The CLI follows the same parser, collector, rules, finding IDs, and policy
+digest as the web scanner.
 
 ```bash
-npx --yes mergewarden@0.10.4 scan owner/repository#123
+npx --yes mergewarden@0.10.4 scan https://github.com/owner/repository/pull/123
 ```
 
-Try it on a pull request you already know well. If the report tells you nothing
-you did not already know, it is doing its job, because most pull requests cross
-no boundary at all.
-
-To look at a whole repository rather than one pull request, `triage` reads every
-open pull request and lists only the ones with something a maintainer checks by
-hand:
+Set `GH_TOKEN` for private repositories or a higher rate limit.
 
 ```bash
-npx --yes mergewarden@0.10.4 triage owner/repository
+GH_TOKEN=github_pat_... npx --yes mergewarden@0.10.4 scan owner/repository#123
 ```
 
-It needs no write access and writes nothing back, but it does need `GH_TOKEN`
-set, even for a public repository: it reads every open pull request, and
-GitHub's 60 unauthenticated requests an hour do not cover one queue. A personal
-access token with no scopes selected is enough. Without one the command says so
-and exits non-zero rather than reporting a queue it only half read.
+There is no token flag because command-line flags can land in shell history and
+CI logs. The [CLI reference](cli.md) covers JSON and Markdown output.
 
-[Triage](triage.md) explains what each row means and where the thresholds come
-from.
+## Install the Action
 
-Set `GH_TOKEN` for private repositories or for a higher API rate limit. There is
-no command-line flag for the token, deliberately, because flags end up in shell
-history and CI logs. The [CLI reference](cli.md) covers the other output
-formats.
-
-## Install it
-
-Create `.github/workflows/mergewarden.yml`:
+Create `.github/workflows/mergewarden.yml`.
 
 ```yaml
-name: MergeWarden
+name: MergeWarden PR Risk Check
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
 
 permissions:
   contents: read
@@ -62,115 +74,39 @@ jobs:
           comment: auto
 ```
 
-There is no checkout step, no config file to write, and no token to create: the
-Action uses the one GitHub already gives the job. MergeWarden reads the pull
-request through the GitHub API, and until you add a `mergewarden.yml` of your
-own it uses a built-in default policy.
+There is no checkout step, config file, or token to create. The Action uses the
+GitHub job token and built-in policy. `comment: auto` stays silent on a complete
+pass and writes one updateable comment when a warning, error, or incomplete
+analysis needs attention.
 
-`comment: auto` is the only option worth setting on a fresh install. The default
-policy already runs in `warn` mode, which never blocks a merge, so
-`mode: warn` and `fail-on-block: false` are what you would get anyway. Leave it
-that way for a while.
+Pull requests from forks receive a read-only token, so the Action cannot comment
+on those PRs. The findings still appear in the job summary.
 
-## What the first pull request looks like
+## Tune only after observing
 
-Most agent pull requests cross no boundary. Those pass, and with `comment: auto`
-MergeWarden says nothing at all: the details go to the Actions job summary
-instead. You get a comment when there is a warning, an error, or an analysis it
-could not finish.
+The default policy runs in `warn` mode. Leave it there until you have reviewed
+real findings from your repository.
 
-Push a fix and that same comment rewrites itself to `PASSED` rather than being
-deleted, so a stale review request cannot outlive the problem it described.
+When the evidence is consistently useful, change individual severities before
+changing the whole policy mode. Then consider `mode: block`,
+`fail-on-block: true`, and a required branch-protection check.
 
-Pull requests from forks get a read-only token from GitHub, so they are never
-commented on.
+Use a narrow expiring waiver for evidence a maintainer has accepted. Do not
+disable an entire rule family to hide one reviewed finding. The
+[configuration reference](configuration.md) has exact syntax.
 
-## Reading a report
+## Verify the trust boundary
 
-Every report ends with one of five verdicts:
+- Policy comes from the exact base commit.
+- PR-controlled code is never checked out or executed.
+- Workflow expressions are never evaluated.
+- Analysis does not call a language model.
+- Missing file evidence produces an incomplete result.
 
-| Verdict               | What it means                                                            |
-| --------------------- | ------------------------------------------------------------------------ |
-| `PASSED`              | Analysis finished and nothing active needs your attention.               |
-| `OBSERVED FINDINGS`   | Evidence was recorded, but observe mode left the decision alone.         |
-| `NEEDS REVIEW`        | Warn mode found something a person should decide about.                  |
-| `BLOCKED`             | Block mode rejected the change.                                          |
-| `ANALYSIS INCOMPLETE` | Something could not be read, so no verdict is claimed and the run fails. |
+Read the [security model](security-model.md) before enabling blocking behavior.
 
-That last one matters. MergeWarden would rather fail than tell you a pull
-request passed when it could not see all of it.
+## Advanced interfaces
 
-When you read a report, work down it in this order:
-
-1. Check that analysis is complete and the expected and analyzed file counts agree.
-2. Check where the policy came from (see below).
-3. Read the highest-severity finding and what it suggests doing.
-4. Quote the finding ID when you discuss or dismiss that exact piece of evidence.
-5. Look at waived findings separately. They stay in the record.
-
-### Where the policy came from
-
-Each report says which of these applied:
-
-- `base-branch`: your config, read from the exact base commit.
-- `default`: the config path returned a confirmed 404, so the built-in policy ran.
-- `local`: the report came from replay fixtures.
-
-Only a confirmed 404 selects the default. Authentication failures, rate limits,
-server errors, and malformed responses never fall back quietly, because a silent
-fallback would look identical to a passing repository.
-
-## What each finding is telling you
-
-| Finding                            | What it means                                                                                 |
-| ---------------------------------- | --------------------------------------------------------------------------------------------- |
-| `agent/origin-detected`            | This pull request looks agent-authored. Context, not a problem.                               |
-| `contract/missing`                 | The body declared no intended scope. Informational by default.                                |
-| `contract/out-of-scope`            | A file changed outside the scope the pull request itself declared.                            |
-| `agent-control-plane/drift`        | `AGENTS.md`, `CLAUDE.md`, `.mcp.json` or similar changed. These steer every future agent run. |
-| `workflow/permission-escalation`   | A workflow gained permissions it did not have on the base branch.                             |
-| `workflow/agentic-untrusted-input` | Pull-request text now flows into an agent prompt.                                             |
-| `dependency/*`                     | An install-time lifecycle script was added or changed.                                        |
-| `analysis/*`                       | Something could not be read. Treat the result as inconclusive.                                |
-
-The first two are what you will see most, and neither changes the decision. Only
-warnings and errors do.
-
-## Tightening it up
-
-Once you have watched it for a while and agree with what it says:
-
-1. Raise individual checks from `warn` to `error`. Prefer per-check severity
-   over switching whole rule families off.
-2. Set `mode: block`.
-3. Set `fail-on-block: true`.
-4. Require the MergeWarden check in branch protection.
-
-If a real finding has to be accepted, add a narrow waiver with an expiry date to
-the base-branch policy rather than disabling the check. Waived findings stay
-visible in the report, and an expired waiver brings the original finding back.
-The [configuration reference](configuration.md) has the exact syntax.
-
-Pin the Action to a release tag, or to the exact release commit if you want a
-build that cannot change under you. MergeWarden does not publish a mutable `v0`
-tag.
-
-## Two things people ask next
-
-**Will it be noisy?** On 46 merged human pull requests it said nothing on 44,
-and both findings it did raise were correct.
-[How that was measured](study/what-a-zero-config-install-reports.md).
-
-**What if it flags something we decided was fine?** Please open an issue with
-the output. That is the most useful bug report this project can get.
-
-## Where to go next
-
-[Configuration](configuration.md) for policy and waivers, the
-[Action reference](action-reference.md) for every input and output, and the
-[security model](security-model.md) for what MergeWarden trusts and what it
-refuses to.
-
-If you run agents yourself rather than reviewing their pull requests, the same
-engine ships as an [MCP server](../packages/mcp/README.md) that checks a change
-against the scope you gave it, before a pull request exists.
+The first path needs only the web scanner, CLI, and Action. The existing
+[`triage`](triage.md) queue reader and [MCP server](../packages/mcp/README.md)
+remain available for teams that need those separate workflows.

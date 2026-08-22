@@ -1,5 +1,5 @@
-name: "MergeWarden for AI PRs"
-description: "Reports when a pull request quietly edits CLAUDE.md, AGENTS.md or another agent instruction file. It closes nothing."
+name: "MergeWarden PR Risk Check"
+description: "Paste a GitHub PR and see what deserves human review. Deterministic, no checkout, no LLM."
 author: "MergeWarden contributors"
 
 inputs:

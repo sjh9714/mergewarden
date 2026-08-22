@@ -58,33 +58,35 @@ const DEFAULT_DEPENDENCIES: CliDependencies = {
   environment: process.env,
 };
 
-export const HELP_TEXT = `MergeWarden — checkout-free policy scanning for AI-generated pull requests
+export const HELP_TEXT = `MergeWarden PR risk check for GitHub pull requests
 
-Usage:
-  mergewarden demo [--format human|json|markdown]
-  mergewarden triage <owner/repository> [--limit N] [--format human|json]
+See what deserves human review without cloning or executing the branch.
+
+Usage
   mergewarden scan <owner/repository#number> [options]
   mergewarden scan <github-pull-request-url> [options]
   mergewarden replay <fixture-dir> [--format json]
+  mergewarden demo [--format human|json|markdown]
+  mergewarden triage <owner/repository> [--limit N] [--format human|json]
 
-Commands:
-  demo     Scan a bundled example pull request. No token, no network.
-  triage   Read a repository's open pull requests and report what each is missing.
+Commands
   scan     Analyze a GitHub pull request through the GitHub API only.
   replay   Analyze a deterministic local fixture.
+  demo     Scan a bundled example pull request. No token, no network.
+  triage   Read a repository's open pull requests and report what each is missing.
 
-Scan options:
-  --format <human|json|markdown>  Output format (default: human).
-  --config <base-branch-path>     Policy path (default: mergewarden.yml).
+Scan options
+  --format <human|json|markdown>  Output format. The default is human.
+  --config <base-branch-path>     Policy path. The default is mergewarden.yml.
   --mode <observe|warn|block>     Override the configured rollout mode.
   -h, --help                      Show help.
   -V, --version                   Show the MergeWarden version.
 
-Authentication:
+Authentication
   GH_TOKEN is preferred over GITHUB_TOKEN. Public repositories can be scanned
   without a token, subject to GitHub's lower unauthenticated API rate limit.
 
-Exit codes:
+Exit codes
   0  Complete pass or warning result
   1  Complete block result
   2  Usage, API, configuration, or incomplete-analysis failure

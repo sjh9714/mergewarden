@@ -1,93 +1,74 @@
 # MergeWarden CLI
 
-Reads a GitHub pull request through the API and reports what a maintainer would
-normally check by hand. It never clones the repository, never executes
-pull-request-controlled code, and never calls a language model.
+Paste a GitHub PR and see what deserves human review from your terminal.
+MergeWarden reads the GitHub API without cloning the repository, executing PR
+code, or calling a language model.
 
-The npm package is `mergewarden` and the installed executable is `mergewarden`.
-
-Most people run this as a [GitHub Action](https://github.com/sjh9714/mergewarden)
-so it happens on every pull request. The CLI is for looking at one pull request,
-or a whole queue, from your terminal.
-
-## Try one finding
-
-```console
-npx --yes mergewarden demo
-```
-
-Once npm has downloaded the package, the demo needs no token or repository and
-makes no GitHub API calls. It scans one synthetic pull request that quietly
-edits `CLAUDE.md` and reports the finding a default installation would leave for
-a reviewer.
-
-## Read a whole queue
-
-```console
-npx mergewarden@0.10.4 triage owner/repository
-```
-
-```
-20 open pull request(s) read. 9 have something a maintainer checks by hand.
-
-#6941  update-unmanaged-certificates       no description · template unused
-#7227  add-tests                           no linked issue · oversized
-#7790  feat/dedup-dynamic-upstreams        no linked issue · template unused
-
-Nothing was closed, labelled, or commented on.
-```
-
-**This needs `GH_TOKEN` set, even on a public repository.** It makes one request
-per pull request, and GitHub allows 60 an hour without one. A personal access
-token with no scopes selected is enough, since nothing here writes. Without one
-it reports what it could not read and exits non-zero rather than showing a queue
-it only half saw.
+The npm package and executable are both named `mergewarden`.
 
 ## Scan one pull request
 
 ```console
-npx mergewarden@0.10.4 scan owner/repository#123
+npx --yes mergewarden@0.10.4 scan https://github.com/owner/repository/pull/123
 ```
 
-Full pull request URLs are accepted too. A single public pull request works
-without a token.
+The compact form works too.
 
 ```console
-mergewarden scan https://github.com/owner/repository/pull/123 --format markdown
-mergewarden scan owner/repository#123 --config policies/mergewarden.yml --mode warn
+npx --yes mergewarden@0.10.4 scan owner/repository#123
 ```
 
-Set `GH_TOKEN` (preferred) or `GITHUB_TOKEN` for private repositories and higher
-rate limits. There is deliberately no command-line flag for the token, because
-flags end up in shell history and CI logs.
+A public PR needs no token. Set `GH_TOKEN` for private repositories or a higher
+API rate limit. `GH_TOKEN` takes precedence over `GITHUB_TOKEN`.
+
+```console
+mergewarden scan owner/repository#123 --format markdown
+mergewarden scan owner/repository#123 --format json
+mergewarden scan owner/repository#123 --config policies/mergewarden.yml --mode warn
+```
 
 Exit codes are stable. `scan` and `replay` return `0` for a complete pass or
 warning, `1` for a complete block decision, and `2` for usage, API,
 configuration, or incomplete-analysis failures.
 
-`triage` differs, because a partly-read queue is still worth printing: `0` when
-every pull request was read, `1` when some could not be and the answer is
-therefore partial, and `2` when the arguments were wrong or the listing itself
-failed.
+## Install on every PR
 
-## Replay a local fixture
+Most repositories should use the
+[GitHub Action](https://github.com/sjh9714/mergewarden) after trying a real scan.
+The Action uses the same collector and analysis engine.
+
+## Local replay
 
 ```console
 mergewarden replay path/to/fixture
 ```
 
-A fixture directory contains `mergewarden.yml`, `fixture.json`, and optionally
-`pr-body.md`. Replay is fully local and deterministic, with no network and no
-token. The repository's own fixtures live under
-[`fixtures/`](https://github.com/sjh9714/mergewarden/tree/main/fixtures) and are
-not bundled in this package.
+Replay is local and deterministic. A fixture contains `mergewarden.yml`,
+`fixture.json`, and optionally `pr-body.md`.
 
-Run `mergewarden --help` for the complete command reference.
+## Advanced commands
+
+`demo` scans a bundled synthetic fixture without a network request.
+
+```console
+mergewarden demo
+```
+
+`triage` reads a whole public repository queue and requires `GH_TOKEN` so it
+does not silently stop at GitHub's anonymous rate limit.
+
+```console
+GH_TOKEN=github_pat_... mergewarden triage owner/repository
+```
+
+`triage` returns `0` when every PR was read, `1` for a partial queue, and `2`
+for invalid arguments or a failed listing request.
 
 ## Security boundary
 
-The policy comes from the pull request's base commit, never from the pull
-request itself. It does not check out either branch, evaluate workflow
-expressions, run package scripts, or call a model during analysis.
+Policy comes from the exact base commit. MergeWarden never checks out either
+branch, evaluates workflow expressions, runs package scripts, or calls a model.
 
-License: MIT. See `THIRD_PARTY_NOTICES.md` for bundled dependency notices.
+Run `mergewarden --help` for the full command reference.
+
+License is MIT. Bundled dependency notices are in `THIRD_PARTY_NOTICES.md`.

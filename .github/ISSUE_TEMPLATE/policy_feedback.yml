@@ -1,42 +1,41 @@
-name: Policy feedback
-description: Share what MergeWarden should warn or block on
-title: "[Policy feedback]: "
+name: Scan feedback
+description: Share whether a real MergeWarden result helped you review a PR
+title: "[Scan feedback] "
 labels:
   - question
 body:
   - type: textarea
-    id: context
+    id: pull_request
     attributes:
-      label: Repository or workflow context
-      description: What kind of repository, team, or AI PR workflow are you using?
-    validations:
-      required: true
+      label: Public pull request
+      description: Link the public PR you scanned when you can share it.
+      placeholder: https://github.com/owner/repository/pull/123
   - type: textarea
-    id: finding
+    id: result
     attributes:
-      label: Finding or policy
-      description: Which finding should block, warn, stay optional, or be disabled?
-      placeholder: Workflow permission escalation, missing test evidence, MCP config drift, etc.
+      label: Result and file
+      description: Which finding was useful, missing, or wrong and which file did it point to?
+      placeholder: The workflow permission finding in .github/workflows/release.yml helped us catch an unnecessary write permission.
     validations:
       required: true
   - type: dropdown
-    id: desired_default
+    id: usefulness
     attributes:
-      label: Desired default
+      label: Was the result useful
       options:
-        - Should block
-        - Should warn
-        - Should be disabled by default
-        - Not sure
+        - "Yes"
+        - Partly
+        - "No"
+        - The scan did not finish
     validations:
       required: true
   - type: textarea
-    id: false_positive_risk
+    id: review_action
     attributes:
-      label: False-positive risk
-      description: What legitimate PRs might this policy flag incorrectly?
+      label: What happened next
+      description: Did you change the PR, dismiss the finding, or decide not to install the Action?
   - type: textarea
-    id: evidence
+    id: friction
     attributes:
-      label: Useful evidence
-      description: What evidence would make this finding actionable for a maintainer?
+      label: Scan or installation friction
+      description: What made the scanner, CLI fallback, or Action installation harder than expected?

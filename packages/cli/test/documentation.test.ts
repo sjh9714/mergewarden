@@ -71,12 +71,14 @@ describe("documentation contracts", () => {
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
     const headings = [
       "# MergeWarden",
-      "## What that actually looks like",
-      "## Install",
-      "## What else it checks",
-      "## What it will not do",
-      "## Reading a whole queue at once",
-      "## Documentation",
+      "## Scan a public PR",
+      "## A real result",
+      "## Four focused checks",
+      "## Scan from the CLI",
+      "## Add the Action",
+      "## Safety boundaries",
+      "## Research and advanced interfaces",
+      "## Contributing",
     ];
     let previous = -1;
 
@@ -88,9 +90,13 @@ describe("documentation contracts", () => {
 
     expect(readme.split("\n").length).toBeLessThanOrEqual(300);
     expect(readme.trim().split(/\s+/).length).toBeLessThanOrEqual(1_500);
+    expect(readme).toContain("https://sjh9714.github.io/mergewarden/");
     expect(readme).toContain("does not execute pull-request code");
     expect(readme).toContain("exact base commit");
     expect(readme).toContain("does not publish or recommend a mutable `v0` tag");
+    expect(readme.indexOf("npx --yes mergewarden@0.10.4 scan")).toBeGreaterThan(
+      readme.indexOf("https://sjh9714.github.io/mergewarden/"),
+    );
   });
 
   it("keeps npm publishing manual, approval-gated, pinned, and tied to fresh artifacts", async () => {
@@ -114,5 +120,21 @@ describe("documentation contracts", () => {
     expect(workflow).not.toContain("mergewarden-*.tgz");
     expect(actionUses.length).toBeGreaterThan(0);
     expect(actionUses.every((uses) => /@[0-9a-f]{40}$/.test(uses))).toBe(true);
+  });
+
+  it("keeps Pages deployment pinned and limited to the web artifact", async () => {
+    const workflow = await readFile(join(repoRoot, ".github/workflows/pages.yml"), "utf8");
+
+    expect(workflow).toContain("contents: read");
+    expect(workflow).toContain("pages: write");
+    expect(workflow).toContain("id-token: write");
+    expect(workflow).toContain("pnpm@11.5.0");
+    expect(workflow).toContain('node-version: "22"');
+    expect(workflow).toContain("path: packages/web/dist");
+    expect(workflow).toContain("actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b");
+    expect(workflow).toContain(
+      "actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa",
+    );
+    expect(workflow).toContain("actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e");
   });
 });

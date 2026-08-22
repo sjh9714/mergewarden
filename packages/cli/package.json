@@ -3,7 +3,7 @@
   "version": "0.10.4",
   "private": false,
   "type": "module",
-  "description": "Reports what a pull request changed that a maintainer normally checks by hand, starting with the files coding agents read as instructions",
+  "description": "Paste a GitHub PR and see what deserves human review. Deterministic, no checkout, no LLM.",
   "license": "MIT",
   "repository": {
     "type": "git",

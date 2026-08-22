@@ -128,6 +128,10 @@ describe("CLI scan", () => {
 
     expect(await runCli(["--help"], helpIo.value)).toBe(0);
     expect(helpIo.stdout.join("")).toBe(HELP_TEXT);
+    expect(HELP_TEXT.indexOf("mergewarden scan")).toBeLessThan(
+      HELP_TEXT.indexOf("mergewarden demo"),
+    );
+    expect(HELP_TEXT).toContain("See what deserves human review");
     expect(helpIo.stderr).toEqual([]);
     expect(await runCli(["--version"], versionIo.value)).toBe(0);
     expect(versionIo.stdout.join("")).toBe(`${MERGEWARDEN_VERSION}\n`);

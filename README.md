@@ -5,73 +5,73 @@
 [![MergeWarden](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml/badge.svg)](https://github.com/sjh9714/mergewarden/actions/workflows/mergewarden.yml)
 [![License](https://img.shields.io/github/license/sjh9714/mergewarden)](LICENSE)
 
-**A pull request quietly edited your `CLAUDE.md`.**
+Paste a GitHub PR and see what deserves human review. MergeWarden checks
+workflow permissions, agent instructions, untrusted prompt inputs, and install
+scripts. It is deterministic and never checks out the branch or calls an LLM.
+No checkout. No LLM.
 
-In the diff it reads as a documentation tidy-up. Claude Code reads that file
-before it works in your repository, so the change can shape future runs long
-after the pull request is merged. It is easy to overlook when it sits beside an
-ordinary documentation edit.
+## Scan a public PR
 
-MergeWarden leaves one comment when that happens. **It closes nothing.**
+[**Open the public PR scanner**](https://sjh9714.github.io/mergewarden/)
 
-## What that actually looks like
+Paste a full GitHub PR URL or `owner/repository#number`. The scan runs in your
+browser without a login or token. Nothing is installed and no code is executed.
+The [getting started guide](docs/getting-started.md) explains each result state
+and the install path.
 
-![An agent pull request adds one line to CLAUDE.md, telling agents to skip the test suite for documentation changes. MergeWarden's comment appears beneath the diff flagging NEEDS REVIEW because this file can change how AI agents behave in future PRs.](docs/assets/quiet-edit.gif)
+## A real result
 
-This is a real pull request, titled "docs: tidy up the contributor notes", whose
-whole diff is one added line in `CLAUDE.md`.
+[This public PR](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/22)
+looks like a one-line documentation edit. It changes `CLAUDE.md`, which can steer
+future coding-agent runs in the repository.
 
+```text
+1 change deserves review
+
+Agent control-plane file changed
+CLAUDE.md
+
+This file can change how AI agents behave in future PRs.
+What to check
+Review the control-plane change before merging.
 ```
-MergeWarden: NEEDS REVIEW
 
-Why:  This file can change how AI agents behave in future PRs. (CLAUDE.md)
-Next: Review the agent instruction/tooling change before merging.
-```
+MergeWarden points to the file and the review question. It does not judge the
+author or attempt a general code review.
 
-[The pull request](https://github.com/sjh9714/agent-gate-install-smoke-20260617/pull/22)
-and [the run that produced it](https://github.com/sjh9714/agent-gate-install-smoke-20260617/actions)
-are public, so you can check the output against the diff yourself.
+## Four focused checks
 
-It works whether or not an agent opened the pull request. That one says
-`Agent detected: no`.
+| Check                   | What deserves review                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| Workflow permissions    | A workflow gains write access, uses a dangerous trigger, or depends on a moving action reference |
+| Agent instructions      | A PR changes `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, or another file that steers coding agents    |
+| Untrusted prompt inputs | Pull request text reaches an agent prompt in a workflow                                          |
+| Install scripts         | A package manifest adds or changes install-time lifecycle code                                   |
 
-Watched by default: `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `QWEN.md`,
-`.mcp.json`, `.cursor/`, `.codex/`, `.gemini/`,
-`.github/copilot-instructions.md`, `claude_desktop_config.json`.
+The [configuration reference](docs/configuration.md) covers each deterministic
+rule and its severity.
 
-**How often is this?** We scanned 2,204 merged agent-authored pull requests on
-public GitHub and **3.9%** of them changed a file like this. That is not a daily
-event. It is the kind of thing you want to hear about when it happens rather
-than find six weeks later.
+## Scan from the CLI
 
-**What review evidence did those changes leave?** 68 pull requests modified an
-existing instruction file, and **none received a human inline comment on that
-file**. In repositories with 100 or more stars, 10 of 17 such pull requests had
-a formal human review, but still no inline comment on the instruction file. A
-missing comment does not prove nobody read the change. It means there is no
-observable record that the steering change was discussed
-([the measurement](docs/study/who-reviews-the-steering-files.md)).
-
-## Try the finding first
+Scan the same public PR from a terminal without cloning it.
 
 ```bash
-npx --yes mergewarden demo
+npx --yes mergewarden@0.10.4 scan https://github.com/owner/repository/pull/123
 ```
 
-The analysis makes no GitHub API calls and needs no token. It scans one
-synthetic pull request that edits `CLAUDE.md` and shows the same finding a
-default installation would report.
+Use `GH_TOKEN` for private repositories or a higher GitHub API rate limit.
+Tokens are accepted only through the environment so they do not land in shell
+history. JSON and Markdown output are available through `--format`.
 
-## Install
+## Add the Action
 
-One file, `.github/workflows/mergewarden.yml`:
+Create `.github/workflows/mergewarden.yml`.
 
 ```yaml
-name: MergeWarden
+name: MergeWarden PR Risk Check
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled, ready_for_review]
 
 permissions:
   contents: read
@@ -86,123 +86,59 @@ jobs:
           comment: auto
 ```
 
-That is the whole setup. There is no checkout step, no build, no config file,
-and no token to create: the Action uses the one GitHub already gives the job.
-Nothing is blocked from merging until you decide otherwise.
+`comment: auto` stays quiet when there is nothing actionable and updates one
+comment when a finding needs attention. The default Action behavior remains
+unchanged for existing users.
 
-`comment: auto` is the only option that does anything on a fresh install. It
-means MergeWarden stays silent when there is nothing to say, and everything else
-goes to the Actions job summary. When it does comment, pushing a fix rewrites
-that same comment to `PASSED` instead of deleting it, so a stale review request
-cannot outlive the problem it described.
+For an immutable install, pin the release commit.
 
-Pull requests from forks get a read-only token from GitHub, so they are never
-commented on.
-
-For a build that cannot change under you, pin the release commit instead of the
-tag. MergeWarden does not publish or recommend a mutable `v0` tag.
+MergeWarden does not publish or recommend a mutable `v0` tag.
 
 ```yaml
 - uses: sjh9714/mergewarden@d63b4fc8c09c540375f039ecd30d2fce56abf31f
 ```
 
-## What else it checks
+## Safety boundaries
 
-Once it is installed, these come with it. Each one is a fact about the diff, not
-a judgement about the contributor.
+- The web scanner talks directly to the public GitHub API. It has no backend,
+  database, account, or telemetry.
+- The web scanner does not execute pull-request code. The Action also never
+  checks out either branch.
+- Policy is loaded from the exact base commit, never from the untrusted PR head.
+- Analysis never calls a language model. The same evidence produces the same
+  finding IDs and policy digest.
+- Incomplete evidence is reported as incomplete and is never presented as a
+  pass.
 
-| It also notices                                            | Because                                                                         |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| A workflow gained a permission it did not have on the base | It can now write where it could previously only read                            |
-| `pull_request_target` combined with a head checkout        | That hands your repository's secrets to whoever opened the pull request         |
-| An action, reusable workflow or container on a moving tag  | Somebody else can change what runs in your CI without opening a pull request    |
-| An install or prepare script added to a package manifest   | That code runs during `npm install`, before any human reads it                  |
-| Pull request text reaching an agent prompt                 | A stranger can put instructions in a title and have your automation follow them |
-| Files outside the scope a pull request declared for itself | An agent asked to update docs also changed your billing code                    |
+Read the [security model](docs/security-model.md) and
+[evidence model](docs/evidence-model.md) for the full trust boundary.
 
-Every finding names the rule, the file, the evidence, and an ID you can quote
-when you discuss or dismiss it. The
-[configuration reference](docs/configuration.md) covers turning individual
-checks up, down, or off.
+## Research and advanced interfaces
 
-## What it will not do
+The [public research](docs/study/what-2204-agent-prs-showed.md) explains what
+the rules found across 2,204 merged agent-authored PRs. It is supporting
+evidence, not a prerequisite for using the scanner.
 
-**It never closes, labels, or merges anything.** There is no `--close` flag, and
-a test in this repository asserts there never will be one. A pull request closed
-by a bot in error does not get reopened by the person who gave up on it.
-
-If what you want is for the pull requests to stop arriving, this is the wrong
-tool and you should look at an auto-closing action instead. MergeWarden is for
-deciding yourself, faster.
-
-It also does not judge your code. It has no opinion on style, naming, or whether
-a change deserves to be merged, and it infers nothing from how the description is
-written.
-
-On what it trusts:
-
-- It does not execute pull-request code, and never checks the branch out.
-- It reads your settings from the exact base commit of your branch, never from
-  the pull request itself, so a pull request cannot rewrite the rules it is
-  judged by.
-- It never calls a language model, so the same pull request always produces the
-  same report.
-- If it cannot see everything it needs, it says so and fails rather than
-  reporting a pass it cannot stand behind.
-
-The [security model](docs/security-model.md) has the boundaries and the known
-limits.
-
-## Reading a whole queue at once
-
-If pull requests have piled up, `triage` reads all the open ones and lists only
-those with something you would have checked by hand.
-
-**This one needs a token**, even on a public repository, because it makes one
-request per pull request and GitHub allows 60 an hour without one. A
-[personal access token](https://github.com/settings/personal-access-tokens/new)
-with **no scopes selected** is enough, since nothing here writes.
-
-```bash
-export GH_TOKEN=github_pat_...
-npx --yes mergewarden@0.10.4 triage owner/repository
-```
-
-```
-20 open pull request(s) read. 9 have something a maintainer checks by hand.
-
-#6941  update-unmanaged-certificates       no description · template unused
-#7227  add-tests                           no linked issue · oversized
-#7790  feat/dedup-dynamic-upstreams        no linked issue · template unused
-
-Nothing was closed, labelled, or commented on.
-```
-
-Without a token it tells you what it could not read and exits non-zero, rather
-than showing you a queue it only half saw. [More on triage](docs/triage.md).
-
-## Documentation
-
-[Getting started](docs/getting-started.md) walks through the first week. The
-[documentation index](docs/README.md) has the rest, including the
-[configuration reference](docs/configuration.md).
-
-Running the agents yourself rather than reviewing their pull requests? The same
-engine ships as an [MCP server](packages/mcp/README.md) that checks a change
-against the scope you gave it, before a pull request exists.
+The [documentation index](docs/README.md) includes configuration, Action and
+CLI references, coding-tool integrations, and reproducible studies. Existing
+advanced interfaces remain available there, including
+[`triage`](docs/triage.md) for a repository queue and the
+[MCP server](packages/mcp/README.md) for checking agent work before a PR exists.
 
 ## Contributing
 
 ```bash
-pnpm install
-pnpm test && pnpm typecheck && pnpm lint && pnpm build && pnpm format:check
+pnpm install --frozen-lockfile
+pnpm build
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm format:check
 ```
 
-Every rule needs a passing fixture, a failing fixture, and a snapshot of what a
-person would read. The
-[good first issues](https://github.com/sjh9714/mergewarden/labels/good%20first%20issue)
-each name the file to change, the command to verify it, and what done looks
-like. See the [contribution guide](CONTRIBUTING.md).
+Every rule needs a passing fixture, a failing fixture, and a snapshot of the
+report a person reads. See the [contribution guide](CONTRIBUTING.md) and the
+[good first issues](https://github.com/sjh9714/mergewarden/labels/good%20first%20issue).
 
 [简体中文](README.zh-CN.md)
 

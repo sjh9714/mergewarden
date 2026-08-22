@@ -40,6 +40,10 @@ describe("action metadata", () => {
 
     expect(typeof metadata.name).toBe("string");
     expect(typeof metadata.description).toBe("string");
+    expect(metadata.name).toBe("MergeWarden PR Risk Check");
+    expect(metadata.description).toBe(
+      "Paste a GitHub PR and see what deserves human review. Deterministic, no checkout, no LLM.",
+    );
     expect((metadata.description as string).length).toBeLessThan(125);
     expect((metadata.name as string).length).toBeLessThanOrEqual(100);
   });
