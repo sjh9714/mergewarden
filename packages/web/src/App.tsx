@@ -205,21 +205,28 @@ function SuccessfulResult({ scan }: { scan: PublicScanResult }) {
 }
 
 export function App() {
-  const initialTarget = parseTargetHash(window.location.hash) ?? "";
+  const [initialTarget] = useState(() => parseTargetHash(window.location.hash) ?? "");
   const [value, setValue] = useState(initialTarget);
   const [state, setState] = useState<ScanState>({ kind: "idle" });
   const autoScanned = useRef(false);
+  const scanSequence = useRef(0);
   const resultRef = useRef<HTMLDivElement>(null);
 
   async function runScan(target: string) {
+    const scanId = ++scanSequence.current;
     const trimmed = target.trim();
     setState({ kind: "loading" });
     window.history.replaceState(null, "", targetHash(trimmed));
 
     try {
-      setState({ kind: "success", scan: await scanPublicPullRequest(trimmed) });
+      const scan = await scanPublicPullRequest(trimmed);
+      if (scanId === scanSequence.current) {
+        setState({ kind: "success", scan });
+      }
     } catch (error) {
-      setState({ kind: "error", error: classifyScanError(error), target: trimmed });
+      if (scanId === scanSequence.current) {
+        setState({ kind: "error", error: classifyScanError(error), target: trimmed });
+      }
     }
   }
 

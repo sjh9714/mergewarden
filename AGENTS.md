@@ -28,8 +28,12 @@ This repository implements MergeWarden, a deterministic CI firewall for AI-gener
 
 ## Architecture
 
-- `packages/core`: pure analysis engine with no GitHub API dependency
+- `packages/core`: pure analysis engine with no GitHub API dependency. It uses
+  `@noble/hashes` for SHA-256 so finding IDs and policy digests stay identical
+  in Node.js and browsers without a Node crypto shim.
 - `packages/github`: private API-only pull-request collection package; depends on `@mergewarden/core` through the workspace and exposes transport ports used by the Action and CLI. It adds no third-party production dependency.
+- `packages/web`: private static browser package; uses the shared core and GitHub
+  packages to scan public PRs without a backend, token, checkout, or telemetry
 - `packages/cli`: public `mergewarden` CLI; uses the private core and GitHub packages at build time, then bundles every runtime dependency into the published executable so npm metadata has no private or `workspace:*` runtime dependency
 - `packages/action`: API-only GitHub Action wrapper package; depends on the private core and GitHub packages through the workspace and on the official `@actions/core` / `@actions/github` toolkit only to read pull request data through GitHub APIs, write bounded reports, set outputs, update the job summary, and optionally upsert a marked PR report comment without checking out or executing PR-controlled code
 
