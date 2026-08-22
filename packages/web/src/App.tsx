@@ -323,7 +323,7 @@ export function App() {
   return (
     <div className="site-shell">
       <header className="site-header">
-        <a className="brand" href="./" aria-label="MergeWarden home">
+        <a className="brand" href="./">
           <span aria-hidden="true">MW</span>
           MergeWarden
         </a>

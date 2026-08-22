@@ -23,8 +23,8 @@ This project follows the spirit of
 
 ### Changed
 
-- Trusted repository roles and known maintenance automation are removed before
-  the browser spends detailed API requests.
+- Trusted repository roles, base repository branches, and known maintenance
+  automation are removed before the browser spends detailed API requests.
 - Repository-wide triage notes are shown once through shared core logic instead
   of repeated on every row.
 - The existing single PR risk scan remains available from the same input and

@@ -30,7 +30,9 @@ export function QueueResult({
       <p className="result-context">
         {result.target.owner}/{result.target.repo}
       </p>
-      <h2>{result.rows.length} external pull requests read</h2>
+      <h2>
+        {result.rows.length} external pull request{result.rows.length === 1 ? "" : "s"} read
+      </h2>
       <p className="queue-summary">
         Latest {result.openPullRequests} open PRs · {result.externalPullRequests} external ·{" "}
         {result.trustedPullRequests} trusted · {result.automationPullRequests} automation

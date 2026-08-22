@@ -9,9 +9,9 @@ result is useful.
 Open the [public review queue](https://sjh9714.github.io/mergewarden/) and paste
 `owner/repository` or a full GitHub repository URL.
 
-The browser reads the latest thirty open PR summaries, skips trusted roles and
-known maintenance automation, and loads at most ten external PRs. It shows four
-facts.
+The browser reads the latest thirty open PR summaries, skips trusted roles,
+base repository branches, and known maintenance automation, then loads at most
+ten external PRs. It shows four facts.
 
 - Missing issue link
 - Description under 80 prose characters

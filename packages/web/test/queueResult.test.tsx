@@ -37,6 +37,8 @@ describe("QueueResult", () => {
     const html = renderToStaticMarkup(<QueueResult result={result()} />);
 
     expect(html).toContain("Render &lt;img src=x onerror=alert(1)&gt;");
+    expect(html).toContain("1 external pull request read");
+    expect(html).not.toContain("1 external pull requests read");
     expect(html).not.toContain("<img src=x");
     expect(html).toContain('href="https://github.com/owner/repo/pull/12"');
     expect(html).toContain('href="#pr=owner%2Frepo%2312"');

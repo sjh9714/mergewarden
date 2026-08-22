@@ -94,7 +94,7 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - Produce `triagePublicRepository(value: string, dependencies?: TriageDependencies): Promise<PublicTriageResult>`
 - Consume `FetchGitHubApi.listOpenPullRequests`, `FetchGitHubApi.getPullRequest`, `FetchGitHubApi.getTextFile`, `analyze`, `DEFAULT_CONFIG`, `parseContractFromPrBody`, and `partitionUniformTriageNotes`
 
-- [x] Write a failing test that filters `OWNER`, `MEMBER`, `COLLABORATOR`, `dependabot[bot]`, `renovate[bot]`, and `github-actions[bot]`
+- [x] Write a failing test that filters `OWNER`, `MEMBER`, `COLLABORATOR`, base repository branches, `dependabot[bot]`, `renovate[bot]`, and `github-actions[bot]`
 - [x] Write a failing test that keeps `CONTRIBUTOR`, first-time roles, `NONE`, and unknown roles
 - [x] Write a failing test that lists thirty summaries but loads details for no more than ten external pull requests
 - [x] Write a failing test that maps only the four readiness rules to queue notes and keeps first-contribution status as context

@@ -39,7 +39,7 @@ The result never calls a contribution spam, low quality, or AI generated. It nev
 
 ## Trust and queue filtering
 
-Pull requests from `OWNER`, `MEMBER`, and `COLLABORATOR` roles are counted as trusted and left out of the external review queue. Authors listed in the existing `triage.exclude_authors` default are counted as maintenance automation and left out too.
+Pull requests from `OWNER`, `MEMBER`, and `COLLABORATOR` roles are counted as trusted and left out of the external review queue. Pull requests whose head branch belongs to the base repository are trusted too, because the author already has repository write access. Authors listed in the existing `triage.exclude_authors` default are counted as maintenance automation and left out.
 
 `CONTRIBUTOR`, `FIRST_TIME_CONTRIBUTOR`, `FIRST_TIMER`, and `NONE` remain in the queue. Unknown role values remain visible rather than being silently trusted.
 

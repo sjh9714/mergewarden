@@ -71,7 +71,14 @@ function fakeApi(
 const now = () => "2026-08-22T00:00:00.000Z";
 
 describe("triagePublicRepository", () => {
-  it("filters trusted roles and default maintenance automation", async () => {
+  it("filters trusted roles, base repository branches, and maintenance automation", async () => {
+    const baseBranchPull = summary(8, "CONTRIBUTOR", "repository-maintainer");
+    baseBranchPull.head = {
+      ref: "maintainer-change",
+      sha: "head-8",
+      repository: { owner: "owner", repo: "repo", defaultBranch: "main" },
+      fork: false,
+    };
     const pulls = [
       summary(1, "OWNER"),
       summary(2, "MEMBER"),
@@ -80,15 +87,16 @@ describe("triagePublicRepository", () => {
       summary(5, "CONTRIBUTOR", "renovate[bot]"),
       summary(6, "CONTRIBUTOR", "github-actions[bot]"),
       summary(7),
+      baseBranchPull,
     ];
     const api = fakeApi(pulls);
 
     const result = await triagePublicRepository("owner/repo", { api, now });
 
     expect(result.rows.map((row) => row.number)).toEqual([7]);
-    expect(result.openPullRequests).toBe(7);
+    expect(result.openPullRequests).toBe(8);
     expect(result.externalPullRequests).toBe(1);
-    expect(result.trustedPullRequests).toBe(3);
+    expect(result.trustedPullRequests).toBe(4);
     expect(result.automationPullRequests).toBe(3);
     expect(api.getPullRequest).toHaveBeenCalledOnce();
   });

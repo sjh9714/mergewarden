@@ -76,6 +76,7 @@ pre[tabindex]:focus-visible,
 
 .brand {
   display: inline-flex;
+  min-height: 48px;
   align-items: center;
   gap: 12px;
   font-weight: 700;
@@ -100,6 +101,12 @@ pre[tabindex]:focus-visible,
   font-size: 14px;
   font-weight: 650;
   text-underline-offset: 4px;
+}
+
+.header-link {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
 }
 
 .hero {

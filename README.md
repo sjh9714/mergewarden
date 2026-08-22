@@ -18,9 +18,9 @@ The [getting started guide](docs/getting-started.md) explains queue states,
 detailed PR results, and the Action install path.
 
 Paste `owner/repository` or a full GitHub repository URL. The browser reads the
-latest thirty open pull request summaries, removes trusted repository roles and
-known maintenance automation, then loads details for at most ten external pull
-requests.
+latest thirty open pull request summaries, removes trusted repository roles,
+base repository branches, and known maintenance automation, then loads details
+for at most ten external pull requests.
 
 Rows are ordered by deterministic facts a maintainer would otherwise check
 before reading code.

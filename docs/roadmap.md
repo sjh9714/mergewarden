@@ -7,8 +7,8 @@ The roadmap follows observed user value rather than promised dates.
 Through v0.10.4 and the public web rollout.
 
 - A no-login browser queue for recent external PRs in public repositories.
-- Trusted repository roles and known maintenance automation are removed before
-  detailed requests are spent.
+- Trusted repository roles, base repository branches, and known maintenance
+  automation are removed before detailed requests are spent.
 - Repository-wide facts are shown once instead of repeated on every queue row.
 - A detailed public PR scan remains available through every row and a shareable
   hash link.

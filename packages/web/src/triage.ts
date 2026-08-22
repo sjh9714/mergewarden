@@ -133,7 +133,14 @@ function analysisInput(
 }
 
 function isTrusted(pull: RemoteOpenPullRequest): boolean {
-  return TRUSTED_ASSOCIATIONS.has((pull.authorAssociation ?? "").toUpperCase());
+  if (TRUSTED_ASSOCIATIONS.has((pull.authorAssociation ?? "").toUpperCase())) {
+    return true;
+  }
+
+  return (
+    pull.head.repository.owner.toLowerCase() === pull.base.repository.owner.toLowerCase() &&
+    pull.head.repository.repo.toLowerCase() === pull.base.repository.repo.toLowerCase()
+  );
 }
 
 export async function triagePublicRepository(
