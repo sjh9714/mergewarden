@@ -1,12 +1,26 @@
 # MergeWarden CLI
 
-Paste a GitHub PR and see what deserves human review from your terminal.
-MergeWarden reads the GitHub API without cloning the repository, executing PR
-code, or calling a language model.
+Rank external pull requests before code review, then inspect deterministic PR
+risks. MergeWarden reads the GitHub API without cloning the repository,
+executing PR code, or calling a language model.
 
 The npm package and executable are both named `mergewarden`.
 
-## Scan one pull request
+## Review a repository queue
+
+`triage` reads open pull requests and orders them by missing issue links, thin
+descriptions, skipped templates, and oversized changes. It never closes,
+labels, scores, or comments.
+
+```console
+GH_TOKEN=github_pat_... npx --yes mergewarden@0.10.4 triage owner/repository
+```
+
+The token is required because a full CLI queue uses more API requests than the
+public browser view. `triage` returns `0` when every selected PR was read, `1`
+for a partial queue, and `2` for invalid arguments or a failed listing request.
+
+## Inspect one pull request
 
 ```console
 npx --yes mergewarden@0.10.4 scan https://github.com/owner/repository/pull/123
@@ -46,23 +60,13 @@ mergewarden replay path/to/fixture
 Replay is local and deterministic. A fixture contains `mergewarden.yml`,
 `fixture.json`, and optionally `pr-body.md`.
 
-## Advanced commands
+## Advanced command
 
 `demo` scans a bundled synthetic fixture without a network request.
 
 ```console
 mergewarden demo
 ```
-
-`triage` reads a whole public repository queue and requires `GH_TOKEN` so it
-does not silently stop at GitHub's anonymous rate limit.
-
-```console
-GH_TOKEN=github_pat_... mergewarden triage owner/repository
-```
-
-`triage` returns `0` when every PR was read, `1` for a partial queue, and `2`
-for invalid arguments or a failed listing request.
 
 ## Security boundary
 

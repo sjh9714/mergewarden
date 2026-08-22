@@ -10,6 +10,11 @@ This project follows the spirit of
 
 ### Added
 
+- The Pages homepage now accepts a public repository and orders up to ten recent
+  external pull requests by missing issue links, thin descriptions, skipped
+  templates, and oversized changes.
+- Repository targets and recent open pull request listing are shared through
+  `@mergewarden/github`.
 - A public browser scanner at `https://sjh9714.github.io/mergewarden/` accepts a
   GitHub PR URL without login or installation and shows up to three high-signal
   findings before the Action install path.
@@ -18,6 +23,12 @@ This project follows the spirit of
 
 ### Changed
 
+- Trusted repository roles and known maintenance automation are removed before
+  the browser spends detailed API requests.
+- Repository-wide triage notes are shown once through shared core logic instead
+  of repeated on every row.
+- The existing single PR risk scan remains available from the same input and
+  from each review queue row.
 - The core hashing and UTF-8 paths now use browser-safe implementations while
   preserving finding IDs, policy digests, JSON, and Markdown output.
 - The CLI and web scanner now share the GitHub fetch adapter and PR target

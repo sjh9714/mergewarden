@@ -3,7 +3,7 @@
   "version": "0.10.4",
   "private": false,
   "type": "module",
-  "description": "Paste a GitHub PR and see what deserves human review. Deterministic, no checkout, no LLM.",
+  "description": "Rank external GitHub pull requests before code review, then inspect deterministic PR risks.",
   "license": "MIT",
   "repository": {
     "type": "git",

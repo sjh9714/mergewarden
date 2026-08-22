@@ -57,7 +57,7 @@ The queue loader fetches only metadata and the base pull request template. It do
 
 `@mergewarden/github` owns repository target parsing and public pull request listing. `FetchGitHubApi` maps author association and optional line totals from GitHub responses.
 
-`@mergewarden/core` owns triage note labels and repository norm suppression. The CLI and web package use the same functions.
+`@mergewarden/core` owns the triage rules and repository norm suppression. The web package owns its four short queue labels.
 
 `packages/web` owns queue orchestration and presentation. It constructs metadata-only analysis inputs and runs the existing deterministic triage rules. Full risk analysis still uses `loadGitHubAnalysis` only for an individual PR.
 

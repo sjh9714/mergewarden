@@ -1,11 +1,12 @@
 # Documentation
 
-MergeWarden shows which PR boundary changes deserve human review. Start with a
-public scan and install the Action only if the result is useful.
+MergeWarden orders recent external pull requests by missing review context, then
+checks security boundaries in one PR. Start with the public queue.
 
 ## First use
 
-- [Public PR scanner](https://sjh9714.github.io/mergewarden/)
+- [Public review queue and PR scan](https://sjh9714.github.io/mergewarden/)
+- [Triage CLI](triage.md)
 - [Getting started](getting-started.md)
 - [CLI reference](cli.md)
 - [Action reference](action-reference.md)
@@ -43,9 +44,8 @@ public scan and install the Action only if the result is useful.
 - [Methodology](study/methodology.md)
 - [GitHub agent-PR review guidance](github-review-guidance.md)
 
-## Advanced interfaces
+## Advanced interface
 
-- [Triage](triage.md) reads a repository queue without writing back.
 - [MCP server](../packages/mcp/README.md) checks agent work before a PR exists.
 
 ## Project operations

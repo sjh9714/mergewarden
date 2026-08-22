@@ -114,10 +114,15 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - Modify `packages/web/src/product.ts`
 - Modify `packages/web/src/styles.css`
 - Modify `packages/web/test/presentation.test.ts`
+- Create `packages/web/test/queueResult.test.tsx`
+- Modify `packages/web/index.html`
 - Modify `README.md`
 - Modify `README.zh-CN.md`
+- Modify `CHANGELOG.md`
+- Modify `docs/README.md`
 - Modify `docs/getting-started.md`
 - Modify `docs/roadmap.md`
+- Modify `packages/cli/README.md`
 - Modify `packages/cli/package.json`
 
 **Interfaces**
@@ -126,17 +131,17 @@ TypeScript, React 19, Vite 8, Tailwind CSS 4, Zod, Vitest, GitHub REST API
 - Detect repository input first and PR input when the value contains a PR number or pull request URL
 - Render GitHub and detailed scan links as ordinary anchors
 
-- [ ] Add presentation tests for repository hash round trips, input classification, queue copy, and existing PR hash regression
-- [ ] Run `pnpm --filter @mergewarden/web test -- presentation.test.ts` and confirm the new assertions fail
-- [ ] Change the hero to the exact copy in the spec and accept a repository or PR in one labelled input
-- [ ] Render queue summary counts, repository norms, incomplete state, rows, GitHub links, and detailed scan links
-- [ ] Replace the example risk card with a three-row external review queue
-- [ ] Add visible focus, mobile layout, reduced motion, and queue skeleton styles without a new component library
-- [ ] Keep the existing single PR result and installation block unchanged
-- [ ] Reorder English and Chinese README content around the public review queue, then place individual PR risk scan and Action installation after it
-- [ ] Update getting started, roadmap, and npm description without claiming market validation
-- [ ] Run web tests, typecheck, lint, and build
-- [ ] Commit with `git commit -m "Lead with external PR triage"`
+- [x] Add presentation tests for repository hash round trips, input classification, queue copy, and existing PR hash regression
+- [x] Run `pnpm --filter @mergewarden/web test -- presentation.test.ts` and confirm the new assertions fail
+- [x] Change the hero to the exact copy in the spec and accept a repository or PR in one labelled input
+- [x] Render queue summary counts, repository norms, incomplete state, rows, GitHub links, and detailed scan links
+- [x] Replace the example risk card with a three-row external review queue
+- [x] Add visible focus, mobile layout, reduced motion, and queue skeleton styles without a new component library
+- [x] Keep the existing single PR result and installation block unchanged
+- [x] Reorder English and Chinese README content around the public review queue, then place individual PR risk scan and Action installation after it
+- [x] Update getting started, roadmap, and npm description without claiming market validation
+- [x] Run web tests, typecheck, lint, and build
+- [x] Commit with `git commit -m "Lead with external PR triage"`
 
 ### Task 5  Full verification and deployed acceptance
 

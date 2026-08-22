@@ -3,25 +3,33 @@ import type { Finding } from "@mergewarden/core";
 
 import {
   buildInstallUrl,
+  classifyTarget,
   classifyScanError,
   cliCommand,
   errorCopy,
   incompleteCopy,
   installWorkflow,
-  parseTargetHash,
+  parseShareHash,
   passCopy,
+  queueCopy,
+  repositoryHash,
   resultFindings,
   reviewHeading,
   targetHash,
+  triageCliCommand,
+  type PublicTargetKind,
   type ScanErrorKind,
 } from "./product.js";
+import { QueueResult } from "./QueueResult.js";
 import { scanPublicPullRequest, type PublicScanResult } from "./scan.js";
+import { triagePublicRepository, type PublicTriageResult } from "./triage.js";
 
 type ScanState =
   | { kind: "idle" }
-  | { kind: "loading" }
-  | { kind: "error"; error: ScanErrorKind; target: string }
-  | { kind: "success"; scan: PublicScanResult };
+  | { kind: "loading"; targetKind: PublicTargetKind }
+  | { kind: "error"; error: ScanErrorKind; target: string; targetKind: PublicTargetKind }
+  | { kind: "pr-success"; scan: PublicScanResult }
+  | { kind: "repository-success"; result: PublicTriageResult };
 
 function FindingCard({ finding }: { finding: Finding }) {
   return (
@@ -42,39 +50,59 @@ function FindingCard({ finding }: { finding: Finding }) {
   );
 }
 
-function ExampleResult() {
+function ExampleQueue() {
   return (
     <section className="result-shell example" aria-labelledby="example-title">
-      <div className="result-kicker">Example result</div>
-      <h2 id="example-title">2 changes deserve review</h2>
-      <p className="result-context">acme/shipyard PR 184</p>
-      <article className="finding">
-        <div className="finding-heading">
-          <span className="severity severity-error">error</span>
-          <h3>Workflow permissions expanded</h3>
-        </div>
-        <code className="path">.github/workflows/release.yml</code>
-        <p>A pull request changed the workflow from read-only access to repository write access.</p>
-        <p className="remediation">
-          <span>What to check</span>
-          Confirm each new write permission is required by the job that uses it.
-        </p>
-      </article>
-      <article className="finding finding-muted">
-        <div className="finding-heading">
-          <span className="severity severity-warn">warn</span>
-          <h3>Agent instructions changed</h3>
-        </div>
-        <code className="path">AGENTS.md</code>
-      </article>
+      <div className="result-kicker">Example review queue</div>
+      <h2 id="example-title">3 external pull requests read</h2>
+      <p className="result-context">framework/runtime</p>
+      <div className="queue-rows example-queue">
+        <article className="queue-row">
+          <div className="queue-row-heading">
+            <span className="queue-number">#184</span>
+            <h3>Split Linux packaging changes</h3>
+          </div>
+          <p className="queue-meta">
+            @mira-builds <span>First contribution</span>
+          </p>
+          <div className="queue-notes">
+            <span>no linked issue</span>
+            <span>oversized</span>
+          </div>
+        </article>
+        <article className="queue-row">
+          <div className="queue-row-heading">
+            <span className="queue-number">#191</span>
+            <h3>Document renderer cache behavior</h3>
+          </div>
+          <p className="queue-meta">@oakbyte</p>
+          <div className="queue-notes">
+            <span>thin description</span>
+            <span>template unused</span>
+          </div>
+        </article>
+        <article className="queue-row">
+          <div className="queue-row-heading">
+            <span className="queue-number">#176</span>
+            <h3>Correct Windows path normalization</h3>
+          </div>
+          <p className="queue-meta">@postcard-labs</p>
+          <div className="queue-notes">
+            <span className="queue-note-clear">No missing context found</span>
+          </div>
+        </article>
+      </div>
+      <p className="example-note">Facts order the queue. They do not score the contributor.</p>
     </section>
   );
 }
 
-function LoadingResult() {
+function LoadingResult({ targetKind }: { targetKind: PublicTargetKind }) {
   return (
     <section className="result-shell" aria-live="polite" aria-busy="true">
-      <span className="sr-only">Scanning the pull request</span>
+      <span className="sr-only">
+        {targetKind === "repository" ? "Loading the review queue" : "Scanning the pull request"}
+      </span>
       <div className="skeleton skeleton-short" />
       <div className="skeleton skeleton-title" />
       <div className="skeleton-card">
@@ -90,20 +118,30 @@ function LoadingResult() {
   );
 }
 
-function ErrorResult({ kind, target }: { kind: ScanErrorKind; target: string }) {
+function ErrorResult({
+  kind,
+  target,
+  targetKind,
+}: {
+  kind: ScanErrorKind;
+  target: string;
+  targetKind: PublicTargetKind;
+}) {
   const content = errorCopy[kind];
   const showCli = kind === "unavailable" || kind === "rate-limit";
 
   return (
     <section className="result-shell error-result" role="alert" tabIndex={-1}>
-      <div className="result-kicker">Scan failed</div>
+      <div className="result-kicker">Request failed</div>
       <h2>{content.title}</h2>
       <p>{content.body}</p>
       {showCli ? (
         <div className="cli-alternative">
-          <p>Scan with an authenticated CLI request</p>
+          <p>Use an authenticated CLI request</p>
           <pre tabIndex={0}>
-            <code>{cliCommand(target)}</code>
+            <code>
+              {targetKind === "repository" ? triageCliCommand(target) : cliCommand(target)}
+            </code>
           </pre>
         </div>
       ) : null}
@@ -205,27 +243,57 @@ function SuccessfulResult({ scan }: { scan: PublicScanResult }) {
 }
 
 export function App() {
-  const [initialTarget] = useState(() => parseTargetHash(window.location.hash) ?? "");
-  const [value, setValue] = useState(initialTarget);
+  const [initialTarget] = useState(() => parseShareHash(window.location.hash));
+  const [value, setValue] = useState(initialTarget?.value ?? "");
   const [state, setState] = useState<ScanState>({ kind: "idle" });
   const autoScanned = useRef(false);
   const scanSequence = useRef(0);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  async function runScan(target: string) {
+  async function runScan(target: string, requestedKind?: PublicTargetKind) {
     const scanId = ++scanSequence.current;
     const trimmed = target.trim();
-    setState({ kind: "loading" });
-    window.history.replaceState(null, "", targetHash(trimmed));
+    let targetKind: PublicTargetKind;
 
     try {
-      const scan = await scanPublicPullRequest(trimmed);
-      if (scanId === scanSequence.current) {
-        setState({ kind: "success", scan });
+      targetKind = requestedKind ?? classifyTarget(trimmed);
+    } catch (error) {
+      setState({
+        kind: "error",
+        error: classifyScanError(error),
+        target: trimmed,
+        targetKind: "repository",
+      });
+      return;
+    }
+
+    setState({ kind: "loading", targetKind });
+    window.history.replaceState(
+      null,
+      "",
+      targetKind === "repository" ? repositoryHash(trimmed) : targetHash(trimmed),
+    );
+
+    try {
+      if (targetKind === "repository") {
+        const result = await triagePublicRepository(trimmed);
+        if (scanId === scanSequence.current) {
+          setState({ kind: "repository-success", result });
+        }
+      } else {
+        const scan = await scanPublicPullRequest(trimmed);
+        if (scanId === scanSequence.current) {
+          setState({ kind: "pr-success", scan });
+        }
       }
     } catch (error) {
       if (scanId === scanSequence.current) {
-        setState({ kind: "error", error: classifyScanError(error), target: trimmed });
+        setState({
+          kind: "error",
+          error: classifyScanError(error),
+          target: trimmed,
+          targetKind,
+        });
       }
     }
   }
@@ -238,12 +306,16 @@ export function App() {
   useEffect(() => {
     if (!autoScanned.current && initialTarget) {
       autoScanned.current = true;
-      void runScan(initialTarget);
+      void runScan(initialTarget.value, initialTarget.kind);
     }
   }, [initialTarget]);
 
   useEffect(() => {
-    if (state.kind === "error" || state.kind === "success") {
+    if (
+      state.kind === "error" ||
+      state.kind === "pr-success" ||
+      state.kind === "repository-success"
+    ) {
       resultRef.current?.focus();
     }
   }, [state]);
@@ -268,85 +340,92 @@ export function App() {
       <main>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <div className="eyebrow">PR risk check</div>
-            <h1 id="hero-title">Paste a GitHub PR. See what deserves human review.</h1>
-            <p className="lede">
-              Checks workflow permissions, agent instructions, untrusted prompt inputs, and install
-              scripts. No login. No code execution.
-            </p>
+            <div className="eyebrow">Maintainer review queue</div>
+            <h1 id="hero-title">{queueCopy.title}</h1>
+            <p className="lede">{queueCopy.body}</p>
             <form className="scan-form" onSubmit={submit} noValidate>
-              <label htmlFor="pull-request">GitHub pull request</label>
+              <label htmlFor="github-target">GitHub repository or pull request</label>
               <div className="input-row">
                 <input
-                  id="pull-request"
-                  name="pull-request"
+                  id="github-target"
+                  name="github-target"
                   type="text"
                   inputMode="url"
                   autoComplete="url"
                   spellCheck={false}
                   value={value}
                   onChange={(event) => setValue(event.target.value)}
-                  aria-describedby="pull-request-help"
+                  aria-describedby="github-target-help"
                   aria-invalid={state.kind === "error" && state.error === "invalid"}
-                  placeholder="https://github.com/owner/repo/pull/123"
+                  placeholder="https://github.com/owner/repository"
                 />
                 <button className="button button-primary scan-button" type="submit">
-                  Scan PR
+                  Review
                 </button>
               </div>
-              <p id="pull-request-help" className="helper">
-                Full URL or owner/repository#number. Public repositories only.
+              <p id="github-target-help" className="helper">
+                Repository URL or owner/repository. Pull request targets still run the detailed risk
+                scan.
               </p>
               {state.kind === "error" && state.error === "invalid" ? (
-                <p className="inline-error">Enter a valid public GitHub PR.</p>
+                <p className="inline-error">Enter a valid public repository or pull request.</p>
               ) : null}
             </form>
-            <ul className="boundaries" aria-label="Scan boundaries">
+            <ul className="boundaries" aria-label="Review queue boundaries">
               <li>Deterministic rules</li>
-              <li>No checkout</li>
+              <li>Public metadata only</li>
               <li>No data stored</li>
             </ul>
           </div>
 
           <div ref={resultRef} tabIndex={-1} className="result-column">
-            {state.kind === "idle" ? <ExampleResult /> : null}
-            {state.kind === "loading" ? <LoadingResult /> : null}
+            {state.kind === "idle" ? <ExampleQueue /> : null}
+            {state.kind === "loading" ? <LoadingResult targetKind={state.targetKind} /> : null}
             {state.kind === "error" ? (
-              <ErrorResult kind={state.error} target={state.target} />
+              <ErrorResult kind={state.error} target={state.target} targetKind={state.targetKind} />
             ) : null}
-            {state.kind === "success" ? <SuccessfulResult scan={state.scan} /> : null}
+            {state.kind === "repository-success" ? (
+              <QueueResult
+                result={state.result}
+                onScanPullRequest={(target) => {
+                  setValue(target);
+                  void runScan(target, "pull-request");
+                }}
+              />
+            ) : null}
+            {state.kind === "pr-success" ? <SuccessfulResult scan={state.scan} /> : null}
           </div>
         </section>
 
         <section className="checks" aria-labelledby="checks-title">
           <div>
-            <div className="eyebrow">Focused by design</div>
-            <h2 id="checks-title">Four boundaries that deserve a second pair of eyes</h2>
+            <div className="eyebrow">Before code review</div>
+            <h2 id="checks-title">Facts that decide what to open first</h2>
           </div>
           <ol className="check-list">
             <li>
               <span>01</span>
-              Workflow permission changes
+              Missing issue links
             </li>
             <li>
               <span>02</span>
-              Agent instruction changes
+              Thin descriptions
             </li>
             <li>
               <span>03</span>
-              Untrusted prompt inputs
+              Skipped pull request templates
             </li>
             <li>
               <span>04</span>
-              Install and lifecycle scripts
+              Oversized changes
             </li>
           </ol>
         </section>
       </main>
 
       <footer>
-        <p>MergeWarden is open source and runs entirely in your browser.</p>
-        <p>Not a general code review.</p>
+        <p>MergeWarden is open source and reads GitHub directly from your browser.</p>
+        <p>No scores, auto-close, or AI judgment.</p>
       </footer>
     </div>
   );
