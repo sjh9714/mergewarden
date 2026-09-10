@@ -10,8 +10,8 @@ and gets merged, did any human say anything about that file first?
 
 ## The answer
 
-**The files that steer coding agents get reviewed once: the day they are
-created.**
+**One of 82 readable PRs had a human inline comment on an instruction file.
+That PR added the file. This does not establish which files were read.**
 
 Out of the 2,204 merged agent-authored pull requests in the
 [scan study](what-2204-agent-prs-showed.md), 86 carried an
@@ -29,8 +29,8 @@ comments, including a maintainer pushing back line by line: "I don't think we
 should write about that." That is what review of a steering file looks like, and
 in this sample it happened exactly once, at creation.
 
-After creation, silence. Not one of the 68 modifying pull requests received a
-human comment on the file being changed.
+None of the 68 modifying pull requests received a human inline comment on the
+instruction file. A review without such a comment is not evidence of neglect.
 
 ## It is not that nobody reviews these pull requests
 
@@ -47,17 +47,16 @@ existing instruction file:
 - **10 of 17 received a formal human review**
 - **0 of 17 received a human comment on the instruction file itself**
 
-The reviews happened. Reviewers looked at the pull request, in several cases
-left multiple reviews, approved, and merged. The instruction file went through
-inside them without a word. Review coverage is not the missing piece; attention
-to this specific class of file is.
+These PRs received formal reviews, but no inline comment was anchored to the
+instruction file. The data cannot distinguish a file that was ignored from one
+that was reviewed and accepted without comment.
 
 ## What this does and does not support
 
-The README's sentence is about what happens after merge: the change "outlives
-the pull request". This measurement is about the merge itself, and it supports
-the premise from the front: the file was already passing through review
-unremarked before it was merged. It does not measure post-merge visibility.
+The old README claimed a visibility gap after merge. This measurement covers
+review comments before merge, not post-merge visibility or reviewer attention.
+It therefore does not validate that claim or establish demand for a separate
+instruction-file alert. Those would require direct maintainer evidence.
 
 ## Limits
 

@@ -31,11 +31,16 @@ Claude Code reads `.mcp.json`; other clients use their own MCP config file.
 | `allowedPaths` | Globs the change was scoped to, e.g. `["src/auth/**"]` |
 | `changedPaths` | What was actually changed, from `git diff --name-only` |
 | `blockedPaths` | Optional globs the change was told not to touch        |
-| `task`         | Optional one-line description, recorded verbatim       |
+| `task`         | Optional description with normalized whitespace        |
 
 It returns the paths that escaped, any edits to agent-instruction files
 (`AGENTS.md`, `CLAUDE.md`, `.mcp.json` and similar), and a ready-to-paste
 contract block for the pull request body.
+
+Scope globs must be non-empty and cannot start or end with whitespace, because
+the PR contract schema trims them. The tool rejects these values instead of
+silently changing their meaning. Actual changed filenames are not trimmed.
+Without an allowed scope, the result needs review and contains no contract block.
 
 ```
 NEEDS REVIEW
@@ -49,9 +54,9 @@ these steer every future agent run in this repository.
 
 ## What it is and is not
 
-**It runs the same engine as the [MergeWarden GitHub Action](https://github.com/sjh9714/mergewarden), on the same default policy.** A clean
-result here is the result the gate produces later — not a second opinion that
-happens to agree.
+**It uses the [MergeWarden GitHub Action](https://github.com/sjh9714/mergewarden)
+engine with the default policy.** A pass covers path-based checks only. The
+Action can report additional findings from file contents or repository policy.
 
 **It is deterministic and offline.** No network, no token, no model call. The
 same inputs always produce the same findings.

@@ -19,24 +19,37 @@ Through v0.10.4 and the public web rollout.
 - Explicit incomplete-analysis reporting when GitHub evidence is missing.
 - An MCP interface for checking agent work before a PR exists.
 
-## Next
+## Product status, 2026-09-10
 
-- Put the deployed queue in front of ten maintainers with active external PRs.
-- Require three confirmations that the ordering saves review time before making
-  the queue the permanent product direction.
-- Keep promotion stopped until that usefulness threshold is reached.
-- If rows discriminate but maintainers do not save time, stop changing the UI
-  and revisit the problem.
-- If maintainers find the queue useful but do not return, fix repeat access and
-  trust friction before adding a rule.
+Product expansion is on hold. The queue experiment has not demonstrated time
+saved or repeat maintainer use. Generating different rows is not evidence that
+their ordering improves a maintainer's decisions. The studies remain available
+with those limits stated explicitly.
 
-## Later
+The current work is limited to correcting known evidence-reporting defects,
+dependency updates, and compatibility tests. No new feature or release dates
+are promised. This is not a promise of ongoing maintenance.
 
-- Private repository support only after repeated requests and external installs.
-- A GitHub App only after maintainers ask for a persistent queue and the public
-  browser flow has proven useful.
-- Version 2 policy format after v1 compatibility requirements are understood.
-- Broader data-flow rules only when they remain deterministic and explainable.
+## Existing alternatives
+
+- GitHub provides [per-user open PR limits](https://github.blog/changelog/2026-06-17-limit-open-pull-requests-for-users-without-write-access/)
+  and [contributor role labels in the PR list](https://github.blog/changelog/2026-04-09-repository-member-role-labels-now-in-pull-request-list-view/).
+- [CODEOWNERS](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
+  requests file-owner reviews without a separate scanning page.
+- [zizmor](https://docs.zizmor.sh/audits/) provides focused workflow security
+  checks and existing CI and editor integrations.
+
+These do not duplicate every MergeWarden rule. They do raise the bar for asking
+maintainers to install another check or return to a separate queue.
+
+## What would justify revisiting the product
+
+A maintainer would need to identify a recurring decision their existing tools
+do not support, demonstrate it on real PRs, and use a small comparison to show
+that MergeWarden improves that decision. Continued use matters more than a
+positive reply. No new outreach campaign, paid service, GitHub App, private
+repository integration, or broader scanner is planned to manufacture this
+evidence.
 
 ## Explicit non-goals
 

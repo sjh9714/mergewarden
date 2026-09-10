@@ -10,6 +10,10 @@ See which pull requests need context before code review.
 Paste a public GitHub repository. MergeWarden surfaces missing issue links,
 thin descriptions, skipped templates, and oversized changes. No login. No AI.
 
+This is an experimental tool. Review-time savings and repeat maintainer use
+have not been demonstrated. Product expansion is on hold; see the
+[roadmap and evidence limits](docs/roadmap.md).
+
 ## Review a public repository
 
 [**Open the public review queue**](https://sjh9714.github.io/mergewarden/)
@@ -109,13 +113,15 @@ MergeWarden does not publish or recommend a mutable `v0` tag.
 ## Safety boundaries
 
 - The web app talks directly to the public GitHub API and has no telemetry.
-- The queue reads metadata and one base branch template. The detailed scan reads
+- The queue reads metadata and templates at each PR's exact base commit. The detailed scan reads
   only the files required by deterministic rules.
 - No checkout. MergeWarden does not execute pull-request code in the web app or
   Action.
 - Policy comes from the exact base commit, never the untrusted PR head.
 - Analysis never calls a language model.
 - Incomplete evidence is reported as incomplete and never presented as a pass.
+- Browser sample limits are explicit: reaching 30 summaries or leaving external
+  PRs beyond the ten-detail limit does not produce a complete queue.
 
 Read the [security model](docs/security-model.md) and
 [evidence model](docs/evidence-model.md) for the full trust boundary.

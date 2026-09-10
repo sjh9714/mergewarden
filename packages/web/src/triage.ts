@@ -8,6 +8,7 @@ import {
 } from "@mergewarden/core";
 import {
   FetchGitHubApi,
+  GitHubApiError,
   parseRepositoryTarget,
   type RemoteOpenPullRequest,
   type RemotePullRequest,
@@ -17,8 +18,9 @@ import {
 const LIST_LIMIT = 30;
 const DETAIL_LIMIT = 10;
 const DETAIL_BATCH_SIZE = 3;
+const MAX_TEMPLATE_BYTES = 1024 * 1024;
 const TRUSTED_ASSOCIATIONS = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
-const FIRST_CONTRIBUTION_ASSOCIATIONS = new Set(["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER", "NONE"]);
+const FIRST_CONTRIBUTION_ASSOCIATIONS = new Set(["FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER"]);
 const TEMPLATE_PATHS = [
   ".github/PULL_REQUEST_TEMPLATE.md",
   ".github/pull_request_template.md",
@@ -52,6 +54,7 @@ export interface PublicTriageRow {
   updatedAt: string;
   htmlUrl: string;
   notes: string[];
+  templateRead: boolean;
 }
 
 export interface PublicTriageResult {
@@ -61,27 +64,33 @@ export interface PublicTriageResult {
   trustedPullRequests: number;
   automationPullRequests: number;
   unreadablePullRequests: number[];
+  unreadableTemplates: number[];
+  unscannedPullRequests: number[];
+  listLimitReached: boolean;
+  rateLimited: boolean;
   analysisComplete: boolean;
   uniformNotes: string[];
   rows: PublicTriageRow[];
 }
 
-async function loadTemplate(
-  api: PublicTriageApi,
-  pull: RemotePullRequest,
-): Promise<string | null | undefined> {
+async function loadTemplate(api: PublicTriageApi, pull: RemotePullRequest): Promise<string | null> {
   for (const path of TEMPLATE_PATHS) {
-    try {
-      const result = await api.getTextFile(pull.base.repository, path, pull.base.sha);
-      if (result.kind === "found") {
-        return result.text;
+    const result = await api.getTextFile(pull.base.repository, path, pull.base.sha);
+    if (result.kind === "found") {
+      // The shared fetch adapter retains one overflow byte for callers to detect
+      // truncated streaming responses, even when Content-Length is absent.
+      if (new TextEncoder().encode(result.text).length > MAX_TEMPLATE_BYTES) {
+        throw new Error("Pull request template exceeds the analysis size limit.");
       }
-    } catch {
-      return undefined;
+      return result.text;
     }
   }
 
   return null;
+}
+
+function rateLimitReached(error: unknown): boolean {
+  return error instanceof GitHubApiError && (error.status === 403 || error.status === 429);
 }
 
 function analysisInput(
@@ -170,6 +179,9 @@ export async function triagePublicRepository(
   const detailed: Array<{ summary: RemoteOpenPullRequest; pull: RemotePullRequest }> = [];
   const unreadablePullRequests: number[] = [];
   const selected = external.slice(0, DETAIL_LIMIT);
+  const unscannedPullRequests = external.slice(DETAIL_LIMIT).map((pull) => pull.number);
+  const listLimitReached = summaries.length >= LIST_LIMIT;
+  let rateLimited = false;
 
   for (let index = 0; index < selected.length; index += DETAIL_BATCH_SIZE) {
     const batch = selected.slice(index, index + DETAIL_BATCH_SIZE);
@@ -188,15 +200,43 @@ export async function triagePublicRepository(
         detailed.push({ summary, pull: result.value });
       } else {
         unreadablePullRequests.push(summary.number);
+        rateLimited ||= rateLimitReached(result.reason);
       }
+    }
+    if (rateLimited) {
+      unreadablePullRequests.push(
+        ...selected.slice(index + batch.length).map((pull) => pull.number),
+      );
+      break;
     }
   }
 
-  const template = detailed[0] ? await loadTemplate(api, detailed[0].pull) : undefined;
+  const templates = new Map<string, string | null | undefined>();
+  const unreadableTemplates: number[] = [];
   const now = (dependencies.now ?? (() => new Date().toISOString()))();
   const rows: PublicTriageRow[] = [];
 
   for (const { summary, pull } of detailed) {
+    const templateKey = JSON.stringify([
+      pull.base.repository.owner,
+      pull.base.repository.repo,
+      pull.base.sha,
+    ]);
+    if (!templates.has(templateKey)) {
+      let template: string | null | undefined;
+      if (!rateLimited) {
+        try {
+          template = await loadTemplate(api, pull);
+        } catch (error) {
+          rateLimited ||= rateLimitReached(error);
+        }
+      }
+      templates.set(templateKey, template);
+    }
+    const template = templates.get(templateKey);
+    if (template === undefined) {
+      unreadableTemplates.push(pull.number);
+    }
     const result = await analyze(analysisInput(pull, template, now));
     const findingIds = new Set(result.findings.map((finding) => finding.ruleId));
     const association = pull.authorAssociation ?? summary.authorAssociation;
@@ -211,6 +251,7 @@ export async function triagePublicRepository(
       updatedAt: pull.updatedAt ?? summary.updatedAt,
       htmlUrl: pull.htmlUrl ?? summary.htmlUrl,
       notes: READINESS_RULES.filter(([ruleId]) => findingIds.has(ruleId)).map(([, label]) => label),
+      templateRead: template !== undefined,
     });
   }
 
@@ -224,7 +265,15 @@ export async function triagePublicRepository(
     trustedPullRequests,
     automationPullRequests,
     unreadablePullRequests,
-    analysisComplete: unreadablePullRequests.length === 0,
+    unreadableTemplates,
+    unscannedPullRequests,
+    listLimitReached,
+    rateLimited,
+    analysisComplete:
+      unreadablePullRequests.length === 0 &&
+      unreadableTemplates.length === 0 &&
+      unscannedPullRequests.length === 0 &&
+      !listLimitReached,
     uniformNotes: partitioned.uniform,
     rows: partitioned.rows,
   };

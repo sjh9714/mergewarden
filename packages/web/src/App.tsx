@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { Finding } from "@mergewarden/core";
 
 import {
@@ -250,7 +250,7 @@ export function App() {
   const scanSequence = useRef(0);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  async function runScan(target: string, requestedKind?: PublicTargetKind) {
+  const runScan = useCallback(async (target: string, requestedKind?: PublicTargetKind) => {
     const scanId = ++scanSequence.current;
     const trimmed = target.trim();
     let targetKind: PublicTargetKind;
@@ -296,7 +296,7 @@ export function App() {
         });
       }
     }
-  }
+  }, []);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -308,7 +308,22 @@ export function App() {
       autoScanned.current = true;
       void runScan(initialTarget.value, initialTarget.kind);
     }
-  }, [initialTarget]);
+  }, [initialTarget, runScan]);
+
+  useEffect(() => {
+    function followHash() {
+      const target = parseShareHash(window.location.hash);
+      setValue(target?.value ?? "");
+      if (target) {
+        void runScan(target.value, target.kind);
+      } else {
+        scanSequence.current += 1;
+        setState({ kind: "idle" });
+      }
+    }
+    window.addEventListener("hashchange", followHash);
+    return () => window.removeEventListener("hashchange", followHash);
+  }, [runScan]);
 
   useEffect(() => {
     if (
@@ -373,7 +388,7 @@ export function App() {
             </form>
             <ul className="boundaries" aria-label="Review queue boundaries">
               <li>Deterministic rules</li>
-              <li>Public metadata only</li>
+              <li>No code execution</li>
               <li>No data stored</li>
             </ul>
           </div>
@@ -400,7 +415,7 @@ export function App() {
         <section className="checks" aria-labelledby="checks-title">
           <div>
             <div className="eyebrow">Before code review</div>
-            <h2 id="checks-title">Facts that decide what to open first</h2>
+            <h2 id="checks-title">Review context, not a quality verdict</h2>
           </div>
           <ol className="check-list">
             <li>

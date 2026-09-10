@@ -8,6 +8,24 @@ This project follows the spirit of
 
 ## Unreleased
 
+### Fixed
+
+- The browser queue reports unreadable templates, skipped PRs, and sampling
+  limits. Templates are cached by exact base commit, not shared across branches.
+  Quota failures stop further requests and show an authenticated CLI fallback.
+- Same-page hash navigation loads the matching result and clears stale output
+  when the hash is removed. Modified clicks keep normal link behavior.
+- CI runs browser regressions against the built web app with mocked, read-only
+  GitHub responses, including keyboard, hash, error, and clipboard flows.
+- GitHub's `NONE` association is no longer mislabeled as a first contribution.
+- MCP-generated contracts quote literal paths and task text, including wildcard
+  globs and comment delimiters, so the Action parser preserves their meaning.
+- Updated security dependency floors and the lockfile for fast-uri, Hono, qs,
+  js-yaml, and Vitest. These repository updates do not modify published packages
+  or an existing consumer's dependency lockfile.
+- Research claims now distinguish rule matches and inline comments from
+  maintainer usefulness and review attention.
+
 ### Added
 
 - The Pages homepage now accepts a public repository and orders up to ten recent

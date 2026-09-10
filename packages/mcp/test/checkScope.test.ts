@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parseContractFromPrBody } from "@mergewarden/core";
 
 import { checkScope, contractBlock } from "../src/checkScope.js";
 
@@ -74,6 +75,65 @@ describe("checkScope", () => {
 });
 
 describe("contractBlock", () => {
+  it.each(["", " ", "src/a.ts ", "\tsrc/**"])(
+    "rejects scope paths that the Action schema would alter: %j",
+    async (path) => {
+      expect(() => contractBlock({ allowedPaths: [path], changedPaths: [] })).toThrow(
+        "Scope paths must be non-empty",
+      );
+      await expect(
+        checkScope({ allowedPaths: ["**"], blockedPaths: [path], changedPaths: [path] }),
+      ).rejects.toThrow("Scope paths must be non-empty");
+    },
+  );
+
+  it("does not emit an invalid empty contract or whitespace-only task", () => {
+    expect(contractBlock({ allowedPaths: [], changedPaths: [] })).toBe("");
+    expect(
+      parseContractFromPrBody(
+        contractBlock({ allowedPaths: ["**"], changedPaths: [], task: " \n " }),
+      ),
+    ).toEqual({ kind: "valid", contract: { version: 1, allowed_paths: ["**"] } });
+  });
+
+  it("preserves real changed filenames with trailing spaces", async () => {
+    const result = await checkScope({ allowedPaths: ["**"], changedPaths: ["src/a.ts "] });
+    expect(result.ok).toBe(true);
+  });
+  it.each([
+    "**",
+    "*.ts",
+    "#notes",
+    "src/a: b.ts",
+    "src/line\nbreak.ts",
+    "src/-->/file.ts",
+    "src/\u0085\u2028\u2029.ts",
+  ])("round trips the literal path %s through the Action parser", (path) => {
+    const request = {
+      allowedPaths: [path],
+      blockedPaths: [path],
+      changedPaths: [],
+      task: "Fix parser",
+    };
+    const parsed = parseContractFromPrBody(contractBlock(request));
+    expect(parsed).toEqual({
+      kind: "valid",
+      contract: {
+        version: 1,
+        allowed_paths: [path],
+        blocked_paths: [path],
+        task: request.task,
+      },
+    });
+  });
+
+  it("keeps YAML syntax and comment delimiters inside the task string", () => {
+    const task = "Fix: parser --> <!-- mergewarden-contract boundary";
+    expect(
+      parseContractFromPrBody(contractBlock({ allowedPaths: ["src/**"], changedPaths: [], task })),
+    ).toEqual({ kind: "valid", contract: { version: 1, allowed_paths: ["src/**"], task } });
+  });
+
   it("renders a block the gate can parse back", async () => {
     const block = contractBlock({
       allowedPaths: ["src/auth/**", "test/auth/**"],
@@ -86,12 +146,12 @@ describe("contractBlock", () => {
       [
         "<!-- mergewarden-contract",
         "version: 1",
-        "task: update session expiry",
+        'task: "update session expiry"',
         "allowed_paths:",
-        "  - src/auth/**",
-        "  - test/auth/**",
+        '  - "src/auth/**"',
+        '  - "test/auth/**"',
         "blocked_paths:",
-        "  - .github/**",
+        '  - ".github/**"',
         "-->",
       ].join("\n"),
     );
@@ -104,7 +164,7 @@ describe("contractBlock", () => {
       task: "first line\nsecond line",
     });
 
-    expect(block).toContain("task: first line second line");
+    expect(block).toContain('task: "first line second line"');
     expect(block.split("\n").filter((l) => l.startsWith("task:"))).toHaveLength(1);
   });
 });

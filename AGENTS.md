@@ -25,6 +25,8 @@ This repository implements MergeWarden, a deterministic CI firewall for AI-gener
 - Test: `pnpm test`
 - Lint: `pnpm lint`
 - Build: `pnpm build`
+- Browser regression: `pnpm build && node packages/web/scripts/browser-smoke.mjs`
+  (requires Chrome or Chromium; set `CHROME_PATH` outside standard locations)
 
 ## Architecture
 

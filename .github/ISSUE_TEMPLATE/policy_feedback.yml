@@ -1,20 +1,20 @@
-name: Scan feedback
-description: Share whether a real MergeWarden result helped you review a PR
-title: "[Scan feedback] "
+name: Result feedback
+description: Share what a review queue or PR scan changed in your actual review
+title: "[Result feedback] "
 labels:
   - question
 body:
   - type: textarea
     id: pull_request
     attributes:
-      label: Public pull request
-      description: Link the public PR you scanned when you can share it.
+      label: Public repository or pull request
+      description: Link the target or shared result when you can share it. Do not include tokens or private code.
       placeholder: https://github.com/owner/repository/pull/123
   - type: textarea
     id: result
     attributes:
-      label: Result and file
-      description: Which finding was useful, missing, or wrong and which file did it point to?
+      label: Result and evidence
+      description: Which queue note or finding was useful, missing, or wrong? Identify the PR or file.
       placeholder: The workflow permission finding in .github/workflows/release.yml helped us catch an unnecessary write permission.
     validations:
       required: true
@@ -33,9 +33,9 @@ body:
     id: review_action
     attributes:
       label: What happened next
-      description: Did you change the PR, dismiss the finding, or decide not to install the Action?
+      description: What would you have done without this result? Did it change which PR you opened, a review decision, or the time you spent?
   - type: textarea
     id: friction
     attributes:
       label: Scan or installation friction
-      description: What made the scanner, CLI fallback, or Action installation harder than expected?
+      description: What made using or returning to the queue, scanner, CLI, or Action harder than expected? What do you use instead?
