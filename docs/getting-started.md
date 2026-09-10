@@ -38,11 +38,16 @@ GH_TOKEN=github_pat_... npx --yes mergewarden@0.10.4 triage owner/repository
 | ---------- | ----------------------------------------------------------------------------------------------------- |
 | Rows       | External PRs were read and ordered by missing review context                                          |
 | Empty      | The latest results contain no external PRs after trusted roles and maintenance automation are removed |
-| Incomplete | One or more selected PRs could not be read, so visible rows are only a partial queue                  |
+| Incomplete | A PR or its base template could not be read, or the browser sample limit was reached                  |
 | Error      | The target, GitHub rate limit, or network request prevented the queue read                            |
 
 An incomplete queue is never a clean result. Retry it or use the authenticated
 CLI command shown by the page.
+
+The browser reads a template separately for each distinct PR base commit and
+reuses it only for PRs sharing that commit. A missing template is valid; a
+failed template request is not a successful template check. Rate limiting stops
+further requests while preserving readable rows.
 
 ## Inspect one pull request
 

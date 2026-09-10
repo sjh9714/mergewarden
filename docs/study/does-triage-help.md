@@ -2,6 +2,12 @@
 
 **Measured 2026-07-30 against the repositories that installed a competing tool.**
 
+**Interpretation corrected 2026-09-10.** The historical result below measures
+whether rules produce different rows. It does not measure review time saved,
+better prioritization, or repeat use. Code search matches can also include
+copied workflows and mirrors; a match alone does not prove an active install.
+No new measurement was performed for this correction.
+
 `mergewarden triage` was repositioned into a category that already had an occupant, so the
 useful question is not whether the idea sounds good. It is whether the command produces a
 result worth reading on the repositories that **self-identified** as having this problem.

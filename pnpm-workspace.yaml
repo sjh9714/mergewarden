@@ -9,19 +9,21 @@ overrides:
   # CVE-2026-14257 mitigation that ^5.0.8 was pinned for. Reached only through
   # eslint's transitive minimatch.
   brace-expansion: ^5.0.9
-  # GHSA-7p8r-x3mc-p8w7: fast-uri authority-introducer parsing. Reached through
+  # September 2026 URI normalization advisories, including GHSA-5jgf-p345-68v8.
+  # Reached through
   # @modelcontextprotocol/sdk > ajv, which needs the 3.x line, so this stays on
   # ^3 rather than following fast-uri to 4.x.
-  fast-uri: ^3.1.5
+  fast-uri: ^3.1.6
   # GHSA-fxqj-rqcc-2cmp: postcss reads arbitrary .map files from an
   # attacker-controlled sourceMappingURL when `from` is unset. Build tooling
   # only, through tsup and vitest.
   postcss: ^8.5.23
-  # GHSA-8j4g-w8fx-2239: hono ReDoS in the CORS middleware. Reached through
-  # @modelcontextprotocol/sdk, so this one is on the runtime path of the
-  # published mergewarden-mcp package, not just the build.
-  hono: ^4.12.34
-  # GHSA-5p4m-2wfm-xmqj: js-yaml quadratic CPU in !!omap resolution.
-  js-yaml: ^4.3.1
+  # September 2026 Hono body/query/static-file advisories. The SDK installs
+  # Hono, but our stdio-only MCP entrypoint does not use its HTTP handlers.
+  hono: ^4.13.5
+  # GHSA-2883-xcg3-v3hh: js-yaml merge-key CPU exhaustion in ESLint tooling.
+  js-yaml: ^4.3.2
+  # GHSA-4mjr-xmp4-gh2g: qs DoS in the SDK's unused Express dependency.
+  qs: ^6.16.0
   # GHSA-2v37-7h3g-55p8: nanoid custom generators can loop indefinitely.
   nanoid: ^3.3.17

@@ -1,6 +1,6 @@
 import type { MouseEvent } from "react";
 
-import { targetHash } from "./product.js";
+import { targetHash, triageCliCommand } from "./product.js";
 import type { PublicTriageResult } from "./triage.js";
 
 function updatedDate(value: string): string {
@@ -18,7 +18,14 @@ export function QueueResult({
   onScanPullRequest?: (target: string) => void;
 }) {
   function scanPullRequest(event: MouseEvent<HTMLAnchorElement>, target: string) {
-    if (onScanPullRequest) {
+    if (
+      onScanPullRequest &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.shiftKey &&
+      !event.altKey &&
+      event.button === 0
+    ) {
       event.preventDefault();
       onScanPullRequest(target);
     }
@@ -42,12 +49,37 @@ export function QueueResult({
       {!result.analysisComplete ? (
         <div className="incomplete" role="status">
           <h3>Review queue incomplete</h3>
-          <p>
-            {result.unreadablePullRequests.length === 1
-              ? `PR #${result.unreadablePullRequests[0]} could not be read.`
-              : `PRs ${result.unreadablePullRequests.map((number) => `#${number}`).join(", ")} could not be read.`}{" "}
-            Do not treat this queue as complete.
-          </p>
+          {result.unreadablePullRequests.length > 0 ? (
+            <p>
+              {result.unreadablePullRequests.length === 1
+                ? `PR #${result.unreadablePullRequests[0]} could not be read.`
+                : `PRs ${result.unreadablePullRequests.map((number) => `#${number}`).join(", ")} could not be read.`}{" "}
+            </p>
+          ) : null}
+          {result.unreadableTemplates.length > 0 ? (
+            <p>
+              Template checks unavailable for{" "}
+              {result.unreadableTemplates.map((number) => `#${number}`).join(", ")}.
+            </p>
+          ) : null}
+          {result.unscannedPullRequests.length > 0 ? (
+            <p>
+              {result.unscannedPullRequests.length} more external PR
+              {result.unscannedPullRequests.length === 1 ? "" : "s"} in this sample were not
+              scanned. The browser reads details for at most 10.
+            </p>
+          ) : null}
+          {result.listLimitReached ? (
+            <p>Only the latest 30 open PR summaries were checked. Older open PRs may be missing.</p>
+          ) : null}
+          {result.rateLimited ? (
+            <p>GitHub API rate limit reached. Further requests stopped.</p>
+          ) : null}
+          <p>Do not treat this queue as complete.</p>
+          <p>Use the authenticated CLI for a larger queue.</p>
+          <pre tabIndex={0}>
+            <code>{triageCliCommand(`${result.target.owner}/${result.target.repo}`)}</code>
+          </pre>
         </div>
       ) : null}
 
@@ -59,7 +91,7 @@ export function QueueResult({
       ) : null}
 
       {result.rows.length === 0 && result.analysisComplete ? (
-        <p className="queue-empty">No external pull requests need a first read.</p>
+        <p className="queue-empty">No external pull requests found in this sample.</p>
       ) : null}
 
       <div className="queue-rows">
@@ -80,15 +112,17 @@ export function QueueResult({
                 {row.firstContribution ? <span>First contribution</span> : null}
               </p>
               <p className="queue-metrics">
-                {row.filesChanged} files · {row.linesChanged} lines · updated{" "}
+                {row.filesChanged} file{row.filesChanged === 1 ? "" : "s"} · {row.linesChanged} line
+                {row.linesChanged === 1 ? "" : "s"} · updated{" "}
                 <time dateTime={row.updatedAt}>{updatedDate(row.updatedAt)}</time>
               </p>
               <div className="queue-notes" aria-label="Review context">
                 {row.notes.length > 0 ? (
                   row.notes.map((note) => <span key={note}>{note}</span>)
                 ) : (
-                  <span className="queue-note-clear">No missing context found</span>
+                  <span className="queue-note-clear">No notes from completed checks</span>
                 )}
+                {!row.templateRead ? <span>Template check unavailable</span> : null}
               </div>
               <a
                 className="detail-link"

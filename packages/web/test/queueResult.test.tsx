@@ -12,6 +12,10 @@ function result(overrides: Partial<PublicTriageResult> = {}): PublicTriageResult
     trustedPullRequests: 1,
     automationPullRequests: 1,
     unreadablePullRequests: [],
+    unreadableTemplates: [],
+    unscannedPullRequests: [],
+    listLimitReached: false,
+    rateLimited: false,
     analysisComplete: true,
     uniformNotes: ["no linked issue"],
     rows: [
@@ -26,6 +30,7 @@ function result(overrides: Partial<PublicTriageResult> = {}): PublicTriageResult
         updatedAt: "2026-08-22T00:00:00Z",
         htmlUrl: "https://github.com/owner/repo/pull/12",
         notes: ["thin description", "oversized"],
+        templateRead: true,
       },
     ],
     ...overrides,
@@ -64,5 +69,35 @@ describe("QueueResult", () => {
     expect(html).toContain("Review queue incomplete");
     expect(html).toContain("PR #12 could not be read");
     expect(html).not.toContain("No external pull requests need a first read");
+  });
+
+  it("explains sample limits, template failures, and the authenticated fallback", () => {
+    const html = renderToStaticMarkup(
+      <QueueResult
+        result={result({
+          analysisComplete: false,
+          unreadableTemplates: [12],
+          unscannedPullRequests: [13, 14],
+          listLimitReached: true,
+          rateLimited: true,
+        })}
+      />,
+    );
+    expect(html).toContain("Template checks unavailable for #12");
+    expect(html).toContain("2 more external PRs in this sample were not scanned");
+    expect(html).toContain("Only the latest 30 open PR summaries were checked");
+    expect(html).toContain("GitHub API rate limit reached");
+    expect(html).toContain("GH_TOKEN=... npx --yes mergewarden@0.10.4 triage owner/repo");
+    expect(html).not.toContain("PRs  could not be read");
+  });
+
+  it("does not claim that an unreadable template was checked", () => {
+    const data = result();
+    data.rows[0]!.templateRead = false;
+    data.rows[0]!.notes = [];
+    const html = renderToStaticMarkup(<QueueResult result={data} />);
+    expect(html).toContain("Template check unavailable");
+    expect(html).toContain("No notes from completed checks");
+    expect(html).not.toContain("No missing context found");
   });
 });

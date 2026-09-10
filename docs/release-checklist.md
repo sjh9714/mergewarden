@@ -23,6 +23,10 @@ not authorize a tag, npm publication, GitHub release, or Marketplace change.
 - [ ] `pnpm lint`
 - [ ] `pnpm format:check`
 - [ ] `pnpm audit`
+- [ ] `node packages/web/scripts/browser-smoke.mjs` against a fresh build, with
+      `CHROME_PATH` set when Chrome is not in a standard location.
+- [ ] Dependency-only fixes are not described as proven runtime exploits.
+      Workspace overrides do not update existing npm consumers' lockfiles.
 - [ ] Unsafe PR zoo replay succeeds.
 - [ ] Packed CLI installs in an empty directory on supported Node/OS matrix.
 - [ ] Tarball has no `workspace:*` or private runtime dependency.

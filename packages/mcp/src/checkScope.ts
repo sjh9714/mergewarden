@@ -37,26 +37,44 @@ function fileChanges(paths: string[]): FileChange[] {
   }));
 }
 
+function quotedContractValue(value: string): string {
+  // JSON strings are YAML scalars. Also escape HTML delimiters and YAML line
+  // separators so a value cannot end the PR comment or change during parsing.
+  return JSON.stringify(value).replace(
+    /[<>\u0085\u2028\u2029]/g,
+    (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
+}
+
 /**
  * Render the contract exactly as `contract/out-of-scope` will parse it back out of a pull
  * request body, so what the agent checks against locally is what the gate reads later.
  */
 export function contractBlock(request: CheckScopeRequest): string {
+  for (const path of [...request.allowedPaths, ...(request.blockedPaths ?? [])]) {
+    if (path.length === 0 || path !== path.trim()) {
+      throw new Error("Scope paths must be non-empty and must not start or end with whitespace.");
+    }
+  }
+  if (request.allowedPaths.length === 0) {
+    return "";
+  }
   const lines = ["<!-- mergewarden-contract", "version: 1"];
 
-  if (request.task) {
-    lines.push(`task: ${request.task.replace(/\n/g, " ").trim()}`);
+  const task = request.task?.replace(/\n/g, " ").trim();
+  if (task) {
+    lines.push(`task: ${quotedContractValue(task)}`);
   }
 
   lines.push("allowed_paths:");
   for (const path of request.allowedPaths) {
-    lines.push(`  - ${path}`);
+    lines.push(`  - ${quotedContractValue(path)}`);
   }
 
   if (request.blockedPaths?.length) {
     lines.push("blocked_paths:");
     for (const path of request.blockedPaths) {
-      lines.push(`  - ${path}`);
+      lines.push(`  - ${quotedContractValue(path)}`);
     }
   }
 
@@ -68,9 +86,9 @@ export function contractBlock(request: CheckScopeRequest): string {
  * Answer the question a developer is otherwise told to answer by eye: did the agent touch
  * anything outside what it was asked to touch?
  *
- * This runs the same engine the GitHub Action runs, on the same default policy, so a clean
- * result here is the same clean result the gate would produce — not a second opinion that
- * happens to agree. Only rules decidable from paths alone can fire: contract scope, blocked
+ * This uses the GitHub Action's engine with the default policy, but a full PR scan or a
+ * repository-specific policy can produce additional findings. Only rules decidable from
+ * paths alone can fire: contract scope, blocked
  * paths, and agent-control-plane drift. Workflow and dependency rules need file contents and
  * are deliberately out of reach.
  */

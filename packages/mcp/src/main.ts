@@ -21,8 +21,8 @@ server.registerTool(
       "in the repository behaves.",
       "",
       "Use this before opening a pull request. Get changedPaths from `git diff --name-only`",
-      "against the branch point. It runs the same engine as the MergeWarden GitHub Action on",
-      "the same default policy, so a clean result here is what the gate will report.",
+      "against the branch point. It uses the GitHub Action's path rules and default policy.",
+      "A pass covers those path checks only; a full PR scan or repository policy can differ.",
       "",
       "Deterministic and offline: no network, no token, no model call. Only checks decidable",
       "from paths — workflow permissions and dependency scripts need file contents and are not",
@@ -44,7 +44,9 @@ server.registerTool(
       task: z
         .string()
         .optional()
-        .describe("One line describing what was asked for. Recorded verbatim, never interpreted."),
+        .describe(
+          "One line describing what was asked for. Whitespace is normalized; meaning is not interpreted.",
+        ),
     },
   },
   async ({ allowedPaths, changedPaths, blockedPaths, task }) => {

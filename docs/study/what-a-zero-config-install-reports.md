@@ -4,8 +4,10 @@ The most common objection to a policy gate is that it will be noisy. This page
 answers that with a measurement rather than an assurance.
 
 **Result: on 46 recently merged human-authored pull requests, the default policy
-reported nothing on 44 of them. The two findings it did produce were both
-correct.** Zero false positives in this sample.
+reported nothing on 44 of them. The other two changed instruction files that
+matched the configured rule.** This verifies pattern matching, not whether
+maintainers wanted either alert. False-positive rates and usefulness were not
+validated with maintainers.
 
 ## Why this is a separate measurement
 
@@ -97,10 +99,10 @@ files that rule exists for: a human editing them still changes how every future
 agent run behaves in that repository, and the rule's claim is that a human should
 look at the change, not that an agent wrote it.
 
-So the honest count is zero false positives here, with the caveat that "false
-positive" for this tool means "a boundary crossing the maintainers consider
-fine", which only the maintainers can decide. What this sample shows is that the
-default policy is silent on ordinary human work.
+No mismatch between the rule and the changed path was found in those two
+results. That is not a measured false-positive rate: a correct file match can
+still be an unwanted alert. Only the maintainer can assess that cost. This
+sample establishes the output frequency in this window, not in OSS generally.
 
 ## Result on agent pull requests
 

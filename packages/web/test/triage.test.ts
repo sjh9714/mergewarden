@@ -1,4 +1,10 @@
-import type { RemoteOpenPullRequest, RemotePullRequest, TextFileResult } from "@mergewarden/github";
+import {
+  FetchGitHubApi,
+  GitHubApiError,
+  type RemoteOpenPullRequest,
+  type RemotePullRequest,
+  type TextFileResult,
+} from "@mergewarden/github";
 import { describe, expect, it, vi } from "vitest";
 
 import { triagePublicRepository } from "../src/triage.js";
@@ -71,6 +77,27 @@ function fakeApi(
 const now = () => "2026-08-22T00:00:00.000Z";
 
 describe("triagePublicRepository", () => {
+  it("rejects a truncated template streamed without Content-Length", async () => {
+    const transport = new FetchGitHubApi({
+      fetch: async () => new Response(" ".repeat(1024 * 1024 + 1) + "\n## Required section\n"),
+    });
+    const api = { ...fakeApi([summary(1)]), getTextFile: transport.getTextFile.bind(transport) };
+    const result = await triagePublicRepository("owner/repo", { api, now });
+    expect(result.analysisComplete).toBe(false);
+    expect(result.unreadableTemplates).toEqual([1]);
+  });
+
+  it.each(["a".repeat(1024 * 1024 + 1), "한".repeat(350_000)])(
+    "marks oversized template content unavailable",
+    async (text) => {
+      const api = fakeApi([summary(1)], undefined, { kind: "found", text });
+      const result = await triagePublicRepository("owner/repo", { api, now });
+      expect(result.analysisComplete).toBe(false);
+      expect(result.unreadableTemplates).toEqual([1]);
+      expect(result.rows[0]?.templateRead).toBe(false);
+    },
+  );
+
   it("filters trusted roles, base repository branches, and maintenance automation", async () => {
     const baseBranchPull = summary(8, "CONTRIBUTOR", "repository-maintainer");
     baseBranchPull.head = {
@@ -118,7 +145,7 @@ describe("triagePublicRepository", () => {
       false,
       true,
       true,
-      true,
+      false,
       false,
     ]);
   });
@@ -134,6 +161,9 @@ describe("triagePublicRepository", () => {
     expect(api.getTextFile).toHaveBeenCalledTimes(3);
     expect(result.rows).toHaveLength(10);
     expect(result.externalPullRequests).toBe(30);
+    expect(result.analysisComplete).toBe(false);
+    expect(result.listLimitReached).toBe(true);
+    expect(result.unscannedPullRequests).toEqual(pulls.slice(10).map((pull) => pull.number));
   });
 
   it("shows four readiness facts and keeps first contribution as context", async () => {
@@ -198,5 +228,79 @@ describe("triagePublicRepository", () => {
     expect(result.analysisComplete).toBe(false);
     expect(result.unreadablePullRequests).toEqual([2]);
     expect(result.rows.map((row) => row.number)).toEqual([1, 3]);
+  });
+
+  it("distinguishes a missing template from a failed template request", async () => {
+    const api = fakeApi([summary(1)]);
+    const complete = await triagePublicRepository("owner/repo", { api, now });
+    expect(complete.analysisComplete).toBe(true);
+    expect(complete.rows[0]?.templateRead).toBe(true);
+
+    api.getTextFile.mockRejectedValue(new Error("timeout"));
+    const incomplete = await triagePublicRepository("owner/repo", { api, now });
+    expect(incomplete.analysisComplete).toBe(false);
+    expect(incomplete.unreadableTemplates).toEqual([1]);
+    expect(incomplete.rows[0]?.templateRead).toBe(false);
+  });
+
+  it("reads and caches templates at each PR's exact base commit", async () => {
+    const pulls = [summary(1), summary(2), summary(3)];
+    pulls[1]!.base = { ...pulls[1]!.base, ref: "release", sha: "release-sha" };
+    const details = new Map(
+      pulls.map((pull) => [
+        pull.number,
+        detail(pull, { body: "## Summary\n\nFixes #1\n\n" + "Useful context. ".repeat(8) }),
+      ]),
+    );
+    const api = {
+      ...fakeApi(pulls, details),
+      getTextFile: vi.fn(async (_repo: unknown, _path: string, ref: string) => ({
+        kind: "found" as const,
+        text: ref === "release-sha" ? "## Release notes\n" : "## Summary\n",
+      })),
+    };
+
+    const result = await triagePublicRepository("owner/repo", { api, now });
+    expect(api.getTextFile).toHaveBeenCalledTimes(2);
+    expect(result.rows.find((row) => row.number === 2)?.notes).toContain("template unused");
+    expect(
+      result.rows
+        .filter((row) => row.number !== 2)
+        .every((row) => !row.notes.includes("template unused")),
+    ).toBe(true);
+    expect(result.analysisComplete).toBe(true);
+  });
+
+  it.each([403, 429])(
+    "stops requests after a %i detail failure and keeps readable rows",
+    async (status) => {
+      const pulls = Array.from({ length: 8 }, (_, index) => summary(index + 1));
+      const details = new Map<number, RemotePullRequest | Error>(
+        pulls.map((pull) => [pull.number, detail(pull)]),
+      );
+      details.set(2, new GitHubApiError("rate limit", { status }));
+      const api = fakeApi(pulls, details);
+
+      const result = await triagePublicRepository("owner/repo", { api, now });
+      expect(api.getPullRequest).toHaveBeenCalledTimes(3);
+      expect(api.getTextFile).not.toHaveBeenCalled();
+      expect(result.rateLimited).toBe(true);
+      expect(result.analysisComplete).toBe(false);
+      expect(result.unreadablePullRequests).toEqual([2, 4, 5, 6, 7, 8]);
+      expect(result.rows.map((row) => row.number)).toEqual([1, 3]);
+    },
+  );
+
+  it("does not keep requesting templates after their quota is exhausted", async () => {
+    const pulls = [summary(1), summary(2)];
+    pulls[1]!.base = { ...pulls[1]!.base, sha: "another-base" };
+    const api = fakeApi(pulls);
+    api.getTextFile.mockRejectedValue(new GitHubApiError("rate limit", { status: 429 }));
+
+    const result = await triagePublicRepository("owner/repo", { api, now });
+    expect(api.getTextFile).toHaveBeenCalledOnce();
+    expect(result.rateLimited).toBe(true);
+    expect(result.unreadableTemplates).toEqual([1, 2]);
+    expect(result.analysisComplete).toBe(false);
   });
 });
